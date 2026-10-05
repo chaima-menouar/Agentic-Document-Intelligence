@@ -21,27 +21,47 @@ The project is developed as a 12-week academic project and compares three modes:
 
 ## Current milestone
 
-**Milestone 1 — Reliable PDF ingestion**
+**Milestone 2 — Canonical corpus normalization + provenance-preserving chunking**
 
+Completed foundation:
+
+```text
+PDF / QASPER / SciFact / HotpotQA
+ ↓
+canonical CorpusDocument
+ ↓
+source segments with provenance
+ ↓
+overlapping word chunks
+ ↓
+stable chunk IDs + source IDs
+ ↓
+ready for embeddings and semantic retrieval
 ```
-PDF
- ↓
-page-by-page extraction
- ↓
-stable document ID + page IDs
- ↓
-JSON
- ↓
-quality inspection
-```
 
-The first milestone intentionally comes before embeddings or LLM integration: if extraction or page mapping is wrong, later citations and verification cannot be trusted.
+The chunker never crosses a provenance boundary. A retrieval chunk can therefore
+be traced back to one source page, section/paragraph, or evidence sentence.
 
-## Planned project layout
+Default experiment configuration:
+
+- chunk size: **220 words**
+- overlap: **40 words**
+- QASPER: primary scientific document-QA corpus
+- SciFact: scientific claim verification corpus
+- HotpotQA: 10,000-example agentic/multi-hop stress-test subset
+
+Large public datasets stay out of Git history. GitHub Actions reproducibly
+collects them, normalizes them, chunks them, and uploads both raw and processed
+artifacts.
+
+## Project layout
 
 ```text
 app/
   ingestion/
+    pdf_extractor.py
+    dataset_normalizer.py
+    chunker.py
   retrieval/
   rag/
   verification/
@@ -50,10 +70,13 @@ app/
   ui/
 data/
   raw/
+  external/
   processed/
   evaluation/
 tests/
 scripts/
+  prepare_datasets.py
+  build_corpus.py
 ```
 
 ## Development
@@ -68,14 +91,23 @@ pip install -r requirements.txt
 pytest
 ```
 
+To reproduce the benchmark corpus locally:
+
+```bash
+pip install -r requirements.txt -r requirements-data.txt
+python scripts/prepare_datasets.py --output data/external --hotpot-size 10000 --seed 42
+python scripts/build_corpus.py --input data/external --output data/processed/benchmark
+```
+
 ## Roadmap
 
-1. PDF extraction and provenance
-2. Chunking and retrieval
-3. Classical RAG with citations
-4. Documents + Assistant UI
-5. Claim extraction and verification
-6. Partial-answer correction
-7. Agentic additional retrieval
-8. A/B/C evaluation
-9. Stabilization, report, and demo
+1. ✅ PDF extraction and provenance
+2. 🚧 Corpus normalization + chunking
+3. Semantic embeddings + retrieval and Recall@k
+4. Classical RAG with citations
+5. Documents + Assistant UI
+6. Claim extraction and verification
+7. Partial-answer correction
+8. Agentic additional retrieval
+9. A/B/C evaluation
+10. Stabilization, report, and demo
