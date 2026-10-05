@@ -1,6 +1,8 @@
-"""Typed schemas shared across ingestion and later RAG stages."""
+"""Typed schemas shared across ingestion, chunking, and later RAG stages."""
 
 from __future__ import annotations
+
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -31,3 +33,44 @@ class DocumentExtraction(BaseModel):
     page_count: int = Field(ge=0)
     pages: list[PageExtraction]
     quality: ExtractionQuality
+
+
+class SourceSegment(BaseModel):
+    """A provenance-preserving source unit before chunking.
+
+    A segment is deliberately smaller than a document and has one stable
+    provenance boundary: a PDF page, a QASPER paragraph, a SciFact sentence,
+    or a HotpotQA context sentence.
+    """
+
+    segment_id: str
+    text: str
+    page_number: int | None = Field(default=None, ge=1)
+    section: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class CorpusDocument(BaseModel):
+    """Canonical document representation shared by all input datasets."""
+
+    dataset: str
+    document_id: str
+    title: str | None = None
+    segments: list[SourceSegment]
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class TextChunk(BaseModel):
+    """Retrieval unit with explicit source provenance."""
+
+    dataset: str
+    document_id: str
+    chunk_id: str
+    source_id: str
+    text: str
+    page_number: int | None = Field(default=None, ge=1)
+    section: str | None = None
+    start_word: int = Field(ge=0)
+    end_word: int = Field(ge=0)
+    word_count: int = Field(ge=1)
+    metadata: dict[str, Any] = Field(default_factory=dict)
