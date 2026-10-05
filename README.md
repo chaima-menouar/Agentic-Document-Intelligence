@@ -97,13 +97,16 @@ To reproduce the benchmark corpus locally:
 pip install -r requirements.txt -r requirements-data.txt
 python scripts/prepare_datasets.py --output data/external --hotpot-size 10000 --seed 42
 python scripts/build_corpus.py --input data/external --output data/processed/benchmark
+python scripts/build_vector_index.py --chunks data/processed/benchmark/chunks.jsonl --output data/indexes/qasper --dataset qasper
+python scripts/evaluate_qasper_retrieval.py --qasper data/external/qasper/validation.parquet --index data/indexes/qasper --output data/evaluation/qasper_retrieval.json --top-k 1,3,5,10,20
+python scripts/search_index.py "What evidence supports the claim?" --index data/indexes/qasper --top-k 5
 ```
 
 ## Roadmap
 
 1. ✅ PDF extraction and provenance
-2. 🚧 Corpus normalization + chunking
-3. Semantic embeddings + retrieval and Recall@k
+2. ✅ Corpus normalization + chunking
+3. 🚧 Semantic embeddings + retrieval and Recall@k
 4. Classical RAG with citations
 5. Documents + Assistant UI
 6. Claim extraction and verification
