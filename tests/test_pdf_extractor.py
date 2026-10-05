@@ -12,7 +12,7 @@ from app.ingestion import PdfExtractionError, extract_pdf, save_extraction_json
 
 
 def _make_test_pdf(path: Path) -> None:
-    with fitz.open() as document:
+    with pymupdf.open() as document:
         first = document.new_page()
         first.insert_text((72, 72), "Agentic Document Intelligence")
 
