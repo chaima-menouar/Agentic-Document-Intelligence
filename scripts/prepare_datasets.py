@@ -35,7 +35,7 @@ def _write_parquet_splits(dataset: DatasetDict, destination: Path) -> dict[str, 
 
 
 def collect_qasper(output: Path) -> dict:
-    dataset = load_dataset("allenai/qasper")
+    dataset = load_dataset("allenai/qasper", trust_remote_code=True)
     counts = _write_parquet_splits(dataset, output / "qasper")
     return {
         "name": "QASPER",
