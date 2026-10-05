@@ -4,7 +4,12 @@ on:
   workflow_dispatch:
   push:
     paths:
+      - "app/ingestion/chunker.py"
+      - "app/ingestion/dataset_normalizer.py"
+      - "app/models/**"
       - "scripts/prepare_datasets.py"
+      - "scripts/build_corpus.py"
+      - "requirements.txt"
       - "requirements-data.txt"
       - ".github/workflows/collect-data.yml"
 
@@ -23,21 +28,36 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Install data dependencies
-        run: pip install -r requirements-data.txt
+      - name: Install project and data dependencies
+        run: pip install -r requirements.txt -r requirements-data.txt
 
       - name: Collect QASPER, SciFact and HotpotQA subset
         run: python scripts/prepare_datasets.py --output data/external --hotpot-size 10000 --seed 42
 
-      - name: Show prepared files
+      - name: Normalize and chunk the retrieval corpus
+        run: python scripts/build_corpus.py --input data/external --output data/processed/benchmark --chunk-size 220 --overlap 40
+
+      - name: Show manifests and prepared files
         run: |
+          echo "=== External data ==="
           find data/external -maxdepth 3 -type f -printf "%p %k KB\n" | sort
           cat data/external/manifest.json
+          echo "=== Processed corpus ==="
+          find data/processed/benchmark -maxdepth 2 -type f -printf "%p %k KB\n" | sort
+          cat data/processed/benchmark/manifest.json
 
-      - name: Upload prepared dataset bundle
+      - name: Upload raw benchmark bundle
         uses: actions/upload-artifact@v4
         with:
           name: research-data-qasper-scifact-hotpot10k
           path: data/external/
+          retention-days: 30
+          compression-level: 6
+
+      - name: Upload normalized chunked corpus
+        uses: actions/upload-artifact@v4
+        with:
+          name: normalized-corpus-qasper-scifact-hotpot10k
+          path: data/processed/benchmark/
           retention-days: 30
           compression-level: 6
