@@ -36,3 +36,6 @@ htmlcov/
 
 # Downloaded external research datasets
 data/external/
+
+# Generated vector indexes
+data/indexes/
