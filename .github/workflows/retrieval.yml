@@ -1,0 +1,68 @@
+name: semantic-retrieval
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "app/retrieval/**"
+      - "app/ingestion/**"
+      - "app/models/**"
+      - "scripts/build_vector_index.py"
+      - "scripts/evaluate_qasper_retrieval.py"
+      - "scripts/build_corpus.py"
+      - "scripts/prepare_datasets.py"
+      - "requirements*.txt"
+      - ".github/workflows/retrieval.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  qasper-retrieval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-data.txt -r requirements-retrieval.txt
+
+      - name: Collect benchmark data
+        run: python scripts/prepare_datasets.py --output data/external --hotpot-size 10000 --seed 42
+
+      - name: Build canonical chunked corpus
+        run: python scripts/build_corpus.py --input data/external --output data/processed/benchmark --chunk-size 220 --overlap 40
+
+      - name: Build QASPER semantic FAISS index
+        run: python scripts/build_vector_index.py --chunks data/processed/benchmark/chunks.jsonl --output data/indexes/qasper --dataset qasper --batch-size 128
+
+      - name: Evaluate QASPER evidence Recall@k
+        run: python scripts/evaluate_qasper_retrieval.py --qasper data/external/qasper/validation.parquet --index data/indexes/qasper --output data/evaluation/qasper_retrieval.json --top-k 1,3,5,10,20
+
+      - name: Show retrieval results
+        run: |
+          echo "=== Index manifest ==="
+          cat data/indexes/qasper/manifest.json
+          echo "=== Evaluation ==="
+          cat data/evaluation/qasper_retrieval.json
+          du -h data/indexes/qasper/*
+
+      - name: Upload QASPER semantic index
+        uses: actions/upload-artifact@v4
+        with:
+          name: qasper-semantic-index-minilm
+          path: data/indexes/qasper/
+          retention-days: 30
+          compression-level: 6
+
+      - name: Upload retrieval evaluation
+        uses: actions/upload-artifact@v4
+        with:
+          name: qasper-retrieval-evaluation
+          path: data/evaluation/qasper_retrieval.json
+          retention-days: 30
