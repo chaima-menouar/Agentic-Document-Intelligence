@@ -33,3 +33,6 @@ data/evaluation/*
 *.log
 coverage.xml
 htmlcov/
+
+# Downloaded external research datasets
+data/external/
