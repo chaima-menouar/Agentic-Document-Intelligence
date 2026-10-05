@@ -60,7 +60,7 @@ def extract_pdf(pdf_path: str | Path) -> DocumentExtraction:
     empty_pages: list[int] = []
 
     try:
-        with fitz.open(path) as document:
+        with pymupdf.open(path) as document:
             if document.needs_pass:
                 raise PdfExtractionError(
                     "Password-protected PDFs are not supported in V1."
