@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-import fitz  # PyMuPDF
+import pymupdf
 
 from app.models import DocumentExtraction, ExtractionQuality, PageExtraction
 
