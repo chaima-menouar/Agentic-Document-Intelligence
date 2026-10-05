@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import fitz
+import pymupdf
 import pytest
 
 from app.ingestion import PdfExtractionError, extract_pdf, save_extraction_json
