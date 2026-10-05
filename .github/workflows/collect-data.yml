@@ -1,0 +1,43 @@
+name: collect-research-data
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "scripts/prepare_datasets.py"
+      - "requirements-data.txt"
+      - ".github/workflows/collect-data.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install data dependencies
+        run: pip install -r requirements-data.txt
+
+      - name: Collect QASPER, SciFact and HotpotQA subset
+        run: python scripts/prepare_datasets.py --output data/external --hotpot-size 10000 --seed 42
+
+      - name: Show prepared files
+        run: |
+          find data/external -maxdepth 3 -type f -printf "%p %k KB\n" | sort
+          cat data/external/manifest.json
+
+      - name: Upload prepared dataset bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-data-qasper-scifact-hotpot10k
+          path: data/external/
+          retention-days: 30
+          compression-level: 6
