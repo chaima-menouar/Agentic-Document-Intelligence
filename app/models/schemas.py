@@ -134,3 +134,20 @@ class VerifiedRAGAnswer(BaseModel):
     verifications: list[ClaimVerification] = Field(default_factory=list)
     citations: list[AnswerCitation] = Field(default_factory=list)
     retrieved_chunks: int = Field(ge=0)
+
+
+
+class CorrectedRAGAnswer(BaseModel):
+    """Mode B corrected output after removing unsupported claims."""
+
+    question: str
+    original_answer: str
+    final_answer: str
+    correction_status: str
+    verification_status: str
+    claims: list[ExtractedClaim] = Field(default_factory=list)
+    verifications: list[ClaimVerification] = Field(default_factory=list)
+    citations: list[AnswerCitation] = Field(default_factory=list)
+    kept_claim_ids: list[str] = Field(default_factory=list)
+    removed_claim_ids: list[str] = Field(default_factory=list)
+    retrieved_chunks: int = Field(ge=0)
