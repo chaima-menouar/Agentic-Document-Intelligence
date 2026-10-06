@@ -121,6 +121,37 @@ python scripts/search_index.py "What evidence supports the claim?" --index data/
 10. Stabilization, report, and demo
 
 
+## A/B/C evaluation
+
+Milestone 9 includes a reproducible, fully local comparison harness for the
+three system modes. It reports answer/citation rates for Mode A, claim
+grounding metrics for Mode B, and recovery/round-efficiency metrics for Mode C.
+
+Build a deterministic QASPER evaluation set:
+
+```bash
+python scripts/build_qasper_eval_questions.py \
+  --qasper data/external/qasper/validation.parquet \
+  --output data/evaluation/abc/questions.jsonl \
+  --limit 50
+```
+
+Then compare all three modes on the same questions:
+
+```bash
+python scripts/evaluate_rag_modes.py \
+  --index data/indexes/qasper-bge-small \
+  --questions data/evaluation/abc/questions.jsonl \
+  --output data/evaluation/abc \
+  --top-k 5 \
+  --max-rounds 2 \
+  --additional-top-k 5
+```
+
+The evaluator uses the free deterministic `ExtractiveGenerator` by default and
+writes both per-question records (`abc_records.jsonl`) and aggregate metrics
+(`abc_summary.json`).
+
 ## Classical RAG CLI
 
 Mode A uses a pluggable generator. The included client targets a
