@@ -46,6 +46,9 @@ def prepare_uploaded_pdfs(
     *,
     chunk_size_words: int = 220,
     overlap_words: int = 40,
+    ocr_fallback: bool = True,
+    min_text_chars: int = 40,
+    ocr_language: str = "eng",
 ) -> tuple[Path, tuple[ProcessedDocumentSummary, ...], int]:
     """Persist uploaded PDFs, extract them, and write canonical chunks JSONL."""
     workspace_dir.mkdir(parents=True, exist_ok=True)
@@ -66,7 +69,12 @@ def prepare_uploaded_pdfs(
             pdf_path = uploads_dir / _safe_pdf_name(filename, index)
             pdf_path.write_bytes(payload)
 
-            extraction = extract_pdf(pdf_path)
+            extraction = extract_pdf(
+                pdf_path,
+                ocr_fallback=ocr_fallback,
+                min_text_chars=min_text_chars,
+                ocr_language=ocr_language,
+            )
             document = pdf_extraction_to_document(extraction)
             chunks = chunk_document(
                 document,
@@ -107,6 +115,9 @@ def build_local_workspace(
     chunk_size_words: int = 220,
     overlap_words: int = 40,
     batch_size: int = 64,
+    ocr_fallback: bool = True,
+    min_text_chars: int = 40,
+    ocr_language: str = "eng",
 ) -> WorkspaceBuildResult:
     """Create a local multi-PDF semantic workspace and FAISS index."""
     chunks_path, summaries, total_chunks = prepare_uploaded_pdfs(
@@ -114,6 +125,9 @@ def build_local_workspace(
         workspace_dir,
         chunk_size_words=chunk_size_words,
         overlap_words=overlap_words,
+        ocr_fallback=ocr_fallback,
+        min_text_chars=min_text_chars,
+        ocr_language=ocr_language,
     )
 
     index_dir = workspace_dir / "index"
