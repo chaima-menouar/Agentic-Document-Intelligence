@@ -139,18 +139,17 @@ python scripts/build_qasper_eval_questions.py \
 Then compare all three modes on the same questions:
 
 ```bash
-python scripts/evaluate_rag_modes.py \
+python scripts/evaluate_abc_modes.py \
   --index data/indexes/qasper-bge-small \
-  --questions data/evaluation/abc/questions.jsonl \
-  --output data/evaluation/abc \
-  --top-k 5 \
+  --output data/evaluation/abc_evaluation.json \
+  --cases 20 \
   --max-rounds 2 \
-  --additional-top-k 5
+  --additional-top-k 3
 ```
 
-The evaluator uses the free deterministic `ExtractiveGenerator` by default and
-writes both per-question records (`abc_records.jsonl`) and aggregate metrics
-(`abc_summary.json`).
+The controlled evaluator runs deterministically on the real BGE + FAISS index and
+writes the full scenario records plus aggregate metrics to
+`data/evaluation/abc_evaluation.json`. No paid API is required.
 
 ## Classical RAG CLI
 
