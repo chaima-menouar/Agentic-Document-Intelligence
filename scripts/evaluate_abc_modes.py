@@ -133,11 +133,21 @@ def evaluate(
         document_id = payload["document_id"]
         claim = _target_claim(payload["text"])
 
-        # Normal grounded case: exact claim query + explicit [S1] citation.
+        # Normal grounded case: first probe the real top-1 passage, then
+        # generate a claim taken from that exact [S1] evidence. This isolates
+        # verification behavior instead of accidentally testing retrieval miss.
         normal_question = claim
+        probe_hits = retriever.search_many_scoped(
+            [normal_question],
+            [document_id],
+            top_k=1,
+        )[0]
+        if not probe_hits:
+            continue
+        grounded_claim = _target_claim(probe_hits[0].text)
         classical, verified, agentic = _pipelines(
             retriever,
-            f"{claim} [S1]",
+            f"{grounded_claim} [S1]",
             max_rounds=max_rounds,
             additional_top_k=additional_top_k,
         )
