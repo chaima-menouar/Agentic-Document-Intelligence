@@ -102,7 +102,11 @@ class ExtractiveGenerator:
 
     def generate(self, prompt: str) -> str:
         marker = "[S1]"
-        start = prompt.find(marker)
+        evidence_start = prompt.find("Evidence:")
+        if evidence_start < 0:
+            return "INSUFFICIENT_EVIDENCE"
+
+        start = prompt.find(marker, evidence_start)
         if start < 0:
             return "INSUFFICIENT_EVIDENCE"
 
