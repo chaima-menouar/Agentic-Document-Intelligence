@@ -112,7 +112,7 @@ The current V1 has intentionally narrow scope:
 - The offline verifier is conservative and primarily validates citation mapping and lexical grounding; it is not a full semantic entailment model.
 - The controlled A/B/C benchmark evaluates grounding and recovery behavior, not open-ended answer quality or human preference.
 - No web search is used in V1.
-- A stronger local generator or NLI verifier can be plugged into the architecture later without changing the overall pipeline.
+- The bundled offline generator is intentionally extractive, but it is question-aware and selects the most relevant supported sentence across retrieved sources. A stronger local generative model or NLI verifier can still be plugged into the architecture later without changing the overall pipeline.
 
 ## 7. Reproducibility
 
@@ -136,8 +136,8 @@ python scripts/evaluate_abc_modes.py \
 Run the local UI:
 
 ```bash
-pip install -r requirements.txt -r requirements-retrieval.txt -r requirements-ui.txt
-streamlit run app/ui/streamlit_app.py
+python -m pip install -r requirements-all.txt
+python -m streamlit run app/ui/streamlit_app.py
 ```
 
 ## 8. Final conclusion
@@ -145,3 +145,12 @@ streamlit run app/ui/streamlit_app.py
 The project demonstrates a complete progression from Classical RAG to evidence verification and then to bounded agentic recovery. The final system does not merely retrieve and answer: it checks whether its claims are grounded, removes unsupported content, searches again only when necessary, and safely abstains when evidence remains insufficient.
 
 For an academic V1, the result is a reproducible and inspectable document-intelligence pipeline that clearly exposes the value added by verification and agentic retrieval.
+
+
+## 9. Final stabilization status
+
+The final repository includes a one-command dependency set
+(`requirements-all.txt`), a Codespaces devcontainer that installs the full
+local stack automatically, and a `final-smoke` GitHub Actions workflow. The
+workflow runs the complete test suite, validates the Streamlit module, and
+checks the local retrieval/UI dependencies before the final manual demo.
