@@ -21,7 +21,7 @@ The project is developed as a 12-week academic project and compares three modes:
 
 ## Current milestone
 
-**Milestone 8 — Agentic additional retrieval**
+**Milestone 9 — A/B/C evaluation**
 
 Current pipeline:
 
@@ -116,8 +116,8 @@ python scripts/search_index.py "What evidence supports the claim?" --index data/
 5. ✅ Documents + Assistant UI
 6. ✅ Claim extraction and verification
 7. ✅ Partial-answer correction
-8. 🚧 Agentic additional retrieval
-9. A/B/C evaluation
+8. ✅ Agentic additional retrieval
+9. 🚧 A/B/C evaluation
 10. Stabilization, report, and demo
 
 
@@ -184,3 +184,17 @@ keeps only citations used by the retained claims.
 
 The `.github/workflows/corrected-rag-e2e.yml` workflow applies the correction
 layer to a real Mode B smoke-test artifact.
+
+
+## Agentic Verified RAG (Mode C)
+
+Mode C starts from Mode B and targets only unresolved claims. Each unresolved
+claim becomes a focused retrieval query; newly retrieved passages are attached
+as evidence and the verifier runs again. The process stops early when all
+claims are supported and is hard-bounded by a configurable maximum number of
+rounds.
+
+The real-index smoke test recovered an initially uncited QASPER claim in one
+additional round using BGE-small + FAISS, then returned the recovered claim with
+new evidence labels. The workflow is
+`.github/workflows/agentic-rag-e2e.yml`.
