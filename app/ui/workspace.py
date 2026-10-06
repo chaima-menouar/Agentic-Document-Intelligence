@@ -20,6 +20,7 @@ class ProcessedDocumentSummary:
     filename: str
     page_count: int
     chunk_count: int
+    ocr_page_count: int
     warnings: tuple[str, ...]
 
 
@@ -91,6 +92,7 @@ def prepare_uploaded_pdfs(
                     filename=extraction.filename,
                     page_count=extraction.page_count,
                     chunk_count=len(chunks),
+                    ocr_page_count=len(extraction.quality.ocr_pages),
                     warnings=tuple(extraction.quality.warnings),
                 )
             )
@@ -99,8 +101,8 @@ def prepare_uploaded_pdfs(
         raise ValueError("No valid PDF uploads were provided.")
     if total_chunks == 0:
         raise ValueError(
-            "The uploaded PDFs produced no text chunks. "
-            "Scanned PDFs without extractable text are not supported in V1."
+            "The uploaded PDFs produced no text chunks, including after the "
+            "configured OCR fallback."
         )
 
     return chunks_path, tuple(summaries), total_chunks
@@ -160,6 +162,7 @@ def workspace_summary_json(result: WorkspaceBuildResult) -> str:
                 "filename": item.filename,
                 "page_count": item.page_count,
                 "chunk_count": item.chunk_count,
+                "ocr_page_count": item.ocr_page_count,
                 "warnings": list(item.warnings),
             }
             for item in result.documents
