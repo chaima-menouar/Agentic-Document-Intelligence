@@ -21,7 +21,7 @@ The project is developed as a 12-week academic project and compares three modes:
 
 ## Current milestone
 
-**Milestone 4 — Classical RAG with grounded citations**
+**Milestone 5 — Documents + Assistant UI**
 
 Current pipeline:
 
@@ -112,8 +112,8 @@ python scripts/search_index.py "What evidence supports the claim?" --index data/
 1. ✅ PDF extraction and provenance
 2. ✅ Corpus normalization + chunking
 3. ✅ Semantic embeddings + retrieval and Recall@k
-4. 🚧 Classical RAG with citations
-5. Documents + Assistant UI
+4. ✅ Classical RAG with citations
+5. 🚧 Documents + Assistant UI
 6. Claim extraction and verification
 7. Partial-answer correction
 8. Agentic additional retrieval
