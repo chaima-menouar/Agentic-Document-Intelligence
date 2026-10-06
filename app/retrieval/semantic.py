@@ -30,7 +30,12 @@ def _require_faiss():
 class SentenceTransformerEmbedder:
     """Thin wrapper around SentenceTransformers with cosine-ready embeddings."""
 
-    def __init__(self, model_name: str = DEFAULT_EMBEDDING_MODEL) -> None:
+    def __init__(
+        self,
+        model_name: str = DEFAULT_EMBEDDING_MODEL,
+        *,
+        query_prefix: str = "",
+    ) -> None:
         try:
             from sentence_transformers import SentenceTransformer
         except ImportError as exc:  # pragma: no cover - integration dependency
@@ -40,6 +45,7 @@ class SentenceTransformerEmbedder:
             ) from exc
 
         self.model_name = model_name
+        self.query_prefix = query_prefix
         self._model = SentenceTransformer(model_name)
 
     def encode(
@@ -60,6 +66,36 @@ class SentenceTransformerEmbedder:
             show_progress_bar=show_progress_bar,
         )
         return np.asarray(embeddings, dtype=np.float32)
+
+    def encode_passages(
+        self,
+        texts: Sequence[str],
+        *,
+        batch_size: int = 64,
+        show_progress_bar: bool = False,
+    ) -> np.ndarray:
+        return self.encode(
+            texts,
+            batch_size=batch_size,
+            show_progress_bar=show_progress_bar,
+        )
+
+    def encode_queries(
+        self,
+        texts: Sequence[str],
+        *,
+        batch_size: int = 64,
+        show_progress_bar: bool = False,
+    ) -> np.ndarray:
+        prepared = [
+            f"{self.query_prefix}{text}" if self.query_prefix else text
+            for text in texts
+        ]
+        return self.encode(
+            prepared,
+            batch_size=batch_size,
+            show_progress_bar=show_progress_bar,
+        )
 
 
 @dataclass(frozen=True)
@@ -120,7 +156,10 @@ class SemanticRetriever:
                     chunk_metadata.append(json.loads(line))
 
         if embedder is None:
-            embedder = SentenceTransformerEmbedder(manifest["embedding_model"])
+            embedder = SentenceTransformerEmbedder(
+                manifest["embedding_model"],
+                query_prefix=manifest.get("query_prefix", ""),
+            )
 
         return cls(
             index=index,
@@ -174,7 +213,8 @@ class SemanticRetriever:
         if not queries:
             return []
 
-        query_vectors = self.embedder.encode(
+        encoder = getattr(self.embedder, "encode_queries", self.embedder.encode)
+        query_vectors = encoder(
             list(queries),
             batch_size=batch_size,
             show_progress_bar=False,
@@ -225,7 +265,8 @@ class SemanticRetriever:
         assert self._all_vectors is not None
         assert self._document_to_indices is not None
 
-        query_vectors = self.embedder.encode(
+        encoder = getattr(self.embedder, "encode_queries", self.embedder.encode)
+        query_vectors = encoder(
             list(queries),
             batch_size=batch_size,
             show_progress_bar=False,
