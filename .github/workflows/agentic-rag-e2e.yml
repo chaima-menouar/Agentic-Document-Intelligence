@@ -1,0 +1,61 @@
+name: agentic-rag-e2e
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "app/agent/**"
+      - "app/verification/**"
+      - "app/rag/**"
+      - "app/models/**"
+      - "scripts/smoke_agentic_rag.py"
+      - "tests/test_agentic_rag.py"
+      - ".github/workflows/agentic-rag-e2e.yml"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  mode-c-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install base dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install CPU retrieval dependencies
+        run: |
+          pip install --index-url https://download.pytorch.org/whl/cpu torch
+          pip install -r requirements-retrieval.txt
+
+      - name: Download selected BGE validation index
+        uses: actions/download-artifact@v4
+        with:
+          name: qasper-validation-index-bge-small-v1.5
+          path: data/indexes/qasper-bge-small
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 37443041910
+
+      - name: Run real bounded agentic recovery
+        run: |
+          python scripts/smoke_agentic_rag.py \
+            --index data/indexes/qasper-bge-small \
+            --output data/evaluation/agentic_rag_smoke.json
+
+      - name: Show Mode C result
+        run: cat data/evaluation/agentic_rag_smoke.json
+
+      - name: Upload Mode C smoke report
+        uses: actions/upload-artifact@v4
+        with:
+          name: agentic-rag-mode-c-smoke
+          path: data/evaluation/agentic_rag_smoke.json
+          retention-days: 30
