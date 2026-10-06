@@ -29,8 +29,13 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt -r requirements-data.txt -r requirements-retrieval.txt
+      - name: Install base and data dependencies
+        run: pip install -r requirements.txt -r requirements-data.txt
+
+      - name: Install CPU retrieval dependencies
+        run: |
+          pip install --index-url https://download.pytorch.org/whl/cpu torch
+          pip install -r requirements-retrieval.txt
 
       - name: Download QASPER raw benchmark
         uses: actions/download-artifact@v4
