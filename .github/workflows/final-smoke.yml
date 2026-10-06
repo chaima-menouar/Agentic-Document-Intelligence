@@ -1,0 +1,31 @@
+name: final-smoke
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  full-local-stack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install full local stack
+        run: python -m pip install -r requirements-all.txt
+      - name: Run full test suite
+        run: pytest -q
+      - name: Validate UI and local dependencies
+        run: |
+          python -m py_compile app/ui/streamlit_app.py
+          python - <<'PY'
+          import faiss
+          import streamlit
+          import sentence_transformers
+          from app.rag import ExtractiveGenerator
+          assert ExtractiveGenerator
+          print("Full local stack imports successfully.")
+          PY
