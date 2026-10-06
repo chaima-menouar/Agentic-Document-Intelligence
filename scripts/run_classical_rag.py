@@ -11,7 +11,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from app.rag import ClassicalRAG, OpenAICompatibleGenerator
+from app.rag import ClassicalRAG, ExtractiveGenerator, OpenAICompatibleGenerator
 from app.retrieval import SemanticRetriever
 
 
@@ -21,6 +21,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--index", type=Path, default=Path("data/indexes/qasper"))
     parser.add_argument("--document-id")
     parser.add_argument("--top-k", type=int, default=5)
+    parser.add_argument("--generator", choices=["extractive", "openai-compatible"], default="extractive")
     parser.add_argument("--model")
     parser.add_argument("--base-url")
     return parser
@@ -29,10 +30,13 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> int:
     args = build_parser().parse_args()
     retriever = SemanticRetriever.load(args.index)
-    generator = OpenAICompatibleGenerator(
-        model=args.model,
-        base_url=args.base_url,
-    )
+    if args.generator == "extractive":
+        generator = ExtractiveGenerator()
+    else:
+        generator = OpenAICompatibleGenerator(
+            model=args.model,
+            base_url=args.base_url,
+        )
     rag = ClassicalRAG(retriever=retriever, generator=generator)
     result = rag.answer(
         args.question,
