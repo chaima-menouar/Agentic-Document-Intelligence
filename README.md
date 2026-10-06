@@ -21,23 +21,28 @@ The project is developed as a 12-week academic project and compares three modes:
 
 ## Current milestone
 
-**Milestone 2 — Canonical corpus normalization + provenance-preserving chunking**
+**Milestone 4 — Classical RAG with grounded citations**
 
-Completed foundation:
+Current pipeline:
 
 ```text
-PDF / QASPER / SciFact / HotpotQA
+PDF / benchmark documents
  ↓
-canonical CorpusDocument
+normalization + provenance-preserving chunks
  ↓
-source segments with provenance
+BGE-small semantic retrieval + FAISS
  ↓
-overlapping word chunks
+Top-k evidence
  ↓
-stable chunk IDs + source IDs
+Mode A Classical RAG
  ↓
-ready for embeddings and semantic retrieval
+answer + inspectable [S1], [S2] citations
 ```
+
+The retriever comparison selected **BAAI/bge-small-en-v1.5** over MiniLM on
+document-scoped QASPER validation. Mode A now retrieves evidence, builds a
+grounded prompt, abstains when evidence is insufficient, and maps generated
+source labels back to the exact retrieved chunks.
 
 The chunker never crosses a provenance boundary. A retrieval chunk can therefore
 be traced back to one source page, section/paragraph, or evidence sentence.
@@ -106,11 +111,32 @@ python scripts/search_index.py "What evidence supports the claim?" --index data/
 
 1. ✅ PDF extraction and provenance
 2. ✅ Corpus normalization + chunking
-3. 🚧 Semantic embeddings + retrieval and Recall@k
-4. Classical RAG with citations
+3. ✅ Semantic embeddings + retrieval and Recall@k
+4. 🚧 Classical RAG with citations
 5. Documents + Assistant UI
 6. Claim extraction and verification
 7. Partial-answer correction
 8. Agentic additional retrieval
 9. A/B/C evaluation
 10. Stabilization, report, and demo
+
+
+## Classical RAG CLI
+
+Mode A uses a pluggable generator. The included client targets a
+`/chat/completions`-compatible endpoint and keeps credentials out of Git.
+
+```bash
+# configure your inference endpoint locally
+export RAG_LLM_BASE_URL="http://localhost:8000/v1"
+export RAG_LLM_MODEL="your-model-name"
+export RAG_LLM_API_KEY="optional-secret"
+
+python scripts/run_classical_rag.py \
+  "What evidence supports the main finding?" \
+  --index data/indexes/qasper-bge-small \
+  --top-k 5
+```
+
+For a question already associated with one document, pass
+`--document-id <document_id>` to use document-scoped retrieval.
