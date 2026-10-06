@@ -21,7 +21,7 @@ The project is developed as a 12-week academic project and compares three modes:
 
 ## Current milestone
 
-**Milestone 5 — Documents + Assistant UI**
+**Milestone 6 — Claim extraction and verification**
 
 Current pipeline:
 
@@ -113,8 +113,8 @@ python scripts/search_index.py "What evidence supports the claim?" --index data/
 2. ✅ Corpus normalization + chunking
 3. ✅ Semantic embeddings + retrieval and Recall@k
 4. ✅ Classical RAG with citations
-5. 🚧 Documents + Assistant UI
-6. Claim extraction and verification
+5. ✅ Documents + Assistant UI
+6. 🚧 Claim extraction and verification
 7. Partial-answer correction
 8. Agentic additional retrieval
 9. A/B/C evaluation
@@ -140,3 +140,19 @@ python scripts/run_classical_rag.py \
 
 For a question already associated with one document, pass
 `--document-id <document_id>` to use document-scoped retrieval.
+
+
+## Streamlit UI
+
+The local UI is free and runs on your machine. It supports multi-PDF upload,
+local BGE-small embeddings, FAISS retrieval, document-scoped or global search,
+answer history, and inspectable page/chunk citations.
+
+```bash
+pip install -r requirements.txt -r requirements-retrieval.txt -r requirements-ui.txt
+streamlit run app/ui/streamlit_app.py
+```
+
+The default generator is the free offline extractive baseline. A local
+OpenAI-compatible server such as Ollama or LM Studio can also be selected from
+the sidebar without changing the RAG architecture.
