@@ -21,7 +21,7 @@ The project is developed as a 12-week academic project and compares three modes:
 
 ## Current milestone
 
-**Milestone 6 — Claim extraction and verification**
+**Milestone 7 — Partial-answer correction**
 
 Current pipeline:
 
@@ -114,8 +114,8 @@ python scripts/search_index.py "What evidence supports the claim?" --index data/
 3. ✅ Semantic embeddings + retrieval and Recall@k
 4. ✅ Classical RAG with citations
 5. ✅ Documents + Assistant UI
-6. 🚧 Claim extraction and verification
-7. Partial-answer correction
+6. ✅ Claim extraction and verification
+7. 🚧 Partial-answer correction
 8. Agentic additional retrieval
 9. A/B/C evaluation
 10. Stabilization, report, and demo
@@ -156,3 +156,19 @@ streamlit run app/ui/streamlit_app.py
 The default generator is the free offline extractive baseline. A local
 OpenAI-compatible server such as Ollama or LM Studio can also be selected from
 the sidebar without changing the RAG architecture.
+
+
+## Verified RAG (Mode B)
+
+Mode B wraps Classical RAG with deterministic sentence-level claim extraction
+and a transparent offline citation-grounding verifier. Each claim is labeled as
+`supported`, `needs_review`, or `unsupported`, with a support score and
+the exact cited evidence labels used for the decision.
+
+The current offline verifier is intentionally conservative: it validates
+citation mapping and lexical grounding, but it does not claim to be a full
+natural-language entailment model. The architecture remains pluggable for a
+stronger local verifier later.
+
+The `.github/workflows/verified-rag-e2e.yml` workflow validates the real
+BGE-small retrieval -> Classical RAG -> claim extraction -> verification path.
