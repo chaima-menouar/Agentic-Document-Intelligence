@@ -151,3 +151,35 @@ class CorrectedRAGAnswer(BaseModel):
     kept_claim_ids: list[str] = Field(default_factory=list)
     removed_claim_ids: list[str] = Field(default_factory=list)
     retrieved_chunks: int = Field(ge=0)
+
+
+
+class AgenticRetrievalStep(BaseModel):
+    """One bounded re-retrieval action taken for an unresolved claim."""
+
+    round_index: int = Field(ge=1)
+    claim_id: str
+    query: str
+    retrieved_labels: list[str] = Field(default_factory=list)
+    support_score: float = Field(ge=0.0, le=1.0)
+    resolved: bool
+
+
+class AgenticRAGAnswer(BaseModel):
+    """Mode C output with bounded re-retrieval audit trail."""
+
+    question: str
+    initial_answer: str
+    final_answer: str
+    status: str
+    initial_verification_status: str
+    final_verification_status: str
+    correction_status: str
+    rounds_used: int = Field(ge=0)
+    additional_chunks_considered: int = Field(ge=0)
+    recovered_claim_ids: list[str] = Field(default_factory=list)
+    unresolved_claim_ids: list[str] = Field(default_factory=list)
+    steps: list[AgenticRetrievalStep] = Field(default_factory=list)
+    claims: list[ExtractedClaim] = Field(default_factory=list)
+    verifications: list[ClaimVerification] = Field(default_factory=list)
+    citations: list[AnswerCitation] = Field(default_factory=list)
