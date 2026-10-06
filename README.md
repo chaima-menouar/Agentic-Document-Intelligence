@@ -21,7 +21,7 @@ The project is developed as a 12-week academic project and compares three modes:
 
 ## Current milestone
 
-**Milestone 7 — Partial-answer correction**
+**Milestone 8 — Agentic additional retrieval**
 
 Current pipeline:
 
@@ -115,8 +115,8 @@ python scripts/search_index.py "What evidence supports the claim?" --index data/
 4. ✅ Classical RAG with citations
 5. ✅ Documents + Assistant UI
 6. ✅ Claim extraction and verification
-7. 🚧 Partial-answer correction
-8. Agentic additional retrieval
+7. ✅ Partial-answer correction
+8. 🚧 Agentic additional retrieval
 9. A/B/C evaluation
 10. Stabilization, report, and demo
 
@@ -172,3 +172,15 @@ stronger local verifier later.
 
 The `.github/workflows/verified-rag-e2e.yml` workflow validates the real
 BGE-small retrieval -> Classical RAG -> claim extraction -> verification path.
+
+
+## Partial-answer correction
+
+After claim verification, claims marked `needs_review` or `unsupported` are
+removed from the user-facing answer. If some supported claims remain, the
+system returns a `partial_answer`; if none remain, it abstains with
+`insufficient_evidence`. This conservative correction step is fully local and
+keeps only citations used by the retained claims.
+
+The `.github/workflows/corrected-rag-e2e.yml` workflow applies the correction
+layer to a real Mode B smoke-test artifact.
