@@ -11,6 +11,7 @@ import streamlit as st
 from app.rag import ClassicalRAG, ExtractiveGenerator, OpenAICompatibleGenerator
 from app.retrieval import SemanticRetriever
 from app.ui.workspace import build_local_workspace
+from app.verification import CitationGroundingVerifier, VerifiedRAG
 
 
 st.set_page_config(
@@ -58,6 +59,11 @@ _ensure_state()
 
 with st.sidebar:
     st.header("Configuration")
+    assistant_mode = st.selectbox(
+        "Assistant mode",
+        ["Classical RAG", "Verified RAG"],
+        help="Verified RAG adds claim-level evidence checks after generation.",
+    )
     generator_mode = st.selectbox(
         "Generator",
         ["Offline extractive baseline", "Local OpenAI-compatible LLM"],
@@ -176,25 +182,73 @@ with assistant_tab:
                     generator=generator,
                 )
                 with st.spinner("Retrieving evidence and generating the answer..."):
-                    answer = rag.answer(
-                        question,
-                        top_k=top_k,
-                        document_id=document_options[selected_document],
-                    )
-                st.session_state.history.append(answer)
+                    if assistant_mode == "Verified RAG":
+                        pipeline = VerifiedRAG(
+                            rag=rag,
+                            verifier=CitationGroundingVerifier(),
+                        )
+                        answer = pipeline.answer(
+                            question,
+                            top_k=top_k,
+                            document_id=document_options[selected_document],
+                        )
+                        st.session_state.history.append(("verified", answer))
+                    else:
+                        answer = rag.answer(
+                            question,
+                            top_k=top_k,
+                            document_id=document_options[selected_document],
+                        )
+                        st.session_state.history.append(("classical", answer))
             except Exception as exc:
                 st.error(f"Could not answer the question: {exc}")
 
-        for answer in reversed(st.session_state.history):
+        for history_item in reversed(st.session_state.history):
+            if isinstance(history_item, tuple):
+                result_mode, answer = history_item
+            else:
+                result_mode, answer = "classical", history_item
+
             with st.container(border=True):
                 st.markdown(f"**Q:** {answer.question}")
-                if answer.status == "insufficient_evidence":
+                base_status = (
+                    answer.base_status
+                    if result_mode == "verified"
+                    else answer.status
+                )
+
+                if base_status == "insufficient_evidence":
                     st.warning(answer.answer)
-                elif answer.status == "uncited_answer":
+                elif base_status == "uncited_answer":
                     st.warning(answer.answer)
                     st.caption("The generator returned an answer without a valid citation.")
                 else:
                     st.markdown(answer.answer)
+
+                if result_mode == "verified":
+                    status_label = answer.verification_status.replace("_", " ").title()
+                    st.markdown(f"**Verification:** {status_label}")
+                    for verification in answer.verifications:
+                        icon = {
+                            "supported": "✅",
+                            "needs_review": "⚠️",
+                            "unsupported": "❌",
+                        }.get(verification.status, "•")
+                        with st.expander(
+                            f"{icon} {verification.claim_id} · "
+                            f"{verification.status} · "
+                            f"{verification.support_score:.2f}"
+                        ):
+                            st.write(verification.claim_text)
+                            st.caption(verification.reason)
+                            if verification.evidence_labels:
+                                st.write(
+                                    "Evidence: "
+                                    + ", ".join(
+                                        f"[{label}]"
+                                        for label in verification.evidence_labels
+                                    )
+                                )
 
                 if answer.citations:
                     st.markdown("**Sources**")
