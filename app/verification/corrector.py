@@ -53,7 +53,23 @@ def correct_verified_answer(
             removed_claims.append(claim)
 
     if verified.claims and len(kept_claims) == len(verified.claims):
-        final_answer = verified.answer
+        required_labels = {
+            label
+            for claim in kept_claims
+            for label in claim.citation_labels
+        }
+        original_has_all_labels = all(
+            f"[{label}]" in verified.answer
+            for label in required_labels
+        )
+        final_answer = (
+            verified.answer
+            if original_has_all_labels
+            else " ".join(
+                _render_supported_claim(claim.text, claim.citation_labels)
+                for claim in kept_claims
+            )
+        )
         correction_status = "full_answer"
     elif kept_claims:
         final_answer = " ".join(
