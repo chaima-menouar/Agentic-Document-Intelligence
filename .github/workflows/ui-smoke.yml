@@ -1,0 +1,55 @@
+name: ui-smoke
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "app/ui/**"
+      - "app/rag/**"
+      - "app/retrieval/**"
+      - "requirements-ui.txt"
+      - ".github/workflows/ui-smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  streamlit-boot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install UI dependencies
+        run: pip install -r requirements.txt -r requirements-ui.txt
+
+      - name: Boot Streamlit
+        run: |
+          streamlit run app/ui/streamlit_app.py \
+            --server.headless true \
+            --server.port 8501 \
+            > /tmp/streamlit.log 2>&1 &
+          echo $! > /tmp/streamlit.pid
+
+      - name: Wait for health check
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8501/_stcore/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/streamlit.log
+          exit 1
+
+      - name: Stop Streamlit
+        if: always()
+        run: |
+          if [ -f /tmp/streamlit.pid ]; then
+            kill "$(cat /tmp/streamlit.pid)" || true
+          fi
