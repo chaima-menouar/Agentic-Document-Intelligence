@@ -1,6 +1,8 @@
 """Shared data models for the document intelligence pipeline."""
 
 from .schemas import (
+    AgenticRAGAnswer,
+    AgenticRetrievalStep,
     AnswerCitation,
     CorpusDocument,
     CorrectedRAGAnswer,
@@ -16,6 +18,8 @@ from .schemas import (
 )
 
 __all__ = [
+    "AgenticRAGAnswer",
+    "AgenticRetrievalStep",
     "AnswerCitation",
     "CorpusDocument",
     "CorrectedRAGAnswer",
