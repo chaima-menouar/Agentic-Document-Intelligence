@@ -1,0 +1,62 @@
+name: retrieval-optimization
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "app/retrieval/**"
+      - "scripts/evaluate_qasper_retrieval.py"
+      - "tests/test_scoped_retrieval.py"
+      - ".github/workflows/retrieval-optimization.yml"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  qasper-scoped-evaluation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-data.txt -r requirements-retrieval.txt
+
+      - name: Download existing MiniLM QASPER index
+        uses: actions/download-artifact@v4
+        with:
+          name: qasper-semantic-index-minilm
+          path: data/indexes/qasper
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 37358164592
+
+      - name: Prepare QASPER validation data
+        run: python scripts/prepare_datasets.py --output data/external --hotpot-size 1 --seed 42
+
+      - name: Evaluate document-scoped retrieval
+        run: |
+          python scripts/evaluate_qasper_retrieval.py             --qasper data/external/qasper/validation.parquet             --index data/indexes/qasper             --output data/evaluation/qasper_document_question.json             --top-k 1,3,5,10,20             --scope document
+
+      - name: Evaluate title + question query formulation
+        run: |
+          python scripts/evaluate_qasper_retrieval.py             --qasper data/external/qasper/validation.parquet             --index data/indexes/qasper             --output data/evaluation/qasper_document_title_question.json             --top-k 1,3,5,10,20             --scope document             --include-title
+
+      - name: Show optimization results
+        run: |
+          echo "=== Document-scoped question-only ==="
+          cat data/evaluation/qasper_document_question.json
+          echo "=== Document-scoped title+question ==="
+          cat data/evaluation/qasper_document_title_question.json
+
+      - name: Upload optimization reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: qasper-retrieval-optimization
+          path: data/evaluation/qasper_document_*.json
+          retention-days: 30
