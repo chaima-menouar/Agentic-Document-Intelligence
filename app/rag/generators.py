@@ -83,3 +83,46 @@ class OpenAICompatibleGenerator:
             return str(body["choices"][0]["message"]["content"]).strip()
         except (KeyError, IndexError, TypeError) as exc:
             raise RuntimeError("LLM endpoint returned an unexpected response.") from exc
+
+
+
+class ExtractiveGenerator:
+    """Deterministic no-key fallback for end-to-end RAG smoke tests.
+
+    It extracts a concise sentence from the top retrieved evidence block and
+    cites [S1]. This is not a replacement for an LLM; it is a reproducible
+    offline baseline that verifies the complete retrieval -> generation ->
+    citation plumbing without external credentials.
+    """
+
+    def __init__(self, *, max_chars: int = 320) -> None:
+        if max_chars <= 0:
+            raise ValueError("max_chars must be greater than zero.")
+        self.max_chars = max_chars
+
+    def generate(self, prompt: str) -> str:
+        marker = "[S1]"
+        start = prompt.find(marker)
+        if start < 0:
+            return "INSUFFICIENT_EVIDENCE"
+
+        block = prompt[start + len(marker):]
+        # The first line is provenance metadata. Evidence text starts after it.
+        if "\n" in block:
+            block = block.split("\n", 1)[1]
+        # Stop before the next evidence block or the final Answer marker.
+        for boundary in ("\n\n[S2]", "\n\nAnswer:"):
+            if boundary in block:
+                block = block.split(boundary, 1)[0]
+
+        text = " ".join(block.split()).strip()
+        if not text:
+            return "INSUFFICIENT_EVIDENCE"
+
+        sentence = text
+        for delimiter in (". ", "? ", "! "):
+            if delimiter in sentence:
+                sentence = sentence.split(delimiter, 1)[0] + delimiter.strip()
+                break
+        sentence = sentence[: self.max_chars].rstrip()
+        return f"{sentence} [S1]"
