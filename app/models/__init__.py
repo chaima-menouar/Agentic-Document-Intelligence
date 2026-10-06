@@ -3,6 +3,7 @@
 from .schemas import (
     AnswerCitation,
     CorpusDocument,
+    CorrectedRAGAnswer,
     DocumentExtraction,
     ExtractionQuality,
     ExtractedClaim,
@@ -17,6 +18,7 @@ from .schemas import (
 __all__ = [
     "AnswerCitation",
     "CorpusDocument",
+    "CorrectedRAGAnswer",
     "DocumentExtraction",
     "ExtractionQuality",
     "ExtractedClaim",
