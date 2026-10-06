@@ -1,5 +1,6 @@
 """Semantic embedding and retrieval utilities."""
 
+from .index_builder import build_index
 from .qasper_eval import (
     evidence_paragraphs,
     iter_qasper_questions,
@@ -15,6 +16,7 @@ from .semantic import (
 
 __all__ = [
     "DEFAULT_EMBEDDING_MODEL",
+    "build_index",
     "RetrievalHit",
     "SemanticRetriever",
     "SentenceTransformerEmbedder",
