@@ -100,3 +100,37 @@ class RAGAnswer(BaseModel):
     citations: list[AnswerCitation] = Field(default_factory=list)
     retrieved_chunks: int = Field(ge=0)
     used_citation_labels: list[str] = Field(default_factory=list)
+
+
+
+class ExtractedClaim(BaseModel):
+    """One factual claim extracted from a generated answer."""
+
+    claim_id: str
+    text: str
+    citation_labels: list[str] = Field(default_factory=list)
+
+
+class ClaimVerification(BaseModel):
+    """Grounding decision for one extracted claim."""
+
+    claim_id: str
+    claim_text: str
+    citation_labels: list[str] = Field(default_factory=list)
+    evidence_labels: list[str] = Field(default_factory=list)
+    status: str
+    support_score: float = Field(ge=0.0, le=1.0)
+    reason: str
+
+
+class VerifiedRAGAnswer(BaseModel):
+    """Mode B output: a RAG answer plus claim-level verification."""
+
+    question: str
+    answer: str
+    base_status: str
+    verification_status: str
+    claims: list[ExtractedClaim] = Field(default_factory=list)
+    verifications: list[ClaimVerification] = Field(default_factory=list)
+    citations: list[AnswerCitation] = Field(default_factory=list)
+    retrieved_chunks: int = Field(ge=0)
