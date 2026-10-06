@@ -5,10 +5,13 @@ from .schemas import (
     CorpusDocument,
     DocumentExtraction,
     ExtractionQuality,
+    ExtractedClaim,
     PageExtraction,
+    ClaimVerification,
     RAGAnswer,
     SourceSegment,
     TextChunk,
+    VerifiedRAGAnswer,
 )
 
 __all__ = [
@@ -16,8 +19,11 @@ __all__ = [
     "CorpusDocument",
     "DocumentExtraction",
     "ExtractionQuality",
+    "ExtractedClaim",
     "PageExtraction",
+    "ClaimVerification",
     "RAGAnswer",
     "SourceSegment",
     "TextChunk",
+    "VerifiedRAGAnswer",
 ]
