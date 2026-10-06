@@ -97,6 +97,8 @@ class SemanticRetriever:
         self.chunk_metadata = chunk_metadata
         self.embedder = embedder
         self.manifest = manifest
+        self._all_vectors: np.ndarray | None = None
+        self._document_to_indices: dict[str, np.ndarray] | None = None
 
     @classmethod
     def load(
@@ -126,6 +128,36 @@ class SemanticRetriever:
             embedder=embedder,
             manifest=manifest,
         )
+
+    def _hit_from_index(self, vector_index: int, score: float, rank: int) -> RetrievalHit:
+        payload = self.chunk_metadata[int(vector_index)]
+        return RetrievalHit(
+            rank=rank,
+            score=float(score),
+            dataset=payload["dataset"],
+            document_id=payload["document_id"],
+            chunk_id=payload["chunk_id"],
+            source_id=payload["source_id"],
+            text=payload["text"],
+            page_number=payload.get("page_number"),
+            section=payload.get("section"),
+            metadata=payload.get("metadata") or {},
+        )
+
+    def _ensure_scoped_cache(self) -> None:
+        """Materialize vectors and document membership for exact scoped search."""
+        if self._all_vectors is None:
+            vectors = self.index.reconstruct_n(0, int(self.index.ntotal))
+            self._all_vectors = np.asarray(vectors, dtype=np.float32)
+
+        if self._document_to_indices is None:
+            grouped: dict[str, list[int]] = {}
+            for index, payload in enumerate(self.chunk_metadata):
+                grouped.setdefault(payload["document_id"], []).append(index)
+            self._document_to_indices = {
+                document_id: np.asarray(indices, dtype=np.int64)
+                for document_id, indices in grouped.items()
+            }
 
     def search(self, query: str, *, top_k: int = 5) -> list[RetrievalHit]:
         return self.search_many([query], top_k=top_k)[0]
@@ -161,21 +193,74 @@ class SemanticRetriever:
             ):
                 if vector_index < 0:
                     continue
-                payload = self.chunk_metadata[int(vector_index)]
-                hits.append(
-                    RetrievalHit(
-                        rank=rank,
-                        score=float(score),
-                        dataset=payload["dataset"],
-                        document_id=payload["document_id"],
-                        chunk_id=payload["chunk_id"],
-                        source_id=payload["source_id"],
-                        text=payload["text"],
-                        page_number=payload.get("page_number"),
-                        section=payload.get("section"),
-                        metadata=payload.get("metadata") or {},
-                    )
+                hits.append(self._hit_from_index(int(vector_index), float(score), rank))
+            all_hits.append(hits)
+
+        return all_hits
+
+
+    def search_many_scoped(
+        self,
+        queries: Sequence[str],
+        document_ids: Sequence[str],
+        *,
+        top_k: int = 5,
+        batch_size: int = 64,
+    ) -> list[list[RetrievalHit]]:
+        """Search each query only inside its associated document.
+
+        QASPER questions are conditioned on one paper. Searching the entire
+        benchmark corpus artificially turns evidence retrieval into a document
+        discovery problem. This method evaluates the intended within-document
+        evidence retrieval setting while preserving the same embeddings/index.
+        """
+        if top_k <= 0:
+            raise ValueError("top_k must be greater than zero.")
+        if len(queries) != len(document_ids):
+            raise ValueError("queries and document_ids must have equal length.")
+        if not queries:
+            return []
+
+        self._ensure_scoped_cache()
+        assert self._all_vectors is not None
+        assert self._document_to_indices is not None
+
+        query_vectors = self.embedder.encode(
+            list(queries),
+            batch_size=batch_size,
+            show_progress_bar=False,
+        )
+        query_vectors = np.asarray(query_vectors, dtype=np.float32)
+
+        all_hits: list[list[RetrievalHit]] = []
+        for query_vector, document_id in zip(
+            query_vectors,
+            document_ids,
+            strict=True,
+        ):
+            candidate_indices = self._document_to_indices.get(document_id)
+            if candidate_indices is None or len(candidate_indices) == 0:
+                all_hits.append([])
+                continue
+
+            candidate_vectors = self._all_vectors[candidate_indices]
+            scores = candidate_vectors @ query_vector
+            keep = min(top_k, len(candidate_indices))
+
+            if keep == len(candidate_indices):
+                order = np.argsort(-scores)
+            else:
+                partial = np.argpartition(-scores, keep - 1)[:keep]
+                order = partial[np.argsort(-scores[partial])]
+
+            hits = [
+                self._hit_from_index(
+                    int(candidate_indices[position]),
+                    float(scores[position]),
+                    rank,
                 )
+                for rank, position in enumerate(order[:keep], start=1)
+            ]
             all_hits.append(hits)
 
         return all_hits
