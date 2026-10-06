@@ -91,6 +91,21 @@ with st.sidebar:
         )
 
     top_k = st.slider("Top-K evidence", min_value=1, max_value=10, value=5)
+    st.divider()
+    st.subheader("V2 ingestion")
+    ocr_fallback = st.checkbox(
+        "OCR scanned/text-poor pages",
+        value=True,
+        help="Uses local Tesseract OCR only when embedded PDF text is too sparse.",
+    )
+    min_text_chars = st.slider(
+        "OCR trigger: minimum embedded-text characters",
+        min_value=0,
+        max_value=200,
+        value=40,
+        disabled=not ocr_fallback,
+    )
+    st.caption("OCR language: English (eng) · local/free")
     st.caption("Embedding model: BAAI/bge-small-en-v1.5")
     if st.button("Reset workspace", use_container_width=True):
         _reset_workspace()
@@ -127,7 +142,13 @@ with documents_tab:
                 st.write("Extracting text and preserving page provenance...")
                 st.write("Chunking documents...")
                 st.write("Building the local BGE + FAISS semantic index...")
-                result = build_local_workspace(uploads, workspace_dir)
+                result = build_local_workspace(
+                    uploads,
+                    workspace_dir,
+                    ocr_fallback=ocr_fallback,
+                    min_text_chars=min_text_chars,
+                    ocr_language="eng",
+                )
                 retriever = SemanticRetriever.load(result.index_dir)
                 st.session_state.workspace_result = result
                 st.session_state.retriever = retriever
@@ -138,10 +159,14 @@ with documents_tab:
 
     result = st.session_state.get("workspace_result")
     if result is not None:
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         col1.metric("Documents", len(result.documents))
         col2.metric("Chunks", result.total_chunks)
         col3.metric("Vectors", result.index_manifest.get("vector_count", 0))
+        col4.metric(
+            "OCR pages",
+            sum(item.ocr_page_count for item in result.documents),
+        )
 
         for item in result.documents:
             with st.expander(item.filename):
@@ -149,6 +174,7 @@ with documents_tab:
                 st.code(item.document_id)
                 st.write(f"Pages: {item.page_count}")
                 st.write(f"Chunks: {item.chunk_count}")
+                st.write(f"OCR pages: {item.ocr_page_count}")
                 if item.warnings:
                     for warning in item.warnings:
                         st.warning(warning)
