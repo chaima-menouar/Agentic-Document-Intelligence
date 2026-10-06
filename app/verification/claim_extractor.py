@@ -13,7 +13,8 @@ _WHITESPACE_RE = re.compile(r"\s+")
 
 def _clean_claim_text(text: str) -> str:
     text = _CITATION_RE.sub("", text)
-    return _WHITESPACE_RE.sub(" ", text).strip(" \t\n-•")
+    text = _WHITESPACE_RE.sub(" ", text).strip(" \t\n-•")
+    return re.sub(r"\s+([.,!?;:])", r"\1", text)
 
 
 def extract_claims(answer: str) -> list[ExtractedClaim]:
