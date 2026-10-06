@@ -79,4 +79,4 @@ def test_scoped_search_unknown_document_returns_empty() -> None:
         manifest={},
     )
 
-    assert retriever.search_many_scoped(["query-a"], ["missing"], top_k=5) == []
+    assert retriever.search_many_scoped(["query-a"], ["missing"], top_k=5) == [[]]
