@@ -19,9 +19,9 @@ The project is developed as a 12-week academic project and compares three modes:
 - No web search in V1
 - No OCR/scanned-PDF support in V1
 
-## Current milestone
+## Project status
 
-**Milestone 10 — Stabilization, report, and demo**
+**V1 complete — implementation, evaluation, stabilization, report, and demo are finished.**
 
 Current pipeline:
 
@@ -92,7 +92,7 @@ Python 3.11+ is recommended.
 python -m venv .venv
 # Windows
 .venv\Scripts\activate
-pip install -r requirements.txt
+python -m pip install -r requirements-all.txt
 pytest
 ```
 
@@ -179,11 +179,11 @@ local BGE-small embeddings, FAISS retrieval, document-scoped or global search,
 answer history, and inspectable page/chunk citations.
 
 ```bash
-pip install -r requirements.txt -r requirements-retrieval.txt -r requirements-ui.txt
-streamlit run app/ui/streamlit_app.py
+python -m pip install -r requirements-all.txt
+python -m streamlit run app/ui/streamlit_app.py
 ```
 
-The default generator is the free offline extractive baseline. A local
+The default generator is a free, deterministic, question-aware extractive baseline that ranks sentences across retrieved evidence and preserves exact source labels. A local
 OpenAI-compatible server such as Ollama or LM Studio can also be selected from
 the sidebar without changing the RAG architecture.
 
@@ -238,3 +238,14 @@ The final academic delivery package is available in:
 - `docs/demo_guide.md` — step-by-step demo flow explaining the difference between Classical, Verified, and Agentic RAG.
 
 Key controlled A/B/C results: Mode B detected unsupported/uncited stress cases at 100% with 100% safe abstention; Mode C recovered 90% of recoverable uncited cases, safely abstained on unsupported claims at 100%, and respected its retrieval bound at 100%.
+
+
+## Final validation
+
+The repository includes a full-stack smoke workflow at
+`.github/workflows/final-smoke.yml`. It installs the complete local dependency
+set, runs the test suite, compiles the Streamlit UI, and checks that Streamlit,
+sentence-transformers, FAISS, and the local generator import successfully.
+
+GitHub Codespaces is configured through `.devcontainer/devcontainer.json` to
+install `requirements-all.txt` automatically and forward Streamlit port 8501.
