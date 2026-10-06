@@ -11,7 +11,11 @@ import streamlit as st
 from app.rag import ClassicalRAG, ExtractiveGenerator, OpenAICompatibleGenerator
 from app.retrieval import SemanticRetriever
 from app.ui.workspace import build_local_workspace
-from app.verification import CitationGroundingVerifier, VerifiedRAG
+from app.verification import (
+    CitationGroundingVerifier,
+    CorrectedVerifiedRAG,
+    VerifiedRAG,
+)
 
 
 st.set_page_config(
@@ -61,7 +65,7 @@ with st.sidebar:
     st.header("Configuration")
     assistant_mode = st.selectbox(
         "Assistant mode",
-        ["Classical RAG", "Verified RAG"],
+        ["Classical RAG", "Verified RAG", "Verified + Corrected RAG"],
         help="Verified RAG adds claim-level evidence checks after generation.",
     )
     generator_mode = st.selectbox(
@@ -182,17 +186,31 @@ with assistant_tab:
                     generator=generator,
                 )
                 with st.spinner("Retrieving evidence and generating the answer..."):
-                    if assistant_mode == "Verified RAG":
-                        pipeline = VerifiedRAG(
+                    if assistant_mode in {
+                        "Verified RAG",
+                        "Verified + Corrected RAG",
+                    }:
+                        verified_pipeline = VerifiedRAG(
                             rag=rag,
                             verifier=CitationGroundingVerifier(),
                         )
-                        answer = pipeline.answer(
-                            question,
-                            top_k=top_k,
-                            document_id=document_options[selected_document],
-                        )
-                        st.session_state.history.append(("verified", answer))
+                        if assistant_mode == "Verified + Corrected RAG":
+                            pipeline = CorrectedVerifiedRAG(
+                                verified_rag=verified_pipeline,
+                            )
+                            answer = pipeline.answer(
+                                question,
+                                top_k=top_k,
+                                document_id=document_options[selected_document],
+                            )
+                            st.session_state.history.append(("corrected", answer))
+                        else:
+                            answer = verified_pipeline.answer(
+                                question,
+                                top_k=top_k,
+                                document_id=document_options[selected_document],
+                            )
+                            st.session_state.history.append(("verified", answer))
                     else:
                         answer = rag.answer(
                             question,
@@ -211,23 +229,41 @@ with assistant_tab:
 
             with st.container(border=True):
                 st.markdown(f"**Q:** {answer.question}")
-                base_status = (
-                    answer.base_status
-                    if result_mode == "verified"
-                    else answer.status
-                )
 
-                if base_status == "insufficient_evidence":
-                    st.warning(answer.answer)
-                elif base_status == "uncited_answer":
-                    st.warning(answer.answer)
-                    st.caption("The generator returned an answer without a valid citation.")
+                if result_mode == "corrected":
+                    st.markdown(answer.final_answer)
+                    correction_label = answer.correction_status.replace("_", " ").title()
+                    verification_label = answer.verification_status.replace("_", " ").title()
+                    st.markdown(f"**Correction:** {correction_label}")
+                    st.markdown(f"**Verification:** {verification_label}")
+                    if answer.removed_claim_ids:
+                        st.caption(
+                            "Removed non-supported claims: "
+                            + ", ".join(answer.removed_claim_ids)
+                        )
                 else:
-                    st.markdown(answer.answer)
+                    base_status = (
+                        answer.base_status
+                        if result_mode == "verified"
+                        else answer.status
+                    )
 
-                if result_mode == "verified":
-                    status_label = answer.verification_status.replace("_", " ").title()
-                    st.markdown(f"**Verification:** {status_label}")
+                    if base_status == "insufficient_evidence":
+                        st.warning(answer.answer)
+                    elif base_status == "uncited_answer":
+                        st.warning(answer.answer)
+                        st.caption(
+                            "The generator returned an answer without a valid citation."
+                        )
+                    else:
+                        st.markdown(answer.answer)
+
+                if result_mode in {"verified", "corrected"}:
+                    if result_mode == "verified":
+                        status_label = (
+                            answer.verification_status.replace("_", " ").title()
+                        )
+                        st.markdown(f"**Verification:** {status_label}")
                     for verification in answer.verifications:
                         icon = {
                             "supported": "✅",
