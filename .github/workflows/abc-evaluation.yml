@@ -1,0 +1,63 @@
+name: abc-evaluation
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "app/agent/**"
+      - "app/verification/**"
+      - "app/rag/**"
+      - "app/models/**"
+      - "scripts/evaluate_abc_modes.py"
+      - ".github/workflows/abc-evaluation.yml"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  evaluate-modes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install base dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install CPU retrieval dependencies
+        run: |
+          pip install --index-url https://download.pytorch.org/whl/cpu torch
+          pip install -r requirements-retrieval.txt
+
+      - name: Download selected BGE validation index
+        uses: actions/download-artifact@v4
+        with:
+          name: qasper-validation-index-bge-small-v1.5
+          path: data/indexes/qasper-bge-small
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 37443041910
+
+      - name: Evaluate Modes A B C
+        run: |
+          python scripts/evaluate_abc_modes.py \
+            --index data/indexes/qasper-bge-small \
+            --output data/evaluation/abc_evaluation.json \
+            --cases 20 \
+            --max-rounds 2 \
+            --additional-top-k 3
+
+      - name: Show A B C evaluation
+        run: cat data/evaluation/abc_evaluation.json
+
+      - name: Upload A B C evaluation
+        uses: actions/upload-artifact@v4
+        with:
+          name: abc-mode-evaluation
+          path: data/evaluation/abc_evaluation.json
+          retention-days: 30
