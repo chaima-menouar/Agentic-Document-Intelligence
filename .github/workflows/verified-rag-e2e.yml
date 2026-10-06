@@ -37,7 +37,7 @@ jobs:
         with:
           name: research-data-qasper-scifact-hotpot10k
           path: data/external
-          github-token: \${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: 37356526278
 
       - name: Download selected BGE validation index
@@ -45,7 +45,7 @@ jobs:
         with:
           name: qasper-validation-index-bge-small-v1.5
           path: data/indexes/qasper-bge-small
-          github-token: \${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: 37443041910
 
       - name: Run real Mode B verification smoke test
