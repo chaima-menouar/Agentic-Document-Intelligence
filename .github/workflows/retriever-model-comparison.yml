@@ -1,0 +1,93 @@
+name: retriever-model-comparison
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "app/retrieval/semantic.py"
+      - "scripts/build_vector_index.py"
+      - "scripts/evaluate_qasper_retrieval.py"
+      - "scripts/compare_retrievers.py"
+      - "tests/test_compare_retrievers.py"
+      - "requirements-retrieval.txt"
+      - ".github/workflows/retriever-model-comparison.yml"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  compare-bge-small:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-data.txt -r requirements-retrieval.txt
+
+      - name: Download normalized benchmark corpus
+        uses: actions/download-artifact@v4
+        with:
+          name: normalized-corpus-qasper-scifact-hotpot10k
+          path: data/processed/benchmark
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 37356526278
+
+      - name: Download raw benchmark data
+        uses: actions/download-artifact@v4
+        with:
+          name: research-data-qasper-scifact-hotpot10k
+          path: data/external
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 37356526278
+
+      - name: Download MiniLM scoped baseline
+        uses: actions/download-artifact@v4
+        with:
+          name: qasper-retrieval-optimization
+          path: data/evaluation/baseline
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 37429789756
+
+      - name: Build BGE-small QASPER index
+        run: |
+          python scripts/build_vector_index.py             --chunks data/processed/benchmark/chunks.jsonl             --output data/indexes/qasper-bge-small             --dataset qasper             --model BAAI/bge-small-en-v1.5             --batch-size 128             --query-prefix "Represent this sentence for searching relevant passages: "
+
+      - name: Evaluate BGE-small document-scoped retrieval
+        run: |
+          python scripts/evaluate_qasper_retrieval.py             --qasper data/external/qasper/validation.parquet             --index data/indexes/qasper-bge-small             --output data/evaluation/qasper_bge_small.json             --top-k 1,3,5,10,20             --scope document
+
+      - name: Compare against MiniLM baseline
+        run: |
+          python scripts/compare_retrievers.py             data/evaluation/baseline/qasper_document_question.json             data/evaluation/qasper_bge_small.json             --output data/evaluation/retriever_comparison.json             --primary-metric recall@5
+
+      - name: Show comparison
+        run: |
+          echo "=== BGE-small evaluation ==="
+          cat data/evaluation/qasper_bge_small.json
+          echo "=== MiniLM vs BGE-small ==="
+          cat data/evaluation/retriever_comparison.json
+          du -h data/indexes/qasper-bge-small/*
+
+      - name: Upload BGE-small index
+        uses: actions/upload-artifact@v4
+        with:
+          name: qasper-semantic-index-bge-small-v1.5
+          path: data/indexes/qasper-bge-small/
+          retention-days: 30
+          compression-level: 6
+
+      - name: Upload retriever comparison
+        uses: actions/upload-artifact@v4
+        with:
+          name: qasper-retriever-model-comparison
+          path: |
+            data/evaluation/qasper_bge_small.json
+            data/evaluation/retriever_comparison.json
+          retention-days: 30
