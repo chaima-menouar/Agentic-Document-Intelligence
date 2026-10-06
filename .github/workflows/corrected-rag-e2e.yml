@@ -1,0 +1,54 @@
+name: corrected-rag-e2e
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "app/verification/corrector.py"
+      - "app/models/**"
+      - "scripts/correct_verified_report.py"
+      - "tests/test_answer_corrector.py"
+      - ".github/workflows/corrected-rag-e2e.yml"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  correction-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install lightweight dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download real Mode B smoke output
+        uses: actions/download-artifact@v4
+        with:
+          name: verified-rag-mode-b-smoke
+          path: data/evaluation/input
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 37476056220
+
+      - name: Apply partial-answer correction
+        run: |
+          python scripts/correct_verified_report.py \
+            data/evaluation/input/verified_rag_smoke.json \
+            --output data/evaluation/corrected_rag_smoke.json
+
+      - name: Show correction result
+        run: cat data/evaluation/corrected_rag_smoke.json
+
+      - name: Upload correction report
+        uses: actions/upload-artifact@v4
+        with:
+          name: corrected-rag-task7-smoke
+          path: data/evaluation/corrected_rag_smoke.json
+          retention-days: 30
