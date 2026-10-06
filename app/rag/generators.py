@@ -4,9 +4,28 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import urllib.error
 import urllib.request
 from typing import Protocol
+
+
+_TOKEN_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9'-]*")
+_SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
+_SOURCE_BLOCK_RE = re.compile(
+    r"\[S(?P<label>\d+)\]\s+[^\n]*\n(?P<text>.*?)(?=\n\n\[S\d+\]|\n\nAnswer:|\Z)",
+    re.DOTALL,
+)
+_YEAR_RE = re.compile(r"\b(?:18|19|20)\d{2}\b")
+_NUMBER_RE = re.compile(r"\b\d+(?:\.\d+)?\b")
+
+_STOPWORDS = {
+    "a", "about", "an", "and", "are", "as", "at", "be", "been", "by",
+    "did", "do", "does", "for", "from", "had", "has", "have", "how", "in",
+    "is", "it", "its", "of", "on", "or", "that", "the", "their", "this",
+    "to", "was", "were", "what", "when", "where", "which", "who", "why",
+    "with",
+}
 
 
 class TextGenerator(Protocol):
@@ -85,48 +104,136 @@ class OpenAICompatibleGenerator:
             raise RuntimeError("LLM endpoint returned an unexpected response.") from exc
 
 
+def _content_tokens(text: str) -> set[str]:
+    return {
+        token.lower()
+        for token in _TOKEN_RE.findall(text)
+        if token.lower() not in _STOPWORDS and len(token) > 1
+    }
+
+
+def _extract_question(prompt: str) -> str:
+    marker = "Question:\n"
+    start = prompt.find(marker)
+    if start < 0:
+        return ""
+    start += len(marker)
+    end = prompt.find("\n\nEvidence:", start)
+    if end < 0:
+        return ""
+    return prompt[start:end].strip()
+
+
+def _extract_source_blocks(prompt: str) -> list[tuple[str, str]]:
+    evidence_start = prompt.find("Evidence:")
+    if evidence_start < 0:
+        return []
+    evidence_text = prompt[evidence_start + len("Evidence:"):]
+    return [
+        (match.group("label"), " ".join(match.group("text").split()).strip())
+        for match in _SOURCE_BLOCK_RE.finditer(evidence_text)
+        if match.group("text").strip()
+    ]
+
+
+def _question_keywords(question: str) -> set[str]:
+    tokens = _content_tokens(question)
+    lowered = question.lower()
+    if "main idea" in lowered or "central idea" in lowered:
+        tokens.update({"idea", "central", "purpose", "theme", "overall"})
+    return tokens
+
+
+def _requires_year(question: str) -> bool:
+    lowered = question.lower()
+    return "what year" in lowered or "which year" in lowered or lowered.startswith("when ")
+
+
+def _requires_number(question: str) -> bool:
+    lowered = question.lower()
+    return "how many" in lowered or "how much" in lowered or "number of" in lowered
+
+
+def _candidate_score(question: str, sentence: str) -> float:
+    question_tokens = _question_keywords(question)
+    sentence_tokens = _content_tokens(sentence)
+    overlap = len(question_tokens & sentence_tokens)
+
+    score = float(overlap * 4)
+    word_count = len(_TOKEN_RE.findall(sentence))
+    score += min(word_count, 30) / 30
+
+    lowered_q = question.lower()
+    lowered_s = sentence.lower()
+    if ("main idea" in lowered_q or "central idea" in lowered_q) and (
+        "central idea" in lowered_s
+        or "main idea" in lowered_s
+        or "purpose" in lowered_s
+        or "theme" in lowered_s
+    ):
+        score += 6.0
+
+    if word_count < 4:
+        score -= 4.0
+
+    return score
+
 
 class ExtractiveGenerator:
-    """Deterministic no-key fallback for end-to-end RAG smoke tests.
+    """Deterministic, question-aware, no-key fallback for local RAG.
 
-    It extracts a concise sentence from the top retrieved evidence block and
-    cites [S1]. This is not a replacement for an LLM; it is a reproducible
-    offline baseline that verifies the complete retrieval -> generation ->
-    citation plumbing without external credentials.
+    The baseline ranks sentences across all retrieved evidence blocks by their
+    lexical relevance to the question, then returns the best sentence with the
+    exact source label that produced it. Small answer-type guards prevent the
+    baseline from inventing a year or numeric answer when the evidence does not
+    contain one.
+
+    This remains an extractive baseline, not a replacement for an LLM. Its goal
+    is a reproducible, useful offline answer while preserving citation and
+    verification plumbing without external credentials.
     """
 
-    def __init__(self, *, max_chars: int = 320) -> None:
+    def __init__(self, *, max_chars: int = 420) -> None:
         if max_chars <= 0:
             raise ValueError("max_chars must be greater than zero.")
         self.max_chars = max_chars
 
     def generate(self, prompt: str) -> str:
-        marker = "[S1]"
-        evidence_start = prompt.find("Evidence:")
-        if evidence_start < 0:
+        question = _extract_question(prompt)
+        blocks = _extract_source_blocks(prompt)
+        if not question or not blocks:
             return "INSUFFICIENT_EVIDENCE"
 
-        start = prompt.find(marker, evidence_start)
-        if start < 0:
+        candidates: list[tuple[float, str, str]] = []
+        for label, text in blocks:
+            sentences = [
+                sentence.strip()
+                for sentence in _SENTENCE_SPLIT_RE.split(text)
+                if sentence.strip()
+            ]
+            for sentence in sentences:
+                if _requires_year(question) and not _YEAR_RE.search(sentence):
+                    continue
+                if _requires_number(question) and not _NUMBER_RE.search(sentence):
+                    continue
+
+                score = _candidate_score(question, sentence)
+                if score > 0:
+                    candidates.append((score, label, sentence))
+
+        if not candidates:
             return "INSUFFICIENT_EVIDENCE"
 
-        block = prompt[start + len(marker):]
-        # The first line is provenance metadata. Evidence text starts after it.
-        if "\n" in block:
-            block = block.split("\n", 1)[1]
-        # Stop before the next evidence block or the final Answer marker.
-        for boundary in ("\n\n[S2]", "\n\nAnswer:"):
-            if boundary in block:
-                block = block.split(boundary, 1)[0]
+        score, label, sentence = max(
+            candidates,
+            key=lambda item: (item[0], len(item[2])),
+        )
 
-        text = " ".join(block.split()).strip()
-        if not text:
+        # Require at least one meaningful lexical/semantic cue from the question.
+        # The special main-idea expansion in _question_keywords allows a sentence
+        # containing "central idea", "purpose", or "theme" to satisfy this guard.
+        if score < 4.0:
             return "INSUFFICIENT_EVIDENCE"
 
-        sentence = text
-        for delimiter in (". ", "? ", "! "):
-            if delimiter in sentence:
-                sentence = sentence.split(delimiter, 1)[0] + delimiter.strip()
-                break
         sentence = sentence[: self.max_chars].rstrip()
-        return f"{sentence} [S1]"
+        return f"{sentence} [S{label}]"
