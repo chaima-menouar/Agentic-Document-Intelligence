@@ -43,6 +43,10 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: 37443041910
 
+      - name: Run evaluation-focused tests
+        run: |
+          pytest -q tests/test_evaluation_metrics.py tests/test_verified_rag.py tests/test_agentic_rag.py
+
       - name: Evaluate Modes A B C
         run: |
           python scripts/evaluate_abc_modes.py \
