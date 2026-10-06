@@ -1,1 +1,5 @@
-"""Bounded agentic retrieval layer (implemented in a later milestone)."""
+"""Bounded agentic retrieval layer."""
+
+from .agentic_rag import AgenticVerifiedRAG
+
+__all__ = ["AgenticVerifiedRAG"]
