@@ -46,6 +46,7 @@ def build_index(
     dataset_filter: str | None = None,
     batch_size: int = 128,
     limit: int | None = None,
+    query_prefix: str = "",
 ) -> dict:
     if batch_size <= 0:
         raise ValueError("batch_size must be greater than zero.")
@@ -56,7 +57,10 @@ def build_index(
     metadata_path = output_dir / "chunks.jsonl"
     index_path = output_dir / "index.faiss"
 
-    embedder = SentenceTransformerEmbedder(embedding_model)
+    embedder = SentenceTransformerEmbedder(
+        embedding_model,
+        query_prefix=query_prefix,
+    )
     faiss = _require_faiss()
 
     index = None
@@ -69,7 +73,7 @@ def build_index(
             return
 
         texts = [item["text"] for item in pending]
-        vectors = embedder.encode(
+        vectors = embedder.encode_passages(
             texts,
             batch_size=batch_size,
             show_progress_bar=False,
@@ -109,6 +113,7 @@ def build_index(
         "format_version": 1,
         "embedding_model": embedding_model,
         "metric": "cosine_similarity_via_normalized_inner_product",
+        "query_prefix": query_prefix,
         "dataset_filter": dataset_filter,
         "vector_count": vector_count,
         "dimension": int(index.d),
@@ -141,6 +146,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--dataset", default="qasper")
     parser.add_argument("--model", default=DEFAULT_EMBEDDING_MODEL)
     parser.add_argument("--batch-size", type=int, default=128)
+    parser.add_argument(
+        "--query-prefix",
+        default="",
+        help="Optional prefix applied only when embedding queries.",
+    )
     parser.add_argument("--limit", type=int)
     return parser
 
@@ -154,6 +164,7 @@ def main() -> int:
         dataset_filter=args.dataset or None,
         batch_size=args.batch_size,
         limit=args.limit,
+        query_prefix=args.query_prefix,
     )
     print(json.dumps(manifest, indent=2, ensure_ascii=False))
     return 0
