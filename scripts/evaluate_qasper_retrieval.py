@@ -31,12 +31,14 @@ def evaluate(
     top_ks: list[int],
     include_title: bool = False,
     query_batch_size: int = 64,
+    scope: str = "document",
 ) -> dict:
     dataset = Dataset.from_parquet(str(qasper_parquet))
 
     queries: list[str] = []
     question_ids: list[str] = []
     gold_source_ids: list[set[str]] = []
+    document_ids: list[str] = []
     unmatched_evidence_questions = 0
     questions_without_text_evidence = 0
 
@@ -61,17 +63,28 @@ def evaluate(
             queries.append(query)
             question_ids.append(question_record["question_id"])
             gold_source_ids.append(gold)
+            document_ids.append(document.document_id)
 
     if not queries:
         raise RuntimeError("No evaluable QASPER questions with mapped text evidence.")
 
     retriever = SemanticRetriever.load(index_dir)
     max_k = max(top_ks)
-    all_hits = retriever.search_many(
-        queries,
-        top_k=max_k,
-        batch_size=query_batch_size,
-    )
+    if scope == "document":
+        all_hits = retriever.search_many_scoped(
+            queries,
+            document_ids,
+            top_k=max_k,
+            batch_size=query_batch_size,
+        )
+    elif scope == "global":
+        all_hits = retriever.search_many(
+            queries,
+            top_k=max_k,
+            batch_size=query_batch_size,
+        )
+    else:
+        raise ValueError("scope must be either 'document' or 'global'.")
     ranked_source_ids = [
         [hit.source_id for hit in hits]
         for hits in all_hits
@@ -94,6 +107,7 @@ def evaluate(
     report = {
         "benchmark": "QASPER validation evidence retrieval",
         "query_mode": "title_plus_question" if include_title else "question_only",
+        "retrieval_scope": scope,
         "evaluable_questions": len(queries),
         "questions_without_text_evidence": questions_without_text_evidence,
         "unmatched_evidence_questions": unmatched_evidence_questions,
@@ -141,6 +155,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--top-k", type=_parse_top_ks, default=[1, 3, 5, 10, 20])
     parser.add_argument("--include-title", action="store_true")
     parser.add_argument("--query-batch-size", type=int, default=64)
+    parser.add_argument(
+        "--scope",
+        choices=["document", "global"],
+        default="document",
+        help="Search within the source paper (QASPER standard) or globally.",
+    )
     return parser
 
 
@@ -153,6 +173,7 @@ def main() -> int:
         top_ks=args.top_k,
         include_title=args.include_title,
         query_batch_size=args.query_batch_size,
+        scope=args.scope,
     )
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0
