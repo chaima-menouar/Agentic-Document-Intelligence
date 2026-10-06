@@ -15,12 +15,16 @@ class PageExtraction(BaseModel):
     text: str
     char_count: int = Field(ge=0)
     is_empty: bool
+    extraction_method: str = "text"
+    ocr_applied: bool = False
+    ocr_confidence: float | None = Field(default=None, ge=0.0, le=100.0)
 
 
 class ExtractionQuality(BaseModel):
     """Simple quality signals produced during text extraction."""
 
     empty_pages: list[int] = Field(default_factory=list)
+    ocr_pages: list[int] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
 
 
