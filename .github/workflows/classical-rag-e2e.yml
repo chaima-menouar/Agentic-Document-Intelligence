@@ -1,0 +1,63 @@
+name: classical-rag-e2e
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "app/rag/**"
+      - "app/retrieval/**"
+      - "app/models/**"
+      - "scripts/run_classical_rag.py"
+      - "scripts/smoke_classical_rag.py"
+      - "tests/test_classical_rag.py"
+      - "tests/test_extractive_generator.py"
+      - ".github/workflows/classical-rag-e2e.yml"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  mode-a-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-data.txt -r requirements-retrieval.txt
+
+      - name: Download QASPER raw benchmark
+        uses: actions/download-artifact@v4
+        with:
+          name: research-data-qasper-scifact-hotpot10k
+          path: data/external
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 37356526278
+
+      - name: Download selected BGE validation index
+        uses: actions/download-artifact@v4
+        with:
+          name: qasper-validation-index-bge-small-v1.5
+          path: data/indexes/qasper-bge-small
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 37443041910
+
+      - name: Run real retrieval + generation + citation smoke test
+        run: |
+          python scripts/smoke_classical_rag.py             --qasper data/external/qasper/validation.parquet             --index data/indexes/qasper-bge-small             --output data/evaluation/classical_rag_smoke.json
+
+      - name: Show Mode A result
+        run: cat data/evaluation/classical_rag_smoke.json
+
+      - name: Upload Mode A smoke report
+        uses: actions/upload-artifact@v4
+        with:
+          name: classical-rag-mode-a-smoke
+          path: data/evaluation/classical_rag_smoke.json
+          retention-days: 30
