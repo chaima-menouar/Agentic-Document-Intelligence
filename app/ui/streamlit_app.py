@@ -8,6 +8,7 @@ from pathlib import Path
 
 import streamlit as st
 
+from app.agent import AgenticVerifiedRAG
 from app.rag import ClassicalRAG, ExtractiveGenerator, OpenAICompatibleGenerator
 from app.retrieval import SemanticRetriever
 from app.ui.workspace import build_local_workspace
@@ -65,7 +66,7 @@ with st.sidebar:
     st.header("Configuration")
     assistant_mode = st.selectbox(
         "Assistant mode",
-        ["Classical RAG", "Verified RAG", "Verified + Corrected RAG"],
+        ["Classical RAG", "Verified RAG", "Verified + Corrected RAG", "Agentic Verified RAG"],
         help="Verified RAG adds claim-level evidence checks after generation.",
     )
     generator_mode = st.selectbox(
@@ -189,10 +190,12 @@ with assistant_tab:
                     if assistant_mode in {
                         "Verified RAG",
                         "Verified + Corrected RAG",
+                        "Agentic Verified RAG",
                     }:
+                        verifier = CitationGroundingVerifier()
                         verified_pipeline = VerifiedRAG(
                             rag=rag,
-                            verifier=CitationGroundingVerifier(),
+                            verifier=verifier,
                         )
                         if assistant_mode == "Verified + Corrected RAG":
                             pipeline = CorrectedVerifiedRAG(
@@ -204,6 +207,20 @@ with assistant_tab:
                                 document_id=document_options[selected_document],
                             )
                             st.session_state.history.append(("corrected", answer))
+                        elif assistant_mode == "Agentic Verified RAG":
+                            pipeline = AgenticVerifiedRAG(
+                                verified_rag=verified_pipeline,
+                                retriever=retriever,
+                                verifier=verifier,
+                                max_rounds=2,
+                                additional_top_k=top_k,
+                            )
+                            answer = pipeline.answer(
+                                question,
+                                top_k=top_k,
+                                document_id=document_options[selected_document],
+                            )
+                            st.session_state.history.append(("agentic", answer))
                         else:
                             answer = verified_pipeline.answer(
                                 question,
@@ -230,7 +247,39 @@ with assistant_tab:
             with st.container(border=True):
                 st.markdown(f"**Q:** {answer.question}")
 
-                if result_mode == "corrected":
+                if result_mode == "agentic":
+                    st.markdown(answer.final_answer)
+                    st.markdown(
+                        f"**Agentic result:** {answer.status.replace('_', ' ').title()}"
+                    )
+                    st.markdown(
+                        "**Verification:** "
+                        + answer.final_verification_status.replace("_", " ").title()
+                    )
+                    st.caption(
+                        f"Additional retrieval rounds: {answer.rounds_used} · "
+                        f"chunks considered: {answer.additional_chunks_considered}"
+                    )
+                    if answer.recovered_claim_ids:
+                        st.success(
+                            "Recovered claims: "
+                            + ", ".join(answer.recovered_claim_ids)
+                        )
+                    if answer.unresolved_claim_ids:
+                        st.warning(
+                            "Still unresolved: "
+                            + ", ".join(answer.unresolved_claim_ids)
+                        )
+                    if answer.steps:
+                        with st.expander("Agentic retrieval trace"):
+                            for step in answer.steps:
+                                st.write(
+                                    f"Round {step.round_index} · {step.claim_id} · "
+                                    f"score {step.support_score:.2f} · "
+                                    f"resolved={step.resolved}"
+                                )
+                                st.caption(step.query)
+                elif result_mode == "corrected":
                     st.markdown(answer.final_answer)
                     correction_label = answer.correction_status.replace("_", " ").title()
                     verification_label = answer.verification_status.replace("_", " ").title()
@@ -258,7 +307,7 @@ with assistant_tab:
                     else:
                         st.markdown(answer.answer)
 
-                if result_mode in {"verified", "corrected"}:
+                if result_mode in {"verified", "corrected", "agentic"}:
                     if result_mode == "verified":
                         status_label = (
                             answer.verification_status.replace("_", " ").title()
