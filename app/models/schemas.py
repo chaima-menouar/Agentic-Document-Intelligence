@@ -74,3 +74,29 @@ class TextChunk(BaseModel):
     end_word: int = Field(ge=0)
     word_count: int = Field(ge=1)
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+
+class AnswerCitation(BaseModel):
+    """Citation linking a generated answer back to one retrieved source chunk."""
+
+    label: str
+    dataset: str
+    document_id: str
+    chunk_id: str
+    source_id: str
+    score: float
+    page_number: int | None = Field(default=None, ge=1)
+    section: str | None = None
+    text: str
+
+
+class RAGAnswer(BaseModel):
+    """Mode A output with answer text and inspectable evidence citations."""
+
+    question: str
+    answer: str
+    status: str
+    citations: list[AnswerCitation] = Field(default_factory=list)
+    retrieved_chunks: int = Field(ge=0)
+    used_citation_labels: list[str] = Field(default_factory=list)
