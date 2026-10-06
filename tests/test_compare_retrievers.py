@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+
+import pytest
 from pathlib import Path
 
 from scripts.compare_retrievers import compare_reports
@@ -40,4 +42,4 @@ def test_candidate_wins_on_primary_metric(tmp_path: Path) -> None:
     report = compare_reports(baseline, candidate, output)
 
     assert report["winner"] == "candidate"
-    assert report["candidate_minus_baseline"]["recall@5"] == 0.10
+    assert report["candidate_minus_baseline"]["recall@5"] == pytest.approx(0.10)
