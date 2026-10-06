@@ -21,7 +21,7 @@ The project is developed as a 12-week academic project and compares three modes:
 
 ## Current milestone
 
-**Milestone 9 — A/B/C evaluation**
+**Milestone 10 — Stabilization, report, and demo**
 
 Current pipeline:
 
@@ -117,8 +117,8 @@ python scripts/search_index.py "What evidence supports the claim?" --index data/
 6. ✅ Claim extraction and verification
 7. ✅ Partial-answer correction
 8. ✅ Agentic additional retrieval
-9. 🚧 A/B/C evaluation
-10. Stabilization, report, and demo
+9. ✅ A/B/C evaluation
+10. ✅ Stabilization, report, and demo
 
 
 ## A/B/C evaluation
@@ -228,3 +228,13 @@ The real-index smoke test recovered an initially uncited QASPER claim in one
 additional round using BGE-small + FAISS, then returned the recovered claim with
 new evidence labels. The workflow is
 `.github/workflows/agentic-rag-e2e.yml`.
+
+
+## Final deliverables
+
+The final academic delivery package is available in:
+
+- `docs/final_project_report.md` — architecture, retriever results, A/B/C benchmark, findings, limitations, and reproducibility.
+- `docs/demo_guide.md` — step-by-step demo flow explaining the difference between Classical, Verified, and Agentic RAG.
+
+Key controlled A/B/C results: Mode B detected unsupported/uncited stress cases at 100% with 100% safe abstention; Mode C recovered 90% of recoverable uncited cases, safely abstained on unsupported claims at 100%, and respected its retrieval bound at 100%.
