@@ -176,7 +176,9 @@ with st.sidebar:
         st.rerun()
 
 
-documents_tab, assistant_tab = st.tabs(["Documents", "Assistant"])
+documents_tab, assistant_tab, comparison_tab = st.tabs(
+    ["Documents", "Assistant", "V1 vs V2"]
+)
 
 with documents_tab:
     st.subheader("Documents")
@@ -509,3 +511,174 @@ with assistant_tab:
                                         details.append(f"{label}={value:.3f}")
                                 if details:
                                     st.caption(" · ".join(details))
+
+
+
+with comparison_tab:
+    st.subheader("V1 vs V2 side-by-side")
+    st.caption(
+        "This demo uses the same offline extractive generator and the same dense "
+        "BGE retriever on both sides, isolating the verification and agent-policy "
+        "differences."
+    )
+
+    comparison_retriever = st.session_state.get("retriever")
+    comparison_result = st.session_state.get("workspace_result")
+
+    if comparison_retriever is None or comparison_result is None:
+        st.info("Process at least one PDF in the Documents tab first.")
+    else:
+        comparison_documents = {"All documents": None}
+        for item in comparison_result.documents:
+            comparison_documents[item.filename] = item.document_id
+
+        comparison_scope = st.selectbox(
+            "Comparison search scope",
+            list(comparison_documents.keys()),
+            key="comparison_scope",
+        )
+        comparison_question = st.text_area(
+            "Comparison question",
+            placeholder="Ask one question to run through both V1 and V2...",
+            height=100,
+            key="comparison_question",
+        )
+        comparison_top_k = st.slider(
+            "Comparison Top-K",
+            min_value=1,
+            max_value=10,
+            value=5,
+            key="comparison_top_k",
+        )
+
+        if st.button(
+            "Compare V1 vs V2",
+            type="primary",
+            disabled=not comparison_question.strip(),
+            key="compare_v1_v2_button",
+        ):
+            try:
+                document_id = comparison_documents[comparison_scope]
+
+                v1_generator = ExtractiveGenerator()
+                v1_rag = ClassicalRAG(
+                    retriever=comparison_retriever,
+                    generator=v1_generator,
+                )
+                v1_verifier = CitationGroundingVerifier()
+                v1_verified = VerifiedRAG(
+                    rag=v1_rag,
+                    verifier=v1_verifier,
+                )
+                v1_pipeline = AgenticVerifiedRAG(
+                    verified_rag=v1_verified,
+                    retriever=comparison_retriever,
+                    verifier=v1_verifier,
+                    max_rounds=2,
+                    additional_top_k=comparison_top_k,
+                )
+
+                v2_generator = ExtractiveGenerator()
+                v2_rag = ClassicalRAG(
+                    retriever=comparison_retriever,
+                    generator=v2_generator,
+                )
+                v2_verifier = _get_verifier("V2 semantic NLI")
+                v2_verified = VerifiedRAG(
+                    rag=v2_rag,
+                    verifier=v2_verifier,
+                )
+                v2_pipeline = AdaptiveAgenticVerifiedRAG(
+                    verified_rag=v2_verified,
+                    retriever=comparison_retriever,
+                    verifier=v2_verifier,
+                    max_rounds=3,
+                    additional_top_k=comparison_top_k,
+                    max_total_additional_chunks=10,
+                )
+
+                with st.spinner("Running V1 and V2 on the same evidence..."):
+                    v1_answer = v1_pipeline.answer(
+                        comparison_question,
+                        top_k=comparison_top_k,
+                        document_id=document_id,
+                    )
+                    v2_answer = v2_pipeline.answer(
+                        comparison_question,
+                        top_k=comparison_top_k,
+                        document_id=document_id,
+                    )
+
+                left, right = st.columns(2)
+
+                with left:
+                    st.markdown("### V1")
+                    st.markdown(v1_answer.final_answer)
+                    st.write(
+                        "Verification:",
+                        v1_answer.final_verification_status.replace("_", " ").title(),
+                    )
+                    st.write("Status:", v1_answer.status.replace("_", " ").title())
+                    st.metric("Additional rounds", v1_answer.rounds_used)
+                    st.metric(
+                        "Additional chunks",
+                        v1_answer.additional_chunks_considered,
+                    )
+                    st.caption("Verifier: lexical · Agent: fixed bounded")
+
+                with right:
+                    st.markdown("### V2")
+                    st.markdown(v2_answer.final_answer)
+                    st.write(
+                        "Verification:",
+                        v2_answer.final_verification_status.replace("_", " ").title(),
+                    )
+                    st.write("Status:", v2_answer.status.replace("_", " ").title())
+                    st.metric("Additional rounds", v2_answer.rounds_used)
+                    st.metric(
+                        "Additional chunks",
+                        v2_answer.additional_chunks_considered,
+                    )
+                    st.caption(
+                        "Verifier: semantic NLI · Agent: adaptive budgeted"
+                    )
+                    if v2_answer.early_stop_reason:
+                        st.caption(
+                            "Early stop: "
+                            + v2_answer.early_stop_reason.replace("_", " ")
+                        )
+
+                st.markdown("#### Comparison")
+                col_a, col_b, col_c = st.columns(3)
+                col_a.metric(
+                    "Round difference (V2 − V1)",
+                    v2_answer.rounds_used - v1_answer.rounds_used,
+                )
+                col_b.metric(
+                    "Chunk difference (V2 − V1)",
+                    (
+                        v2_answer.additional_chunks_considered
+                        - v1_answer.additional_chunks_considered
+                    ),
+                )
+                col_c.metric(
+                    "V2 recovered claims",
+                    len(v2_answer.recovered_claim_ids),
+                )
+
+                with st.expander("V2 adaptive trace"):
+                    if not v2_answer.steps:
+                        st.write("No additional retrieval was needed.")
+                    for step in v2_answer.steps:
+                        st.write(
+                            f"Round {step.round_index} · {step.action} · "
+                            f"resolved={step.resolved}"
+                        )
+                        st.caption(
+                            f"reason={step.failure_reason or 'n/a'} · "
+                            f"new_chunks={step.new_chunks} · "
+                            f"support_delta={step.support_improvement:+.2f}"
+                        )
+                        st.caption(step.query)
+            except Exception as exc:
+                st.error(f"Could not run the V1/V2 comparison: {exc}")
