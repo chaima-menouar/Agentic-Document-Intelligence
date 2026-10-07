@@ -9,7 +9,7 @@ from pathlib import Path
 import streamlit as st
 
 from app.agent import AgenticVerifiedRAG
-from app.rag import ClassicalRAG, ExtractiveGenerator, OpenAICompatibleGenerator
+from app.rag import ClassicalRAG, ExtractiveGenerator, GroundedLocalGenerator
 from app.retrieval import SemanticRetriever
 from app.ui.workspace import build_local_workspace
 from app.verification import (
@@ -54,7 +54,7 @@ def _reset_workspace() -> None:
 def _get_generator(mode: str, model: str, base_url: str):
     if mode == "Offline extractive baseline":
         return ExtractiveGenerator()
-    return OpenAICompatibleGenerator(
+    return GroundedLocalGenerator(
         model=model.strip() or None,
         base_url=base_url.strip() or None,
     )
@@ -71,23 +71,27 @@ with st.sidebar:
     )
     generator_mode = st.selectbox(
         "Generator",
-        ["Offline extractive baseline", "Local OpenAI-compatible LLM"],
+        ["Offline extractive baseline", "V2 grounded local LLM"],
         help=(
             "The offline baseline is fully free. "
-            "The local LLM option is intended for Ollama, LM Studio, "
-            "or another local OpenAI-compatible server."
+            "The V2 local LLM option adds citation validation, one repair "
+            "attempt, and a safe extractive fallback. It works with Ollama, "
+            "LM Studio, or another local OpenAI-compatible server."
         ),
     )
     local_model = ""
     local_base_url = ""
-    if generator_mode == "Local OpenAI-compatible LLM":
+    if generator_mode == "V2 grounded local LLM":
         local_base_url = st.text_input(
             "Local endpoint",
             value="http://localhost:11434/v1",
         )
         local_model = st.text_input(
             "Model name",
-            placeholder="Your local model name",
+            placeholder="e.g. qwen2.5:3b, llama3.2:3b, or your local model",
+        )
+        st.caption(
+            "V2 guard: validate citations → repair once → extractive fallback."
         )
 
     top_k = st.slider("Top-K evidence", min_value=1, max_value=10, value=5)
@@ -117,8 +121,8 @@ documents_tab, assistant_tab = st.tabs(["Documents", "Assistant"])
 with documents_tab:
     st.subheader("Documents")
     st.write(
-        "Upload one or more English text-based PDFs. "
-        "V1 does not support OCR for scanned PDFs."
+        "Upload one or more English PDFs. V2 can OCR scanned or text-poor "
+        "pages locally when OCR is enabled."
     )
 
     uploaded_files = st.file_uploader(
