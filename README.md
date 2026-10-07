@@ -20,8 +20,8 @@ Current V2 progress:
 - ✅ Milestone 13 — local semantic/NLI claim verification with lexical fallback
 - ✅ Milestone 14 — hybrid dense+BM25 retrieval and local cross-encoder reranking
 - ✅ Milestone 15 — adaptive agent policy
-- ⏳ Milestone 16 — V1 vs V2 evaluation
-- ⬜ Milestone 17 — final V2 UI/report/demo polish
+- ✅ Milestone 16 — V1 vs V2 evaluation
+- ⏳ Milestone 17 — final V2 UI/report/demo polish
 
 Detailed V2 design notes are in:
 
@@ -31,6 +31,7 @@ Detailed V2 design notes are in:
 - `docs/v2_hybrid_retrieval.md`
 - `docs/v2_adaptive_agent.md`
 - `docs/v2_v1_vs_v2_evaluation.md`
+- `docs/v2_demo_guide.md`
 
 ## Version 1 scope
 
