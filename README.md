@@ -304,6 +304,8 @@ Final V2 documentation:
 - `docs/v2_demo_guide.md`
 - `docs/v2_v1_vs_v2_evaluation.md`
 - `docs/v2_roadmap.md`
+- `docs/v2_release_notes.md`
+- `docs/v2_final_manual_test.md`
 
 ## Final validation
 
