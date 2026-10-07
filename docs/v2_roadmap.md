@@ -49,9 +49,27 @@ V2 builds on the stable V1 while preserving the same evidence-grounded philosoph
 14. ✅ Hybrid retrieval + reranking
 15. ✅ Adaptive agent policy
 16. ✅ V1 vs V2 evaluation
-17. ⏳ UI polish + final V2 report/demo
+17. ✅ UI polish + final V2 report/demo
 
 ## Compatibility rule
 
 V1 behavior must remain available and reproducible. V2 changes are developed on
 `v2-development` until regression tests and V1-vs-V2 evaluation pass.
+
+
+## V2 completion status
+
+V2 is complete on `v2-development`.
+
+Final validation on the same release candidate passed:
+
+- OCR / scanned-PDF E2E
+- guarded local generator E2E
+- semantic NLI verifier E2E
+- hybrid retrieval + cross-encoder reranking E2E
+- adaptive-agent E2E
+- Streamlit UI smoke
+- full V2 regression / import / local-tool smoke
+
+The final manual demo can now be performed from the Streamlit interface before
+merging V2 into `main`.
