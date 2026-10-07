@@ -37,7 +37,7 @@ def _claim(text: str, labels=None) -> ExtractedClaim:
     return ExtractedClaim(
         claim_id="claim_001",
         text=text,
-        citation_labels=list(labels or ["S1"]),
+        citation_labels=list(["S1"] if labels is None else labels),
     )
 
 
