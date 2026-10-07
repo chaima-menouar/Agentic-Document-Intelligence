@@ -171,6 +171,12 @@ class AgenticRetrievalStep(BaseModel):
     retrieved_labels: list[str] = Field(default_factory=list)
     support_score: float = Field(ge=0.0, le=1.0)
     resolved: bool
+    action: str = "retrieve"
+    failure_reason: str | None = None
+    support_score_before: float = Field(default=0.0, ge=0.0, le=1.0)
+    support_improvement: float = Field(default=0.0, ge=-1.0, le=1.0)
+    new_chunks: int = Field(default=0, ge=0)
+    stopped_early: bool = False
 
 
 class AgenticRAGAnswer(BaseModel):
@@ -185,6 +191,9 @@ class AgenticRAGAnswer(BaseModel):
     correction_status: str
     rounds_used: int = Field(ge=0)
     additional_chunks_considered: int = Field(ge=0)
+    retrieval_budget: int | None = Field(default=None, ge=1)
+    budget_exhausted: bool = False
+    early_stop_reason: str | None = None
     recovered_claim_ids: list[str] = Field(default_factory=list)
     unresolved_claim_ids: list[str] = Field(default_factory=list)
     steps: list[AgenticRetrievalStep] = Field(default_factory=list)
