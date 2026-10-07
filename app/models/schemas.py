@@ -93,6 +93,7 @@ class AnswerCitation(BaseModel):
     page_number: int | None = Field(default=None, ge=1)
     section: str | None = None
     text: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class RAGAnswer(BaseModel):
