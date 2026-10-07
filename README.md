@@ -8,6 +8,28 @@ The project is developed as a 12-week academic project and compares three modes:
 - **Mode B — Verified RAG:** Mode A + claim-level evidence verification.
 - **Mode C — Agentic Verified RAG:** Mode B + bounded additional retrieval when evidence is insufficient.
 
+## V2 development
+
+V2 is developed on the `v2-development` branch while `main` preserves the
+stable V1.
+
+Current V2 progress:
+
+- ✅ Milestone 11 — local OCR fallback for scanned/text-poor PDF pages
+- ✅ Milestone 12 — guarded local LLM generation with citation repair/fallback
+- ✅ Milestone 13 — local semantic/NLI claim verification with lexical fallback
+- ⏳ Milestone 14 — hybrid dense+BM25 retrieval and local cross-encoder reranking
+- ⬜ Milestone 15 — adaptive agent policy
+- ⬜ Milestone 16 — V1 vs V2 evaluation
+- ⬜ Milestone 17 — final V2 UI/report/demo polish
+
+Detailed V2 design notes are in:
+
+- `docs/v2_roadmap.md`
+- `docs/v2_local_generator.md`
+- `docs/v2_semantic_verifier.md`
+- `docs/v2_hybrid_retrieval.md`
+
 ## Version 1 scope
 
 - English, text-based PDFs
