@@ -129,6 +129,7 @@ class ClassicalRAG:
                     page_number=hit.page_number,
                     section=hit.section,
                     text=hit.text,
+                    metadata=dict(hit.metadata),
                 )
             )
 
