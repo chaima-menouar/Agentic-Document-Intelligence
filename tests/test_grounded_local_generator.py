@@ -136,3 +136,23 @@ def test_repair_can_be_disabled_and_falls_back_immediately() -> None:
     assert answer == "Fallback answer [S2]"
     assert len(client.prompts) == 1
     assert fallback.calls == [PROMPT]
+
+
+def test_every_factual_sentence_requires_a_citation() -> None:
+    client = FakeClient([
+        "BGE provides embeddings [S1]. FAISS stores vectors.",
+        "BGE provides embeddings [S1]. FAISS stores vectors [S2].",
+    ])
+    fallback = FakeFallback()
+    generator = GroundedLocalGenerator(
+        client=client,
+        fallback=fallback,
+        max_repair_attempts=1,
+    )
+
+    answer = generator.generate(PROMPT)
+
+    assert "BGE provides embeddings [S1]." in answer
+    assert "FAISS stores vectors [S2]." in answer
+    assert len(client.prompts) == 2
+    assert fallback.calls == []
