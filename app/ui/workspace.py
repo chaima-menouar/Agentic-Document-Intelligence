@@ -47,7 +47,7 @@ def prepare_uploaded_pdfs(
     *,
     chunk_size_words: int = 220,
     overlap_words: int = 40,
-    ocr_fallback: bool = True,
+    ocr_fallback: bool = False,
     min_text_chars: int = 40,
     ocr_language: str = "eng",
 ) -> tuple[Path, tuple[ProcessedDocumentSummary, ...], int]:
