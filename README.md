@@ -23,6 +23,24 @@ Current V2 progress:
 - ✅ Milestone 16 — V1 vs V2 evaluation
 - ⏳ Milestone 17 — final V2 UI/report/demo polish
 
+### V2 benchmark snapshot
+
+Controlled V1 vs V2 scorecard:
+
+| Metric | V1 | V2 |
+| --- | ---: | ---: |
+| Generation citation precision | 0% | 100% |
+| Verification classification accuracy | 33.3% | 66.7% |
+| Recoverable claim recovery | 90% | 90% |
+| Unsupported safe abstention | 100% | 100% |
+| Unsupported average agent rounds | 3.0 | 2.0 |
+| Unsupported average additional chunks | 9.0 | 6.0 |
+
+Retrieval remains evidence-driven rather than novelty-driven: full QASPER
+Recall@5 was 66.10% for dense BGE versus 65.43% for plain hybrid RRF, so dense
+BGE remains the default. Hybrid + reranker is available as an optional V2 mode
+and reached 74% Recall@5 versus 70% dense on the matched 50-question sample.
+
 Detailed V2 design notes are in:
 
 - `docs/v2_roadmap.md`
