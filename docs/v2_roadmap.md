@@ -48,8 +48,8 @@ V2 builds on the stable V1 while preserving the same evidence-grounded philosoph
 13. ✅ Semantic verifier
 14. ✅ Hybrid retrieval + reranking
 15. ✅ Adaptive agent policy
-16. ⏳ V1 vs V2 evaluation
-17. ⬜ UI polish + final V2 report/demo
+16. ✅ V1 vs V2 evaluation
+17. ⏳ UI polish + final V2 report/demo
 
 ## Compatibility rule
 
