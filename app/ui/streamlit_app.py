@@ -8,7 +8,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from app.agent import AgenticVerifiedRAG
+from app.agent import AdaptiveAgenticVerifiedRAG, AgenticVerifiedRAG
 from app.rag import ClassicalRAG, ExtractiveGenerator, GroundedLocalGenerator
 from app.retrieval import (
     HybridRetriever,
@@ -115,6 +115,23 @@ with st.sidebar:
         )
 
     top_k = st.slider("Top-K evidence", min_value=1, max_value=10, value=5)
+    agent_policy_mode = st.selectbox(
+        "Agent policy",
+        ["V2 adaptive budgeted", "V1 fixed bounded"],
+        index=0,
+        help=(
+            "V2 chooses retrieval actions from verification failure reasons, "
+            "stops when no new evidence is found, and enforces a strict chunk budget."
+        ),
+    )
+    agent_budget = st.slider(
+        "Agent retrieval budget (chunks)",
+        min_value=2,
+        max_value=20,
+        value=10,
+        disabled=assistant_mode != "Agentic Verified RAG"
+        or agent_policy_mode != "V2 adaptive budgeted",
+    )
     retrieval_mode = st.selectbox(
         "Retrieval",
         ["V1 dense BGE + FAISS", "V2 hybrid RRF", "V2 hybrid + reranker"],
@@ -294,13 +311,23 @@ with assistant_tab:
                             )
                             st.session_state.history.append(("corrected", answer))
                         elif assistant_mode == "Agentic Verified RAG":
-                            pipeline = AgenticVerifiedRAG(
-                                verified_rag=verified_pipeline,
-                                retriever=retriever,
-                                verifier=verifier,
-                                max_rounds=2,
-                                additional_top_k=top_k,
-                            )
+                            if agent_policy_mode == "V2 adaptive budgeted":
+                                pipeline = AdaptiveAgenticVerifiedRAG(
+                                    verified_rag=verified_pipeline,
+                                    retriever=retriever,
+                                    verifier=verifier,
+                                    max_rounds=3,
+                                    additional_top_k=top_k,
+                                    max_total_additional_chunks=agent_budget,
+                                )
+                            else:
+                                pipeline = AgenticVerifiedRAG(
+                                    verified_rag=verified_pipeline,
+                                    retriever=retriever,
+                                    verifier=verifier,
+                                    max_rounds=2,
+                                    additional_top_k=top_k,
+                                )
                             answer = pipeline.answer(
                                 question,
                                 top_k=top_k,
@@ -342,10 +369,23 @@ with assistant_tab:
                         "**Verification:** "
                         + answer.final_verification_status.replace("_", " ").title()
                     )
+                    budget_text = (
+                        f" · budget: {answer.retrieval_budget}"
+                        if answer.retrieval_budget is not None
+                        else ""
+                    )
                     st.caption(
                         f"Additional retrieval rounds: {answer.rounds_used} · "
                         f"chunks considered: {answer.additional_chunks_considered}"
+                        f"{budget_text}"
                     )
+                    if answer.budget_exhausted:
+                        st.warning("Adaptive retrieval budget exhausted.")
+                    if answer.early_stop_reason:
+                        st.caption(
+                            "Early-stop reason: "
+                            + answer.early_stop_reason.replace("_", " ")
+                        )
                     if answer.recovered_claim_ids:
                         st.success(
                             "Recovered claims: "
@@ -363,6 +403,12 @@ with assistant_tab:
                                     f"Round {step.round_index} · {step.claim_id} · "
                                     f"score {step.support_score:.2f} · "
                                     f"resolved={step.resolved}"
+                                )
+                                st.caption(
+                                    f"action={step.action} · "
+                                    f"failure={step.failure_reason or 'n/a'} · "
+                                    f"new_chunks={step.new_chunks} · "
+                                    f"improvement={step.support_improvement:+.2f}"
                                 )
                                 st.caption(step.query)
                 elif result_mode == "corrected":
