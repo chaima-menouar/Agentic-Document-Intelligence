@@ -8,12 +8,12 @@ The project is developed as a 12-week academic project and compares three modes:
 - **Mode B — Verified RAG:** Mode A + claim-level evidence verification.
 - **Mode C — Agentic Verified RAG:** Mode B + bounded additional retrieval when evidence is insufficient.
 
-## V2 development
+## V2
 
-V2 is developed on the `v2-development` branch while `main` preserves the
-stable V1.
+V2 is complete on the `v2-development` branch while `main` preserves the
+stable V1 until the final manual release test passes.
 
-Current V2 progress:
+V2 milestones:
 
 - ✅ Milestone 11 — local OCR fallback for scanned/text-poor PDF pages
 - ✅ Milestone 12 — guarded local LLM generation with citation repair/fallback
@@ -21,7 +21,7 @@ Current V2 progress:
 - ✅ Milestone 14 — hybrid dense+BM25 retrieval and local cross-encoder reranking
 - ✅ Milestone 15 — adaptive agent policy
 - ✅ Milestone 16 — V1 vs V2 evaluation
-- ⏳ Milestone 17 — final V2 UI/report/demo polish
+- ✅ Milestone 17 — final V2 UI/report/demo polish
 
 ### V2 benchmark snapshot
 
@@ -65,7 +65,7 @@ Detailed V2 design notes are in:
 
 ## Project status
 
-**V1 complete — implementation, evaluation, stabilization, report, and demo are finished.**
+**V1 is the stable baseline on `main`; V2 is complete on `v2-development` and awaiting one final manual release test before merge.**
 
 Current pipeline:
 
