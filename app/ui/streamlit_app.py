@@ -118,10 +118,11 @@ with st.sidebar:
     retrieval_mode = st.selectbox(
         "Retrieval",
         ["V1 dense BGE + FAISS", "V2 hybrid RRF", "V2 hybrid + reranker"],
-        index=1,
+        index=0,
         help=(
-            "Hybrid retrieval combines dense semantic search with BM25 lexical "
-            "search. The reranked mode adds a local cross-encoder over fused candidates."
+            "Dense BGE remains the validated default. Hybrid retrieval combines "
+            "dense semantic search with BM25 lexical search; the reranked mode adds "
+            "a local cross-encoder over fused candidates."
         ),
     )
     if retrieval_mode == "V2 hybrid + reranker":
