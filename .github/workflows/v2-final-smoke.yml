@@ -32,6 +32,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y tesseract-ocr tesseract-ocr-eng
 
+      - name: Install CPU Torch
+        run: python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+
       - name: Install complete V2 Python stack
         run: python -m pip install -r requirements-all.txt
 
