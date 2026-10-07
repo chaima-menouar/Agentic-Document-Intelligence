@@ -87,3 +87,22 @@ the same real BGE+FAISS QASPER index for:
 
 The benchmark reports recovery rate, safe abstention, average rounds, average
 additional chunks, early stopping, and budget compliance.
+
+
+## Recorded policy benchmark
+
+Controlled 20-case comparison on the real BGE + FAISS QASPER index:
+
+| Metric | V1 fixed | V2 adaptive |
+| --- | ---: | ---: |
+| Recoverable-claim recovery | 90% | 90% |
+| Recoverable avg. rounds | 1.2 | 1.1 |
+| Recoverable avg. additional chunks | 3.6 | 3.3 |
+| Unsupported safe abstention | 100% | 100% |
+| Unsupported avg. rounds | 3.0 | 2.0 |
+| Unsupported avg. additional chunks | 9.0 | 6.0 |
+
+The adaptive policy preserved both recovery and safe abstention while reducing
+unnecessary retrieval. It respected the configured retrieval budget in 100% of
+unsupported cases and triggered an early-stop/budget stop in 100% of those
+cases.
