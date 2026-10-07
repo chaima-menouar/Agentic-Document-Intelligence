@@ -1,0 +1,58 @@
+name: v2-semantic-verifier-e2e
+
+on:
+  push:
+    branches: ["v2-development"]
+    paths:
+      - "app/verification/**"
+      - "app/models/**"
+      - "app/ui/**"
+      - "tests/test_semantic_verifier.py"
+      - ".github/workflows/v2-semantic-verifier-e2e.yml"
+  pull_request:
+    branches: ["v2-development"]
+
+jobs:
+  semantic-verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install verification dependencies
+        run: python -m pip install -r requirements.txt -r requirements-retrieval.txt -r requirements-ui.txt
+
+      - name: Run semantic verifier unit tests
+        run: pytest -q tests/test_semantic_verifier.py
+
+      - name: Validate real local NLI model
+        run: |
+          python - <<'PY'
+          from app.verification import LocalNLIEntailmentScorer
+
+          scorer = LocalNLIEntailmentScorer()
+
+          entailment = scorer.score(
+              "A researcher is writing a report about the experiment.",
+              "A researcher is writing a report.",
+          )
+          contradiction = scorer.score(
+              "No researcher is writing a report.",
+              "A researcher is writing a report.",
+          )
+
+          print("entailment_score=", entailment)
+          print("contradiction_entailment_score=", contradiction)
+
+          assert 0.0 <= entailment <= 1.0
+          assert 0.0 <= contradiction <= 1.0
+          assert entailment > contradiction
+          assert entailment >= 0.50
+          PY
+
+      - name: Validate Streamlit module
+        run: python -m py_compile app/ui/streamlit_app.py
