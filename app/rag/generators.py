@@ -132,12 +132,27 @@ def _answer_citation_labels(answer: str) -> set[str]:
 
 
 def _has_valid_citations(answer: str, prompt: str) -> bool:
-    """Require at least one citation and reject labels absent from evidence."""
-    if not answer or answer.strip() == "INSUFFICIENT_EVIDENCE":
+    """Require valid evidence labels on every factual sentence."""
+    if not answer:
+        return False
+    if answer.strip() == "INSUFFICIENT_EVIDENCE":
         return True
+
     available = _available_source_labels(prompt)
     used = _answer_citation_labels(answer)
-    return bool(used) and used.issubset(available)
+    if not used or not used.issubset(available):
+        return False
+
+    # Keep a citation attached to the sentence that precedes it. This splitter
+    # only starts a new sentence when the next token looks like normal prose,
+    # not when the next token is a citation such as [S1].
+    sentences = re.split(r"(?<=[.!?])\s+(?=[A-Z0-9])", answer.strip())
+    for sentence in sentences:
+        if not _content_tokens(sentence):
+            continue
+        if not _answer_citation_labels(sentence):
+            return False
+    return True
 
 
 class GroundedLocalGenerator:
