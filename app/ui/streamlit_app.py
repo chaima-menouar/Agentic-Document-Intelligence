@@ -10,7 +10,11 @@ import streamlit as st
 
 from app.agent import AgenticVerifiedRAG
 from app.rag import ClassicalRAG, ExtractiveGenerator, GroundedLocalGenerator
-from app.retrieval import SemanticRetriever
+from app.retrieval import (
+    HybridRetriever,
+    LocalCrossEncoderReranker,
+    SemanticRetriever,
+)
 from app.ui.workspace import build_local_workspace
 from app.verification import (
     CitationGroundingVerifier,
@@ -35,6 +39,8 @@ def _ensure_state() -> None:
         "workspace_dir": None,
         "workspace_result": None,
         "retriever": None,
+        "hybrid_retriever": None,
+        "reranked_retriever": None,
         "history": [],
     }
     for key, value in defaults.items():
@@ -49,6 +55,8 @@ def _reset_workspace() -> None:
     st.session_state.workspace_dir = None
     st.session_state.workspace_result = None
     st.session_state.retriever = None
+    st.session_state.hybrid_retriever = None
+    st.session_state.reranked_retriever = None
     st.session_state.history = []
 
 
@@ -107,6 +115,17 @@ with st.sidebar:
         )
 
     top_k = st.slider("Top-K evidence", min_value=1, max_value=10, value=5)
+    retrieval_mode = st.selectbox(
+        "Retrieval",
+        ["V1 dense BGE + FAISS", "V2 hybrid RRF", "V2 hybrid + reranker"],
+        index=1,
+        help=(
+            "Hybrid retrieval combines dense semantic search with BM25 lexical "
+            "search. The reranked mode adds a local cross-encoder over fused candidates."
+        ),
+    )
+    if retrieval_mode == "V2 hybrid + reranker":
+        st.caption("First reranked query may download/load the local cross-encoder.")
     verifier_mode = st.selectbox(
         "Verifier",
         ["V1 lexical", "V2 semantic NLI"],
@@ -177,8 +196,15 @@ with documents_tab:
                     ocr_language="eng",
                 )
                 retriever = SemanticRetriever.load(result.index_dir)
+                hybrid_retriever = HybridRetriever(retriever)
+                reranked_retriever = HybridRetriever(
+                    retriever,
+                    reranker=LocalCrossEncoderReranker(),
+                )
                 st.session_state.workspace_result = result
                 st.session_state.retriever = retriever
+                st.session_state.hybrid_retriever = hybrid_retriever
+                st.session_state.reranked_retriever = reranked_retriever
                 status.update(label="Workspace ready", state="complete")
         except Exception as exc:
             _reset_workspace()
@@ -208,7 +234,13 @@ with documents_tab:
 
 with assistant_tab:
     st.subheader("Assistant")
-    retriever = st.session_state.get("retriever")
+    dense_retriever = st.session_state.get("retriever")
+    if retrieval_mode == "V2 hybrid RRF":
+        retriever = st.session_state.get("hybrid_retriever")
+    elif retrieval_mode == "V2 hybrid + reranker":
+        retriever = st.session_state.get("reranked_retriever")
+    else:
+        retriever = dense_retriever
 
     if retriever is None:
         st.info("Process at least one PDF in the Documents tab first.")
@@ -415,3 +447,18 @@ with assistant_tab:
                             st.caption(
                                 f"document={citation.document_id} | chunk={citation.chunk_id}"
                             )
+                            retrieval_kind = citation.metadata.get("retrieval_mode")
+                            if retrieval_kind:
+                                st.write(f"Retrieval: {retrieval_kind}")
+                                details = []
+                                for key, label in (
+                                    ("dense_score", "dense"),
+                                    ("sparse_score", "sparse"),
+                                    ("fusion_score", "fusion"),
+                                    ("rerank_score", "rerank"),
+                                ):
+                                    value = citation.metadata.get(key)
+                                    if value is not None:
+                                        details.append(f"{label}={value:.3f}")
+                                if details:
+                                    st.caption(" · ".join(details))
