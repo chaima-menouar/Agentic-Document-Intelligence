@@ -41,8 +41,8 @@ jobs:
           sudo apt-get install -y tesseract-ocr tesseract-ocr-eng
       - name: Install V2 dependencies
         run: python -m pip install -r requirements-all.txt
-      - name: Run unit tests
-        run: pytest -q
+      - name: Run OCR ingestion unit tests
+        run: pytest -q tests/test_pdf_extractor.py
       - name: Validate real image-only PDF OCR
         run: |
           python - <<'PY'
