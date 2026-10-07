@@ -15,6 +15,7 @@ from app.ui.workspace import build_local_workspace
 from app.verification import (
     CitationGroundingVerifier,
     CorrectedVerifiedRAG,
+    SemanticCitationGroundingVerifier,
     VerifiedRAG,
 )
 
@@ -60,6 +61,17 @@ def _get_generator(mode: str, model: str, base_url: str):
     )
 
 
+@st.cache_resource(show_spinner="Loading local semantic verifier...")
+def _cached_semantic_verifier():
+    return SemanticCitationGroundingVerifier()
+
+
+def _get_verifier(mode: str):
+    if mode == "V2 semantic NLI":
+        return _cached_semantic_verifier()
+    return CitationGroundingVerifier()
+
+
 _ensure_state()
 
 with st.sidebar:
@@ -95,6 +107,17 @@ with st.sidebar:
         )
 
     top_k = st.slider("Top-K evidence", min_value=1, max_value=10, value=5)
+    verifier_mode = st.selectbox(
+        "Verifier",
+        ["V1 lexical", "V2 semantic NLI"],
+        index=1,
+        help=(
+            "V2 uses a local NLI model to test semantic entailment. "
+            "If the model cannot load, it automatically falls back to V1 lexical verification."
+        ),
+    )
+    if verifier_mode == "V2 semantic NLI":
+        st.caption("First use may download/load the local NLI model.")
     st.divider()
     st.subheader("V2 ingestion")
     ocr_fallback = st.checkbox(
@@ -222,7 +245,7 @@ with assistant_tab:
                         "Verified + Corrected RAG",
                         "Agentic Verified RAG",
                     }:
-                        verifier = CitationGroundingVerifier()
+                        verifier = _get_verifier(verifier_mode)
                         verified_pipeline = VerifiedRAG(
                             rag=rag,
                             verifier=verifier,
@@ -356,6 +379,17 @@ with assistant_tab:
                         ):
                             st.write(verification.claim_text)
                             st.caption(verification.reason)
+                            st.write(f"Verifier: {verification.verifier_method}")
+                            if verification.lexical_support_score is not None:
+                                st.write(
+                                    "Lexical score: "
+                                    f"{verification.lexical_support_score:.2f}"
+                                )
+                            if verification.semantic_entailment_score is not None:
+                                st.write(
+                                    "Semantic entailment: "
+                                    f"{verification.semantic_entailment_score:.2f}"
+                                )
                             if verification.evidence_labels:
                                 st.write(
                                     "Evidence: "
