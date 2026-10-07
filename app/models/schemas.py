@@ -125,6 +125,9 @@ class ClaimVerification(BaseModel):
     status: str
     support_score: float = Field(ge=0.0, le=1.0)
     reason: str
+    verifier_method: str = "lexical"
+    lexical_support_score: float | None = Field(default=None, ge=0.0, le=1.0)
+    semantic_entailment_score: float | None = Field(default=None, ge=0.0, le=1.0)
 
 
 class VerifiedRAGAnswer(BaseModel):
