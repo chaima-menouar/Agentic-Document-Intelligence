@@ -25,13 +25,16 @@ from app.verification import (
 
 
 st.set_page_config(
-    page_title="Agentic Document Intelligence",
+    page_title="Agentic Document Intelligence V2",
     page_icon="📄",
     layout="wide",
 )
 
-st.title("Agentic Document Intelligence")
-st.caption("Local-first document QA with semantic retrieval and inspectable citations.")
+st.title("Agentic Document Intelligence V2")
+st.caption(
+    "Local-first document QA with OCR, inspectable citations, semantic verification, "
+    "hybrid retrieval, and adaptive agentic recovery."
+)
 
 
 def _ensure_state() -> None:
@@ -84,6 +87,11 @@ _ensure_state()
 
 with st.sidebar:
     st.header("Configuration")
+    st.info(
+        "Recommended V2 demo: Agentic Verified RAG + dense BGE (validated default) "
+        "+ V2 semantic NLI + V2 adaptive budgeted agent. Enable the grounded local "
+        "LLM only when a local Ollama/LM Studio endpoint is running."
+    )
     assistant_mode = st.selectbox(
         "Assistant mode",
         ["Classical RAG", "Verified RAG", "Verified + Corrected RAG", "Agentic Verified RAG"],
