@@ -86,3 +86,34 @@ with Recall@k and MRR.
 5. dense-vs-hybrid Recall@5 comparison;
 6. a 50-question real local cross-encoder reranking smoke benchmark;
 7. Streamlit module compilation.
+
+
+## Recorded V2 benchmark results
+
+Full QASPER validation (888 evaluable questions):
+
+| Metric | Dense BGE | Hybrid RRF |
+| --- | ---: | ---: |
+| Recall@1 | 27.93% | 28.27% |
+| Recall@3 | 53.38% | 52.59% |
+| Recall@5 | 66.10% | 65.43% |
+| Recall@10 | 83.33% | 82.21% |
+| Recall@20 | 94.59% | 94.03% |
+| MRR@20 | 44.97% | 44.82% |
+
+RRF slightly improved Recall@1 but reduced the primary Recall@5 metric, so
+dense BGE remains the default retrieval mode.
+
+Matched 50-question reranker sample:
+
+| Metric | Dense BGE | Hybrid + reranker |
+| --- | ---: | ---: |
+| Recall@1 | 28% | 30% |
+| Recall@3 | 58% | 52% |
+| Recall@5 | 70% | 74% |
+| MRR@5 | 44.70% | 45.13% |
+
+The reranked candidate won on the selected primary metric Recall@5 (+4
+percentage points) and Recall@1 (+2 points), but Recall@3 decreased. For that
+reason reranking remains an optional V2 mode rather than replacing the validated
+dense default.
