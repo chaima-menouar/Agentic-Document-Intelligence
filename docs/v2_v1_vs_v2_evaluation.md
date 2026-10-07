@@ -67,3 +67,47 @@ python scripts/evaluate_v1_v2.py \
 
 The GitHub Actions workflow is
 `.github/workflows/v2-v1-vs-v2-evaluation.yml`.
+
+
+## Recorded scorecard
+
+The consolidated CI benchmark produced:
+
+| Metric | V1 | V2 |
+| --- | ---: | ---: |
+| Generation citation precision (controlled contract case) | 0% | 100% |
+| Answer relevance proxy | 100% | 100% |
+| Verification classification accuracy (3 controlled cases) | 33.3% | 66.7% |
+| Recoverable-claim recovery | 90% | 90% |
+| Unsupported safe abstention | 100% | 100% |
+| Unsupported average agent rounds | 3.0 | 2.0 |
+| Unsupported average additional chunks | 9.0 | 6.0 |
+| Paid external API cost | 0 | 0 |
+
+### Semantic-verifier detail
+
+- Direct entailment: V1 supported; V2 supported with semantic score ~0.994.
+- Semantic paraphrase: both remained conservative (`needs_review`); V2 semantic
+  score was ~0.606 versus V1 lexical overlap ~0.333.
+- Explicit contradiction: V1 lexical verification incorrectly marked it
+  supported, while V2 NLI correctly marked it unsupported with entailment
+  score ~0.002.
+
+The semantic verifier therefore improved the controlled classification score,
+especially by detecting contradiction, but the paraphrase case shows that V2
+remains intentionally conservative rather than treating every related sentence
+as fully entailed.
+
+### Latency trade-off
+
+The lexical verifier is effectively negligible in these tiny controlled cases,
+while local NLI inference averaged about 1.1 seconds per verification case on
+the CI CPU runner. V2 therefore spends more compute for stronger semantic
+checking.
+
+### Regression status
+
+Both demo regressions passed:
+
+- the main-idea question no longer collapses to the fragment `important.`;
+- the unsupported year question returns `INSUFFICIENT_EVIDENCE`.
