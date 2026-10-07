@@ -32,6 +32,7 @@ Detailed V2 design notes are in:
 - `docs/v2_adaptive_agent.md`
 - `docs/v2_v1_vs_v2_evaluation.md`
 - `docs/v2_demo_guide.md`
+- `docs/v2_final_project_report.md`
 
 ## Version 1 scope
 
