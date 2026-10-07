@@ -3,8 +3,28 @@ name: v2-ocr-e2e
 on:
   push:
     branches: ["v2-development"]
+    paths:
+      - "app/ingestion/**"
+      - "app/models/schemas.py"
+      - "app/ui/workspace.py"
+      - "app/ui/streamlit_app.py"
+      - "tests/test_pdf_extractor.py"
+      - "requirements-ocr.txt"
+      - "requirements-all.txt"
+      - ".devcontainer/devcontainer.json"
+      - ".github/workflows/v2-ocr-e2e.yml"
   pull_request:
     branches: ["v2-development"]
+    paths:
+      - "app/ingestion/**"
+      - "app/models/schemas.py"
+      - "app/ui/workspace.py"
+      - "app/ui/streamlit_app.py"
+      - "tests/test_pdf_extractor.py"
+      - "requirements-ocr.txt"
+      - "requirements-all.txt"
+      - ".devcontainer/devcontainer.json"
+      - ".github/workflows/v2-ocr-e2e.yml"
 
 jobs:
   ocr-scanned-pdf:
