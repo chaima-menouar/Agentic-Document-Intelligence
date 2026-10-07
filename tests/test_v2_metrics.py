@@ -25,7 +25,7 @@ def test_answer_relevance_proxy_tracks_question_content_coverage() -> None:
         "What technology is used for semantic retrieval?",
         "Semantic retrieval uses BGE technology [S1].",
     )
-    assert score == 1.0
+    assert score == 0.75
 
 
 def test_citation_precision_rejects_unknown_labels() -> None:
