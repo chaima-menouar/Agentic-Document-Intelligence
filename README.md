@@ -30,6 +30,7 @@ Detailed V2 design notes are in:
 - `docs/v2_semantic_verifier.md`
 - `docs/v2_hybrid_retrieval.md`
 - `docs/v2_adaptive_agent.md`
+- `docs/v2_v1_vs_v2_evaluation.md`
 
 ## Version 1 scope
 
