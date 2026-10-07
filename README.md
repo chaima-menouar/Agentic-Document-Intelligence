@@ -284,6 +284,27 @@ The final academic delivery package is available in:
 Key controlled A/B/C results: Mode B detected unsupported/uncited stress cases at 100% with 100% safe abstention; Mode C recovered 90% of recoverable uncited cases, safely abstained on unsupported claims at 100%, and respected its retrieval bound at 100%.
 
 
+## V2 status
+
+**V2 is complete on the `v2-development` branch.**
+
+V2 adds:
+
+- local OCR fallback for scanned/text-poor PDFs;
+- guarded local LLM generation with citation repair and extractive fallback;
+- local semantic/NLI claim verification with lexical fallback;
+- hybrid BM25 + dense retrieval and optional local cross-encoder reranking;
+- adaptive budgeted agentic retrieval;
+- a side-by-side V1 vs V2 comparison tab;
+- consolidated V1 vs V2 evaluation and a final V2 report/demo guide.
+
+Final V2 documentation:
+
+- `docs/v2_final_project_report.md`
+- `docs/v2_demo_guide.md`
+- `docs/v2_v1_vs_v2_evaluation.md`
+- `docs/v2_roadmap.md`
+
 ## Final validation
 
 The repository includes a full-stack smoke workflow at
