@@ -12,7 +12,7 @@ from pathlib import Path
 import streamlit as st
 import streamlit.components.v1 as components
 
-from app.agent import AdaptiveAgenticVerifiedRAG, AgenticVerifiedRAG
+from app.agent import AdaptiveAgenticVerifiedRAG
 from app.rag import ClassicalRAG, ExtractiveGenerator, GroundedLocalGenerator
 from app.retrieval import (
     HybridRetriever,
@@ -203,7 +203,7 @@ with overview_tab:
     with cap5:
         feature_card("↻", "Adaptive recovery", "The agent identifies evidence failures, re-retrieves within a strict budget, and exposes its action trace.", accent="d")
     with cap6:
-        feature_card("A/B", "Evaluation workspace", "Inspect session behavior, benchmark V1 against V2, and compare safety, retrieval, and recovery metrics.", accent="a")
+        feature_card("QA", "Evaluation workspace", "Inspect answer quality, retrieval behavior, verification, recovery, and human feedback in one place.", accent="a")
 
     overview_result = st.session_state.get("workspace_result")
     st.markdown('<div class="adi-section">Workspace status</div>', unsafe_allow_html=True)
@@ -418,7 +418,7 @@ with assistant_tab:
             st.metric("Active documents", active_docs)
             status_pills(
                 [
-                    (retrieval_mode.replace("V1 ", "").replace("V2 ", ""), "info"),
+                    (retrieval_mode, "info"),
                     ("Top-K " + str(top_k), ""),
                 ]
             )
@@ -539,23 +539,14 @@ with assistant_tab:
                             )
                             st.session_state.history.append(("corrected", answer))
                         elif assistant_mode == "Agentic Verified RAG":
-                            if agent_policy_mode == "V2 adaptive budgeted":
-                                pipeline = AdaptiveAgenticVerifiedRAG(
-                                    verified_rag=verified_pipeline,
-                                    retriever=retriever,
-                                    verifier=verifier,
-                                    max_rounds=3,
-                                    additional_top_k=top_k,
-                                    max_total_additional_chunks=agent_budget,
-                                )
-                            else:
-                                pipeline = AgenticVerifiedRAG(
-                                    verified_rag=verified_pipeline,
-                                    retriever=retriever,
-                                    verifier=verifier,
-                                    max_rounds=2,
-                                    additional_top_k=top_k,
-                                )
+                            pipeline = AdaptiveAgenticVerifiedRAG(
+                                verified_rag=verified_pipeline,
+                                retriever=retriever,
+                                verifier=verifier,
+                                max_rounds=3,
+                                additional_top_k=top_k,
+                                max_total_additional_chunks=agent_budget,
+                            )
                             answer = pipeline.answer(
                                 question,
                                 top_k=top_k,
@@ -767,7 +758,7 @@ with assistant_tab:
 with evaluation_tab:
     st.markdown('<div class="adi-section">Evaluation & action log</div>', unsafe_allow_html=True)
     st.caption(
-        "Monitor the current session and keep the validated V1/V2 benchmark visible next to live assistant behavior."
+        "Monitor the current session alongside the validated release benchmark and live assistant behavior."
     )
 
     session_history = st.session_state.history
