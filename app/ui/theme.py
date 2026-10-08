@@ -371,6 +371,83 @@ div.stDownloadButton > button:active {
   background: color-mix(in srgb, var(--adi-panel-strong) 82%, transparent);
 }
 
+[data-testid="stStatusWidget"] {
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--adi-line);
+  background: color-mix(in srgb, var(--adi-panel) 76%, transparent);
+  box-shadow: 0 14px 36px color-mix(in srgb, var(--adi-shadow) 42%, transparent);
+}
+
+[data-baseweb="popover"] > div,
+[data-baseweb="menu"] {
+  background: var(--adi-panel-strong) !important;
+  border: 1px solid var(--adi-line) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 20px 50px var(--adi-shadow) !important;
+}
+
+[role="option"] {
+  color: var(--adi-text) !important;
+}
+
+[role="option"]:hover,
+[aria-selected="true"][role="option"] {
+  background: color-mix(in srgb, var(--adi-a) 14%, transparent) !important;
+}
+
+[data-testid="stSlider"] [role="slider"] {
+  background: var(--adi-c) !important;
+  border-color: color-mix(in srgb, var(--adi-c) 52%, #fff) !important;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--adi-c) 10%, transparent);
+}
+
+[data-testid="stCheckbox"] span[data-baseweb="checkbox"] > div {
+  border-radius: 6px;
+}
+
+[data-testid="stCheckbox"] span[data-baseweb="checkbox"][aria-checked="true"] > div {
+  background: linear-gradient(135deg, var(--adi-a), var(--adi-c)) !important;
+  border-color: transparent !important;
+}
+
+[data-testid="stProgress"] > div > div {
+  background: linear-gradient(90deg, var(--adi-a), var(--adi-c), var(--adi-b)) !important;
+}
+
+[data-testid="stCodeBlock"] {
+  border-radius: 16px;
+  border: 1px solid var(--adi-line);
+  overflow: hidden;
+}
+
+[data-testid="stDataFrame"] {
+  border: 1px solid var(--adi-line);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--adi-a) 46%, var(--adi-muted)) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(var(--adi-a), var(--adi-c));
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
 /* hero */
 .adi-hero {
   position: relative;
