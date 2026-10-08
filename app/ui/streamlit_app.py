@@ -45,7 +45,7 @@ st.set_page_config(
     layout="wide",
 )
 
-active_theme = st.session_state.get("ui_theme", "Aurora")
+active_theme = st.session_state.get("ui_theme", "Dark")
 apply_v2_theme(active_theme)
 render_hero(active_theme)
 
@@ -106,13 +106,14 @@ _ensure_state()
 
 with st.sidebar:
     st.header("Experience")
-    ui_theme = st.selectbox(
-        "Visual theme",
+    ui_theme = st.radio(
+        "Appearance",
         available_themes(),
+        horizontal=True,
         key="ui_theme",
-        help="Switch the complete interface palette without changing the RAG pipeline.",
+        help="Switch between the two product modes without changing the RAG pipeline.",
     )
-    st.caption("Aurora · Prism · Ember · Pearl — same system, different visual identity.")
+    st.caption("Dark / Light · charcoal, neutral gray, warm yellow accent.")
     st.divider()
     st.header("Configuration")
     st.info(
