@@ -531,6 +531,7 @@ with assistant_tab:
                         )
 
         if ask_requested:
+            request_started = time.perf_counter()
             try:
                 generator = _get_generator(
                     generator_mode,
@@ -600,6 +601,30 @@ with assistant_tab:
                             document_id=document_options[selected_document],
                         )
                         st.session_state.history.append(("classical", answer))
+
+                elapsed_seconds = time.perf_counter() - request_started
+                latest_mode, latest_answer = st.session_state.history[-1]
+                latest_verifications = getattr(latest_answer, "verifications", [])
+                st.session_state.session_events.append(
+                    {
+                        "mode": latest_mode,
+                        "question": question,
+                        "latency_seconds": elapsed_seconds,
+                        "citation_count": len(getattr(latest_answer, "citations", [])),
+                        "claim_count": len(latest_verifications),
+                        "supported_claims": sum(
+                            verification.status == "supported"
+                            for verification in latest_verifications
+                        ),
+                        "llm_calls": getattr(generator, "last_llm_calls", 0),
+                        "rounds": getattr(latest_answer, "rounds_used", 0),
+                        "additional_chunks": getattr(
+                            latest_answer,
+                            "additional_chunks_considered",
+                            0,
+                        ),
+                    }
+                )
             except Exception as exc:
                 st.error(f"Could not answer the question: {exc}")
 
