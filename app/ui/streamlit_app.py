@@ -46,6 +46,9 @@ st.set_page_config(
 )
 
 active_theme = st.session_state.get("ui_theme", "Dark")
+if active_theme not in available_themes():
+    active_theme = "Dark"
+    st.session_state.ui_theme = active_theme
 apply_v2_theme(active_theme)
 render_hero(active_theme)
 
