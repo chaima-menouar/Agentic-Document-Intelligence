@@ -5,7 +5,23 @@
 Demonstrate how V2 improves document coverage, grounding, verification, and
 agent efficiency while keeping V1 behavior available for comparison.
 
-## 1. Introduce V1 vs V2
+## 1. Introduce the V2 interface
+
+The final UI is organized into six spaces:
+
+- **Overview** — product summary, architecture flow, capability cards, workspace state;
+- **Documents** — upload, OCR/index status, document metrics, original-page vs extracted-text inspection;
+- **Assistant** — three-zone workspace: Sources / Question + Answer / Evidence;
+- **Evaluation** — live session metrics, benchmark snapshot, action log, human review;
+- **V1 vs V2** — controlled side-by-side comparison;
+- **Configuration** — active retrieval, verifier, agent, chunking, OCR, and model settings.
+
+The visual system uses a dark navy document-intelligence theme with blue/cyan
+evidence accents, rounded glass-like panels, status pills, and subtle scan /
+flow / fade animations. Animations are intentionally restrained so evidence and
+verification remain the visual focus.
+
+## 2. Introduce V1 vs V2
 
 V1 established the core architecture:
 
@@ -25,7 +41,7 @@ OCR ingestion
 Hybrid retrieval/reranking is available as an experimental optional retrieval
 mode; dense BGE remains the validated default.
 
-## 2. Show scanned-PDF support
+## 3. Show scanned-PDF support
 
 Upload an image-only or text-poor English PDF.
 
@@ -36,7 +52,7 @@ Point out:
 - OCR text retains its page provenance;
 - no paid OCR service is required.
 
-## 3. Ask a normal answerable question
+## 4. Ask a normal answerable question
 
 Use:
 
@@ -47,7 +63,7 @@ Use:
 Explain that dense BGE stays the default because the full QASPER benchmark did
 not show a Recall@5 improvement from RRF alone.
 
-## 4. Show semantic verification
+## 5. Show semantic verification
 
 Open a verification expander.
 
@@ -61,7 +77,7 @@ Point out:
 Explain that V2 can recognize semantic entailment beyond simple token overlap,
 while still requiring valid citations.
 
-## 5. Show adaptive agent behavior
+## 6. Show adaptive agent behavior
 
 Ask an unsupported or evidence-poor question.
 
@@ -79,7 +95,7 @@ The controlled benchmark preserved 100% safe abstention while reducing
 unsupported-case average retrieval from 3 rounds / 9 chunks in the fixed V1
 policy to 2 rounds / 6 chunks in the adaptive V2 policy.
 
-## 6. Show V1 vs V2 side-by-side
+## 7. Show V1 vs V2 side-by-side
 
 Open the **V1 vs V2** tab and ask one question.
 
@@ -102,7 +118,7 @@ Compare:
 - additional chunks;
 - V2 adaptive trace.
 
-## 7. Optional: show guarded local LLM generation
+## 8. Optional: show guarded local LLM generation
 
 If a local Ollama/LM Studio OpenAI-compatible endpoint is available, select
 **V2 grounded local LLM**.
@@ -118,7 +134,7 @@ local LLM answer
 
 This means fluent local generation does not bypass the grounding contract.
 
-## 8. Optional: compare retrieval modes
+## 9. Optional: compare retrieval modes
 
 The UI exposes:
 
@@ -137,7 +153,7 @@ Recorded QASPER findings:
 Explain that V2 keeps experimental improvements optional when a benchmark does
 not justify replacing the validated default.
 
-## 9. Finish with safety behavior
+## 10. Finish with safety behavior
 
 Use a question whose answer is absent from the document.
 
