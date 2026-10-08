@@ -399,7 +399,10 @@ with documents_tab:
                 st.info("No retrieval chunk text was produced for this page.")
 
 with assistant_tab:
-    st.subheader("Assistant")
+    st.markdown('<div class="adi-section">Grounded assistant</div>', unsafe_allow_html=True)
+    st.caption(
+        "The workspace is intentionally split into Sources, Question + Answer, and Evidence so every response remains inspectable."
+    )
     dense_retriever = st.session_state.get("retriever")
     if retrieval_mode == "V2 hybrid RRF":
         retriever = st.session_state.get("hybrid_retriever")
@@ -416,17 +419,113 @@ with assistant_tab:
         for item in result.documents:
             document_options[item.filename] = item.document_id
 
-        selected_document = st.selectbox(
-            "Search scope",
-            list(document_options.keys()),
-        )
-        question = st.text_area(
-            "Question",
-            placeholder="Ask a question about the uploaded documents...",
-            height=100,
-        )
+        source_zone, answer_zone, evidence_zone = st.columns([0.95, 1.7, 1.15])
 
-        if st.button("Ask", type="primary", disabled=not question.strip()):
+        with source_zone:
+            zone_intro(
+                "Sources",
+                "Choose the active corpus scope and keep document status visible before asking.",
+            )
+            selected_document = st.selectbox(
+                "Search scope",
+                list(document_options.keys()),
+                key="assistant_search_scope",
+            )
+            selected_id = document_options[selected_document]
+            active_docs = (
+                len(result.documents)
+                if selected_id is None
+                else 1
+            )
+            st.metric("Active documents", active_docs)
+            status_pills(
+                [
+                    (retrieval_mode.replace("V1 ", "").replace("V2 ", ""), "info"),
+                    ("Top-K " + str(top_k), ""),
+                ]
+            )
+            with st.expander("Corpus documents"):
+                for item in result.documents:
+                    marker = "●" if selected_id in {None, item.document_id} else "○"
+                    st.write(f"{marker} {item.filename}")
+                    st.caption(
+                        f"{item.page_count} pages · {item.chunk_count} chunks · "
+                        f"{item.ocr_page_count} OCR pages"
+                    )
+
+        with answer_zone:
+            zone_intro(
+                "Question + answer",
+                "Ask the corpus. The selected RAG mode generates only from retrieved evidence and can abstain when support is insufficient.",
+            )
+            question = st.text_area(
+                "Question",
+                placeholder="Ask a question about the uploaded documents...",
+                height=132,
+                key="assistant_question",
+            )
+            ask_requested = st.button(
+                "Ask the evidence",
+                type="primary",
+                disabled=not question.strip(),
+                use_container_width=True,
+            )
+            status_pills(
+                [
+                    (assistant_mode, "info"),
+                    (verifier_mode, ""),
+                    (agent_policy_mode, "gold"),
+                ]
+            )
+
+        with evidence_zone:
+            zone_intro(
+                "Evidence",
+                "Inspect the latest citations, support decisions, and verification method without leaving the assistant.",
+            )
+            latest_history = st.session_state.history[-1] if st.session_state.history else None
+            if latest_history is None:
+                st.info("Evidence will appear here after the first answer.")
+            else:
+                if isinstance(latest_history, tuple):
+                    latest_mode, latest_answer = latest_history
+                else:
+                    latest_mode, latest_answer = "classical", latest_history
+                latest_citations = getattr(latest_answer, "citations", [])
+                latest_verifications = getattr(latest_answer, "verifications", [])
+                st.metric("Citations", len(latest_citations))
+                if latest_verifications:
+                    supported = sum(
+                        item.status == "supported"
+                        for item in latest_verifications
+                    )
+                    st.metric(
+                        "Supported claims",
+                        f"{supported}/{len(latest_verifications)}",
+                    )
+                    for verification in latest_verifications[:3]:
+                        icon = {
+                            "supported": "✅",
+                            "needs_review": "⚠️",
+                            "unsupported": "❌",
+                        }.get(verification.status, "•")
+                        st.caption(
+                            f"{icon} {verification.claim_id} · "
+                            f"{verification.verifier_method} · "
+                            f"{verification.support_score:.2f}"
+                        )
+                elif latest_citations:
+                    for citation in latest_citations[:3]:
+                        page_text = (
+                            f"page {citation.page_number}"
+                            if citation.page_number is not None
+                            else "source passage"
+                        )
+                        st.caption(
+                            f"[{citation.label}] {page_text} · {citation.score:.3f}"
+                        )
+
+        if ask_requested:
             try:
                 generator = _get_generator(
                     generator_mode,
