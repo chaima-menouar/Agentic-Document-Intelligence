@@ -1168,7 +1168,16 @@ with configuration_tab:
                 config_line("Retrieval", retrieval_mode),
                 config_line("Verifier", verifier_mode),
                 config_line("Top-K evidence", str(top_k)),
+                config_line("Chunk size", "220 words"),
+                config_line("Chunk overlap", "40 words"),
+                config_line("Prompt contract", "evidence-only + citations"),
                 config_line("Agent policy", agent_policy_mode),
+                config_line(
+                    "Max retrieval rounds",
+                    "3 adaptive"
+                    if agent_policy_mode == "V2 adaptive budgeted"
+                    else "2 fixed",
+                ),
                 config_line(
                     "Agent chunk budget",
                     str(agent_budget)
@@ -1197,6 +1206,14 @@ with configuration_tab:
                 ),
                 config_line("Embedding model", "BAAI/bge-small-en-v1.5"),
                 config_line("Vector index", "FAISS"),
+                config_line(
+                    "Corpus state",
+                    (
+                        f"{len(st.session_state.workspace_result.documents)} active document(s)"
+                        if st.session_state.get("workspace_result") is not None
+                        else "no active corpus"
+                    ),
+                ),
                 config_line("Paid external API", "not required"),
             ]
         )
