@@ -38,8 +38,8 @@ its evidence-grounded design and local-first execution model.
 - Added V1 vs V2 controlled evaluation.
 - Added a side-by-side V1 vs V2 demo tab.
 - Added OCR, retrieval, verifier, and agent-policy diagnostics.
-- Rebuilt the Streamlit visual layer as a cinematic AI product interface with multi-color glass panels, animated evidence-core/orbit visuals, gradient navigation, bento capability cards, animated pipeline states, verification gauges, and themed native controls.
-- Added four switchable visual identities: **Aurora, Prism, Ember, and Pearl**.
+- Rebuilt the Streamlit visual layer with a Mantine-inspired product identity: charcoal/neutral surfaces, white/gray typography, a single warm-yellow accent, clean brand bar, layered document/evidence hero cards, subtle motion, compact cards, verification gauges, and themed native controls.
+- Added exactly two switchable appearance modes: **Dark** and **Light**.
 - Added reduced-motion support for accessibility.
 - Added V2-specific E2E workflows and a final full-stack smoke workflow.
 
