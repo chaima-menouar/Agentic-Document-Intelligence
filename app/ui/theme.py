@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+import textwrap
 
 import streamlit as st
 
@@ -57,21 +58,25 @@ html { scroll-behavior: smooth; }
 
 html, body, [data-testid="stAppViewContainer"] {
   color: var(--adi-text);
-  background:
-    radial-gradient(circle at 85% -8%, var(--adi-accent-soft), transparent 26rem),
-    linear-gradient(180deg, var(--adi-bg) 0%, var(--adi-bg2) 100%);
 }
 
 [data-testid="stAppViewContainer"] {
   position: relative;
   isolation: isolate;
   overflow-x: hidden;
+  background:
+    radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--adi-accent) 16%, transparent) 0%, transparent 24%),
+    radial-gradient(circle at 88% 22%, color-mix(in srgb, var(--adi-accent) 10%, transparent) 0%, transparent 22%),
+    radial-gradient(circle at 68% 82%, color-mix(in srgb, var(--adi-text) 5%, transparent) 0%, transparent 25%),
+    linear-gradient(135deg, var(--adi-bg) 0%, var(--adi-bg2) 48%, var(--adi-bg) 100%);
+  background-size: 140% 140%, 145% 145%, 150% 150%, 100% 100%;
+  animation: adiBackgroundFlow 18s ease-in-out infinite alternate;
 }
 
 .adi-ambient {
   position: fixed;
   inset: 0;
-  z-index: -2;
+  z-index: 0;
   pointer-events: none;
   overflow: hidden;
   background:
@@ -110,7 +115,7 @@ html, body, [data-testid="stAppViewContainer"] {
 
 .adi-orb {
   position: fixed;
-  z-index: -1;
+  z-index: 0;
   width: 260px;
   height: 260px;
   border-radius: 999px;
@@ -136,6 +141,8 @@ html, body, [data-testid="stAppViewContainer"] {
 }
 
 [data-testid="stAppViewBlockContainer"] {
+  position: relative;
+  z-index: 1;
   max-width: 1500px;
   padding-top: 1rem;
   padding-bottom: 4rem;
@@ -512,101 +519,129 @@ div.stDownloadButton > button:active {
   border-color: var(--adi-accent);
 }
 
-/* Stacked document/evidence preview */
+/* Animated intelligence visual */
 .adi-visual-stage {
   position: relative;
+  min-height: 350px;
+  display: grid;
+  place-items: center;
+  overflow: visible;
+}
+
+.adi-core-wrap {
+  position: relative;
+  width: 330px;
   height: 330px;
-  perspective: 1100px;
-  transform: rotate(-2deg);
+  display: grid;
+  place-items: center;
 }
 
-.adi-preview {
+.adi-core-ring,
+.adi-core-ring::before,
+.adi-core-ring::after {
   position: absolute;
-  right: 0;
-  width: min(100%, 430px);
-  border: 1px solid var(--adi-border);
-  border-radius: 14px;
-  background: var(--adi-bg2);
-  box-shadow: 0 18px 42px var(--adi-shadow);
-  overflow: hidden;
-  transition: transform .3s ease, box-shadow .3s ease;
+  inset: 0;
+  border-radius: 50%;
 }
 
-.adi-preview:hover {
-  z-index: 8;
-  box-shadow: 0 26px 56px var(--adi-shadow);
+.adi-core-ring {
+  border: 1px solid color-mix(in srgb, var(--adi-accent) 38%, transparent);
+  animation: adiSpin 18s linear infinite;
 }
 
-.adi-preview.p1 {
-  top: 0;
-  right: -22px;
-  transform: rotate(4deg) translateZ(0);
-  animation: adiCardFloat 6s ease-in-out infinite;
+.adi-core-ring::before,
+.adi-core-ring::after {
+  content: "";
 }
 
-.adi-preview.p2 {
-  top: 104px;
-  right: 36px;
-  transform: rotate(-2deg);
-  animation: adiCardFloat 6.8s ease-in-out -1.3s infinite;
+.adi-core-ring::before {
+  inset: 34px;
+  border: 1px dashed color-mix(in srgb, var(--adi-accent) 36%, var(--adi-border));
+  animation: adiSpinReverse 13s linear infinite;
 }
 
-.adi-preview.p3 {
-  top: 218px;
-  right: -2px;
-  transform: rotate(3deg);
-  animation: adiCardFloat 7.4s ease-in-out -2.4s infinite;
+.adi-core-ring::after {
+  inset: 72px;
+  border: 1px solid color-mix(in srgb, var(--adi-text) 10%, var(--adi-border));
 }
 
-.adi-preview-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: .6rem;
-  padding: .58rem .72rem;
-  border-bottom: 1px solid var(--adi-border);
-  color: var(--adi-muted);
-  font-size: .63rem;
-  font-weight: 700;
-}
-
-.adi-preview-body {
-  padding: .8rem .86rem .9rem;
-}
-
-.adi-preview-title {
-  color: var(--adi-text);
-  font-size: .86rem;
-  font-weight: 820;
-  margin-bottom: .32rem;
-}
-
-.adi-preview-copy {
-  color: var(--adi-muted);
-  font-size: .67rem;
-  line-height: 1.48;
-}
-
-.adi-preview-line {
-  height: 6px;
-  margin-top: .5rem;
-  border-radius: 99px;
-  background: var(--adi-surface3);
-}
-
-.adi-preview-line.short { width: 62%; }
-.adi-preview-line.mid { width: 82%; }
-
-.adi-preview-accent {
-  display: inline-flex;
-  align-items: center;
-  gap: .28rem;
+.adi-core {
+  position: relative;
+  z-index: 4;
+  width: 118px;
+  height: 118px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
   color: #1A1B1E;
+  background:
+    radial-gradient(circle at 34% 30%, #fff6b3 0%, var(--adi-accent) 28%, var(--adi-accent-hover) 74%);
+  box-shadow:
+    0 0 0 12px color-mix(in srgb, var(--adi-accent) 9%, transparent),
+    0 0 48px color-mix(in srgb, var(--adi-accent) 38%, transparent);
+  animation: adiCorePulse 3.5s ease-in-out infinite;
+}
+
+.adi-core strong {
+  font-size: 1.22rem;
+  letter-spacing: -.04em;
+}
+
+.adi-node {
+  position: absolute;
+  z-index: 5;
+  min-width: 108px;
+  padding: .56rem .68rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--adi-border) 82%, transparent);
+  background: color-mix(in srgb, var(--adi-surface) 86%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 12px 28px var(--adi-shadow);
+  color: var(--adi-text);
+  font-size: .69rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.adi-node small {
+  display: block;
+  margin-top: .15rem;
+  color: var(--adi-muted);
+  font-size: .56rem;
+  font-weight: 600;
+}
+
+.adi-node.n1 { top: 18px; left: 10px; animation: adiNodeFloat 5.2s ease-in-out infinite; }
+.adi-node.n2 { top: 34px; right: -8px; animation: adiNodeFloat 5.8s ease-in-out -.8s infinite; }
+.adi-node.n3 { bottom: 26px; left: -10px; animation: adiNodeFloat 6.1s ease-in-out -1.5s infinite; }
+.adi-node.n4 { bottom: 12px; right: 4px; animation: adiNodeFloat 5.5s ease-in-out -2.2s infinite; }
+
+.adi-signal {
+  position: absolute;
+  z-index: 2;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
   background: var(--adi-accent);
-  padding: .22rem .42rem;
-  border-radius: 6px;
-  font-size: .58rem;
-  font-weight: 850;
+  box-shadow: 0 0 16px var(--adi-accent);
+}
+
+.adi-signal.s1 { animation: adiOrbitOne 6s linear infinite; }
+.adi-signal.s2 { animation: adiOrbitTwo 8s linear infinite reverse; }
+
+.adi-visual-caption {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 100%;
+  color: var(--adi-muted);
+  font-size: .66rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-weight: 800;
 }
 
 /* Sections/cards */
@@ -846,6 +881,40 @@ div.stDownloadButton > button:active {
 .adi-config-key { color: var(--adi-muted); }
 .adi-config-value { color: var(--adi-text); font-weight: 700; text-align: right; }
 
+@keyframes adiBackgroundFlow {
+  0% { background-position: 0% 0%, 100% 0%, 50% 100%, 0 0; }
+  50% { background-position: 12% 10%, 86% 14%, 58% 88%, 0 0; }
+  100% { background-position: 22% 16%, 76% 20%, 66% 76%, 0 0; }
+}
+
+@keyframes adiSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes adiSpinReverse {
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes adiCorePulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 12px color-mix(in srgb, var(--adi-accent) 9%, transparent), 0 0 48px color-mix(in srgb, var(--adi-accent) 38%, transparent); }
+  50% { transform: scale(1.055); box-shadow: 0 0 0 20px color-mix(in srgb, var(--adi-accent) 5%, transparent), 0 0 70px color-mix(in srgb, var(--adi-accent) 50%, transparent); }
+}
+
+@keyframes adiNodeFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes adiOrbitOne {
+  0% { transform: rotate(0deg) translateX(138px) rotate(0deg); }
+  100% { transform: rotate(360deg) translateX(138px) rotate(-360deg); }
+}
+
+@keyframes adiOrbitTwo {
+  0% { transform: rotate(0deg) translateX(102px) rotate(0deg); }
+  100% { transform: rotate(360deg) translateX(102px) rotate(-360deg); }
+}
+
 @keyframes adiFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -964,82 +1033,56 @@ def render_ambient_background() -> None:
 
 def render_hero(theme: str = "Dark") -> None:
     safe_theme = html.escape(theme)
-    st.markdown(
-        f"""
-        <div class="adi-brandbar">
-          <div class="adi-brand">
-            <span class="adi-brandmark">AI</span>
-            Agentic Document Intelligence
-          </div>
-          <div class="adi-brandmeta">
-            <span class="adi-live-dot"></span>
-            V2 · {safe_theme} mode · local-first
-          </div>
+    hero_html = f"""
+    <div class="adi-brandbar">
+      <div class="adi-brand">
+        <span class="adi-brandmark">AI</span>
+        Agentic Document Intelligence
+      </div>
+      <div class="adi-brandmeta">
+        <span class="adi-live-dot"></span>
+        V2 · {safe_theme} mode · local-first
+      </div>
+    </div>
+
+    <section class="adi-hero">
+      <div>
+        <div class="adi-kicker">Evidence-grounded AI for documents</div>
+        <div class="adi-title">
+          Ask your documents.<br>
+          <span class="accent">Verify every answer.</span>
         </div>
+        <div class="adi-subtitle">
+          Ingest text or scanned PDFs, retrieve inspectable evidence, verify
+          generated claims, and let a bounded agent recover missing support —
+          all with a local-first architecture.
+        </div>
+        <div class="adi-chip-row">
+          <span class="adi-chip"><strong>01</strong> OCR ingestion</span>
+          <span class="adi-chip"><strong>02</strong> Evidence RAG</span>
+          <span class="adi-chip"><strong>03</strong> Semantic verification</span>
+          <span class="adi-chip"><strong>04</strong> Agentic recovery</span>
+        </div>
+      </div>
 
-        <section class="adi-hero">
-          <div>
-            <div class="adi-kicker">Evidence-grounded AI for documents</div>
-            <div class="adi-title">
-              Ask your documents.<br>
-              <span class="accent">Verify every answer.</span>
-            </div>
-            <div class="adi-subtitle">
-              Ingest text or scanned PDFs, retrieve inspectable evidence, verify
-              generated claims, and let a bounded agent recover missing support —
-              all with a local-first architecture.
-            </div>
-            <div class="adi-chip-row">
-              <span class="adi-chip"><strong>01</strong> OCR ingestion</span>
-              <span class="adi-chip"><strong>02</strong> Evidence RAG</span>
-              <span class="adi-chip"><strong>03</strong> Semantic verification</span>
-              <span class="adi-chip"><strong>04</strong> Agentic recovery</span>
-            </div>
-          </div>
+      <div class="adi-visual-stage" aria-hidden="true">
+        <div class="adi-core-wrap">
+          <div class="adi-core-ring"></div>
+          <div class="adi-signal s1"></div>
+          <div class="adi-signal s2"></div>
 
-          <div class="adi-visual-stage" aria-hidden="true">
-            <div class="adi-preview p1">
-              <div class="adi-preview-head">
-                <span>DOCUMENT INGESTION</span>
-                <span class="adi-preview-accent">OCR READY</span>
-              </div>
-              <div class="adi-preview-body">
-                <div class="adi-preview-title">Research_Report.pdf</div>
-                <div class="adi-preview-copy">Page provenance preserved · 18 pages · local extraction</div>
-                <div class="adi-preview-line"></div>
-                <div class="adi-preview-line mid"></div>
-                <div class="adi-preview-line short"></div>
-              </div>
-            </div>
+          <div class="adi-node n1">OCR<small>scanned pages</small></div>
+          <div class="adi-node n2">RAG<small>evidence retrieval</small></div>
+          <div class="adi-node n3">NLI<small>claim verification</small></div>
+          <div class="adi-node n4">AGENT<small>bounded recovery</small></div>
 
-            <div class="adi-preview p2">
-              <div class="adi-preview-head">
-                <span>ANSWER VERIFICATION</span>
-                <span class="adi-preview-accent">SUPPORTED</span>
-              </div>
-              <div class="adi-preview-body">
-                <div class="adi-preview-title">Claim grounded in cited evidence [S2]</div>
-                <div class="adi-preview-copy">Semantic entailment confirms the retrieved source supports the answer.</div>
-                <div class="adi-preview-line mid"></div>
-                <div class="adi-preview-line"></div>
-              </div>
-            </div>
-
-            <div class="adi-preview p3">
-              <div class="adi-preview-head">
-                <span>AGENT TRACE</span>
-                <span class="adi-preview-accent">ROUND 01</span>
-              </div>
-              <div class="adi-preview-body">
-                <div class="adi-preview-title">Missing evidence detected → targeted retrieval</div>
-                <div class="adi-preview-copy">Recovery stays inside the configured evidence budget.</div>
-              </div>
-            </div>
-          </div>
-        </section>
-        """,
-        unsafe_allow_html=True,
-    )
+          <div class="adi-core"><strong>ADI V2</strong></div>
+          <div class="adi-visual-caption">evidence → answer → verify → recover</div>
+        </div>
+      </div>
+    </section>
+    """
+    st.markdown(textwrap.dedent(hero_html).strip(), unsafe_allow_html=True)
 
 
 def render_pipeline() -> None:
