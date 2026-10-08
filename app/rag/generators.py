@@ -186,6 +186,7 @@ class GroundedLocalGenerator:
         )
         self.max_repair_attempts = max_repair_attempts
         self.fallback = fallback or ExtractiveGenerator()
+        self.last_llm_calls = 0
 
     def _repair_prompt(self, original_prompt: str, invalid_answer: str) -> str:
         labels = sorted(
@@ -214,11 +215,14 @@ ORIGINAL PROMPT:
 """
 
     def generate(self, prompt: str) -> str:
+        self.last_llm_calls = 0
+        self.last_llm_calls += 1
         answer = self.client.generate(prompt).strip()
         if _has_valid_citations(answer, prompt):
             return answer
 
         for _ in range(self.max_repair_attempts):
+            self.last_llm_calls += 1
             answer = self.client.generate(
                 self._repair_prompt(prompt, answer)
             ).strip()
