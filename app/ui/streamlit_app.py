@@ -21,12 +21,9 @@ from app.retrieval import (
 )
 from app.ui.theme import (
     apply_v2_theme,
-    available_themes,
     config_line,
     feature_card,
-    render_ambient_background,
     render_hero,
-    render_pipeline,
     status_pills,
     verification_gauge,
     zone_intro,
@@ -41,17 +38,13 @@ from app.verification import (
 
 
 st.set_page_config(
-    page_title="Agentic Document Intelligence V2",
+    page_title="Agentic Document Intelligence",
     page_icon="📄",
     layout="wide",
 )
 
-active_theme = st.session_state.get("ui_theme", "Dark")
-if active_theme not in available_themes():
-    active_theme = "Dark"
-    st.session_state.ui_theme = active_theme
+active_theme = "Dark"
 apply_v2_theme(active_theme)
-render_ambient_background()
 render_hero(active_theme)
 
 
@@ -101,49 +94,39 @@ def _cached_semantic_verifier():
     return SemanticCitationGroundingVerifier()
 
 
-def _get_verifier(mode: str):
-    if mode == "V2 semantic NLI":
-        return _cached_semantic_verifier()
-    return CitationGroundingVerifier()
+def _get_verifier(mode: str = "Semantic NLI"):
+    if mode == "Lexical":
+        return CitationGroundingVerifier()
+    return _cached_semantic_verifier()
 
 
 _ensure_state()
 
 with st.sidebar:
-    st.header("Experience")
-    ui_theme = st.radio(
-        "Appearance",
-        available_themes(),
-        horizontal=True,
-        key="ui_theme",
-        help="Switch between the two product modes without changing the RAG pipeline.",
-    )
-    st.caption("Dark / Light · charcoal, neutral gray, warm yellow accent.")
-    st.divider()
     st.header("Configuration")
     st.info(
-        "Recommended V2 demo: Agentic Verified RAG + dense BGE (validated default) "
-        "+ V2 semantic NLI + V2 adaptive budgeted agent. Enable the grounded local "
-        "LLM only when a local Ollama/LM Studio endpoint is running."
+        "Recommended setup: Agentic Verified RAG + dense BGE retrieval + "
+        "semantic NLI verification + adaptive budgeted recovery. "
+        "Enable the grounded local LLM only when a local Ollama/LM Studio endpoint is running."
     )
     assistant_mode = st.selectbox(
         "Assistant mode",
-        ["Classical RAG", "Verified RAG", "Verified + Corrected RAG", "Agentic Verified RAG"],
-        help="Verified RAG adds claim-level evidence checks after generation.",
+        ["Agentic Verified RAG", "Verified + Corrected RAG", "Verified RAG", "Classical RAG"],
+        help="Agentic Verified RAG is the recommended final mode.",
     )
     generator_mode = st.selectbox(
         "Generator",
-        ["Offline extractive baseline", "V2 grounded local LLM"],
+        ["Offline extractive baseline", "Grounded local LLM"],
         help=(
             "The offline baseline is fully free. "
-            "The V2 local LLM option adds citation validation, one repair "
+            "The grounded local LLM option adds citation validation, one repair "
             "attempt, and a safe extractive fallback. It works with Ollama, "
             "LM Studio, or another local OpenAI-compatible server."
         ),
     )
     local_model = ""
     local_base_url = ""
-    if generator_mode == "V2 grounded local LLM":
+    if generator_mode == "Grounded local LLM":
         local_base_url = st.text_input(
             "Local endpoint",
             value="http://localhost:11434/v1",
@@ -153,30 +136,22 @@ with st.sidebar:
             placeholder="e.g. qwen2.5:3b, llama3.2:3b, or your local model",
         )
         st.caption(
-            "V2 guard: validate citations → repair once → extractive fallback."
+            "Guard: validate citations → repair once → extractive fallback."
         )
 
     top_k = st.slider("Top-K evidence", min_value=1, max_value=10, value=5)
-    agent_policy_mode = st.selectbox(
-        "Agent policy",
-        ["V2 adaptive budgeted", "V1 fixed bounded"],
-        index=0,
-        help=(
-            "V2 chooses retrieval actions from verification failure reasons, "
-            "stops when no new evidence is found, and enforces a strict chunk budget."
-        ),
-    )
+    agent_policy_mode = "Adaptive budgeted"
     agent_budget = st.slider(
         "Agent retrieval budget (chunks)",
         min_value=2,
         max_value=20,
         value=10,
         disabled=assistant_mode != "Agentic Verified RAG"
-        or agent_policy_mode != "V2 adaptive budgeted",
+        or agent_policy_mode != "Adaptive budgeted",
     )
     retrieval_mode = st.selectbox(
         "Retrieval",
-        ["V1 dense BGE + FAISS", "V2 hybrid RRF", "V2 hybrid + reranker"],
+        ["Dense BGE + FAISS", "Hybrid RRF", "Hybrid + reranker"],
         index=0,
         help=(
             "Dense BGE remains the validated default. Hybrid retrieval combines "
@@ -184,21 +159,11 @@ with st.sidebar:
             "a local cross-encoder over fused candidates."
         ),
     )
-    if retrieval_mode == "V2 hybrid + reranker":
+    if retrieval_mode == "Hybrid + reranker":
         st.caption("First reranked query may download/load the local cross-encoder.")
-    verifier_mode = st.selectbox(
-        "Verifier",
-        ["V1 lexical", "V2 semantic NLI"],
-        index=1,
-        help=(
-            "V2 uses a local NLI model to test semantic entailment. "
-            "If the model cannot load, it automatically falls back to V1 lexical verification."
-        ),
-    )
-    if verifier_mode == "V2 semantic NLI":
-        st.caption("First use may download/load the local NLI model.")
+    verifier_mode = "Semantic NLI"
     st.divider()
-    st.subheader("V2 ingestion")
+    st.subheader("Document ingestion")
     ocr_fallback = st.checkbox(
         "OCR scanned/text-poor pages",
         value=True,
@@ -218,21 +183,11 @@ with st.sidebar:
         st.rerun()
 
 
-overview_tab, documents_tab, assistant_tab, evaluation_tab, comparison_tab, configuration_tab = st.tabs(
-    ["Overview", "Documents", "Assistant", "Evaluation", "V1 vs V2", "Configuration"]
+overview_tab, documents_tab, assistant_tab, evaluation_tab, configuration_tab = st.tabs(
+    ["Overview", "Documents", "Assistant", "Evaluation", "Configuration"]
 )
 
 with overview_tab:
-    render_pipeline()
-    status_pills(
-        [
-            ("V2 release candidate", "info"),
-            ("Local-first", ""),
-            ("Evidence-grounded", ""),
-            ("No paid API required", "gold"),
-        ]
-    )
-
     st.markdown('<div class="adi-section">Core capabilities</div>', unsafe_allow_html=True)
     cap1, cap2, cap3 = st.columns(3)
     with cap1:
@@ -427,9 +382,9 @@ with assistant_tab:
         "The workspace is intentionally split into Sources, Question + Answer, and Evidence so every response remains inspectable."
     )
     dense_retriever = st.session_state.get("retriever")
-    if retrieval_mode == "V2 hybrid RRF":
+    if retrieval_mode == "Hybrid RRF":
         retriever = st.session_state.get("hybrid_retriever")
-    elif retrieval_mode == "V2 hybrid + reranker":
+    elif retrieval_mode == "Hybrid + reranker":
         retriever = st.session_state.get("reranked_retriever")
     else:
         retriever = dense_retriever
@@ -868,12 +823,12 @@ with evaluation_tab:
     perf2.metric("Local LLM calls", total_llm_calls)
     perf3.metric("Human ratings", len(st.session_state.feedback))
 
-    st.markdown('<div class="adi-section">Validated V1 → V2 benchmark</div>', unsafe_allow_html=True)
+    st.markdown('<div class="adi-section">Validated release benchmark</div>', unsafe_allow_html=True)
     bench1, bench2, bench3, bench4 = st.columns(4)
-    bench1.metric("Citation precision", "100%", "+100 pp")
-    bench2.metric("Verifier accuracy", "66.7%", "+33.4 pp")
+    bench1.metric("Citation precision", "100%", "high precision")
+    bench2.metric("Verifier accuracy", "66.7%", "semantic check")
     bench3.metric("Safe abstention", "100%", "maintained")
-    bench4.metric("Unsupported rounds", "2.0", "-1.0 vs V1")
+    bench4.metric("Unsupported rounds", "2.0", "bounded")
 
     eval_left, eval_right = st.columns(2)
     with eval_left:
@@ -881,9 +836,8 @@ with evaluation_tab:
             """
             <div class="adi-benchmark">
               <strong style="color:#eaf7ff">Retrieval decision</strong><br>
-              Full QASPER Recall@5: dense BGE <strong>66.10%</strong> vs plain
-              hybrid RRF <strong>65.43%</strong>. Dense therefore remains the
-              validated default instead of being replaced only because hybrid is newer.
+              Full QASPER Recall@5 keeps dense BGE at <strong>66.10%</strong>,
+              so dense retrieval remains the validated default for the release.
             </div>
             """,
             unsafe_allow_html=True,
@@ -905,9 +859,8 @@ with evaluation_tab:
             """
             <div class="adi-benchmark">
               <strong style="color:#eaf7ff">Adaptive agent</strong><br>
-              Recoverable-claim recovery stayed at <strong>90%</strong>, while
-              unsupported-case retrieval dropped from <strong>3 rounds / 9 chunks</strong>
-              to <strong>2 rounds / 6 chunks</strong>.
+              Recoverable-claim recovery reaches <strong>90%</strong>, while
+              unsupported cases stay bounded at about <strong>2 rounds / 6 chunks</strong>.
             </div>
             """,
             unsafe_allow_html=True,
@@ -915,9 +868,9 @@ with evaluation_tab:
         st.markdown(
             """
             <div class="adi-benchmark">
-              <strong style="color:#eaf7ff">Evaluation principle</strong><br>
-              V2 keeps improvements optional when a benchmark does not justify
-              replacing the validated V1 component.
+              <strong style="color:#eaf7ff">Release principle</strong><br>
+              The final interface exposes the strongest validated configuration
+              while keeping safe fallbacks inside the pipeline.
             </div>
             """,
             unsafe_allow_html=True,
@@ -1002,176 +955,6 @@ with evaluation_tab:
             st.success("Human evaluation saved for the latest answer.")
 
 
-with comparison_tab:
-    st.subheader("V1 vs V2 side-by-side")
-    st.caption(
-        "This demo uses the same offline extractive generator and the same dense "
-        "BGE retriever on both sides, isolating the verification and agent-policy "
-        "differences."
-    )
-
-    comparison_retriever = st.session_state.get("retriever")
-    comparison_result = st.session_state.get("workspace_result")
-
-    if comparison_retriever is None or comparison_result is None:
-        st.info("Process at least one PDF in the Documents tab first.")
-    else:
-        comparison_documents = {"All documents": None}
-        for item in comparison_result.documents:
-            comparison_documents[item.filename] = item.document_id
-
-        comparison_scope = st.selectbox(
-            "Comparison search scope",
-            list(comparison_documents.keys()),
-            key="comparison_scope",
-        )
-        comparison_question = st.text_area(
-            "Comparison question",
-            placeholder="Ask one question to run through both V1 and V2...",
-            height=100,
-            key="comparison_question",
-        )
-        comparison_top_k = st.slider(
-            "Comparison Top-K",
-            min_value=1,
-            max_value=10,
-            value=5,
-            key="comparison_top_k",
-        )
-
-        if st.button(
-            "Compare V1 vs V2",
-            type="primary",
-            disabled=not comparison_question.strip(),
-            key="compare_v1_v2_button",
-        ):
-            try:
-                document_id = comparison_documents[comparison_scope]
-
-                v1_generator = ExtractiveGenerator()
-                v1_rag = ClassicalRAG(
-                    retriever=comparison_retriever,
-                    generator=v1_generator,
-                )
-                v1_verifier = CitationGroundingVerifier()
-                v1_verified = VerifiedRAG(
-                    rag=v1_rag,
-                    verifier=v1_verifier,
-                )
-                v1_pipeline = AgenticVerifiedRAG(
-                    verified_rag=v1_verified,
-                    retriever=comparison_retriever,
-                    verifier=v1_verifier,
-                    max_rounds=2,
-                    additional_top_k=comparison_top_k,
-                )
-
-                v2_generator = ExtractiveGenerator()
-                v2_rag = ClassicalRAG(
-                    retriever=comparison_retriever,
-                    generator=v2_generator,
-                )
-                v2_verifier = _get_verifier("V2 semantic NLI")
-                v2_verified = VerifiedRAG(
-                    rag=v2_rag,
-                    verifier=v2_verifier,
-                )
-                v2_pipeline = AdaptiveAgenticVerifiedRAG(
-                    verified_rag=v2_verified,
-                    retriever=comparison_retriever,
-                    verifier=v2_verifier,
-                    max_rounds=3,
-                    additional_top_k=comparison_top_k,
-                    max_total_additional_chunks=10,
-                )
-
-                with st.spinner("Running V1 and V2 on the same evidence..."):
-                    v1_answer = v1_pipeline.answer(
-                        comparison_question,
-                        top_k=comparison_top_k,
-                        document_id=document_id,
-                    )
-                    v2_answer = v2_pipeline.answer(
-                        comparison_question,
-                        top_k=comparison_top_k,
-                        document_id=document_id,
-                    )
-
-                left, right = st.columns(2)
-
-                with left:
-                    st.markdown("### V1")
-                    st.markdown(v1_answer.final_answer)
-                    st.write(
-                        "Verification:",
-                        v1_answer.final_verification_status.replace("_", " ").title(),
-                    )
-                    st.write("Status:", v1_answer.status.replace("_", " ").title())
-                    st.metric("Additional rounds", v1_answer.rounds_used)
-                    st.metric(
-                        "Additional chunks",
-                        v1_answer.additional_chunks_considered,
-                    )
-                    st.caption("Verifier: lexical · Agent: fixed bounded")
-
-                with right:
-                    st.markdown("### V2")
-                    st.markdown(v2_answer.final_answer)
-                    st.write(
-                        "Verification:",
-                        v2_answer.final_verification_status.replace("_", " ").title(),
-                    )
-                    st.write("Status:", v2_answer.status.replace("_", " ").title())
-                    st.metric("Additional rounds", v2_answer.rounds_used)
-                    st.metric(
-                        "Additional chunks",
-                        v2_answer.additional_chunks_considered,
-                    )
-                    st.caption(
-                        "Verifier: semantic NLI · Agent: adaptive budgeted"
-                    )
-                    if v2_answer.early_stop_reason:
-                        st.caption(
-                            "Early stop: "
-                            + v2_answer.early_stop_reason.replace("_", " ")
-                        )
-
-                st.markdown("#### Comparison")
-                col_a, col_b, col_c = st.columns(3)
-                col_a.metric(
-                    "Round difference (V2 − V1)",
-                    v2_answer.rounds_used - v1_answer.rounds_used,
-                )
-                col_b.metric(
-                    "Chunk difference (V2 − V1)",
-                    (
-                        v2_answer.additional_chunks_considered
-                        - v1_answer.additional_chunks_considered
-                    ),
-                )
-                col_c.metric(
-                    "V2 recovered claims",
-                    len(v2_answer.recovered_claim_ids),
-                )
-
-                with st.expander("V2 adaptive trace"):
-                    if not v2_answer.steps:
-                        st.write("No additional retrieval was needed.")
-                    for step in v2_answer.steps:
-                        st.write(
-                            f"Round {step.round_index} · {step.action} · "
-                            f"resolved={step.resolved}"
-                        )
-                        st.caption(
-                            f"reason={step.failure_reason or 'n/a'} · "
-                            f"new_chunks={step.new_chunks} · "
-                            f"support_delta={step.support_improvement:+.2f}"
-                        )
-                        st.caption(step.query)
-            except Exception as exc:
-                st.error(f"Could not run the V1/V2 comparison: {exc}")
-
-
 with configuration_tab:
     st.markdown('<div class="adi-section">Configuration workspace</div>', unsafe_allow_html=True)
     st.caption(
@@ -1183,7 +966,7 @@ with configuration_tab:
         st.markdown("### Active pipeline")
         config_html = "".join(
             [
-                config_line("Visual theme", ui_theme),
+                config_line("Visual theme", "Dark gold"),
                 config_line("Assistant mode", assistant_mode),
                 config_line("Generator", generator_mode),
                 config_line("Retrieval", retrieval_mode),
@@ -1195,15 +978,12 @@ with configuration_tab:
                 config_line("Agent policy", agent_policy_mode),
                 config_line(
                     "Max retrieval rounds",
-                    "3 adaptive"
-                    if agent_policy_mode == "V2 adaptive budgeted"
-                    else "2 fixed",
+                    "3 adaptive",
                 ),
                 config_line(
                     "Agent chunk budget",
                     str(agent_budget)
                     if assistant_mode == "Agentic Verified RAG"
-                    and agent_policy_mode == "V2 adaptive budgeted"
                     else "not active",
                 ),
             ]
@@ -1272,8 +1052,8 @@ with configuration_tab:
         [
             ("Agentic Verified RAG", "info"),
             ("Dense BGE + FAISS", ""),
-            ("V2 semantic NLI", ""),
-            ("V2 adaptive budgeted", "gold"),
+            ("Semantic NLI", ""),
+            ("Adaptive budgeted", "gold"),
             ("OCR enabled", "info"),
         ]
     )
