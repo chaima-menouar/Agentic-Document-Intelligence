@@ -62,6 +62,79 @@ html, body, [data-testid="stAppViewContainer"] {
     linear-gradient(180deg, var(--adi-bg) 0%, var(--adi-bg2) 100%);
 }
 
+[data-testid="stAppViewContainer"] {
+  position: relative;
+  isolation: isolate;
+  overflow-x: hidden;
+}
+
+.adi-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      115deg,
+      transparent 0%,
+      color-mix(in srgb, var(--adi-accent) 5%, transparent) 38%,
+      transparent 62%
+    );
+}
+
+.adi-ambient::before {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  background:
+    radial-gradient(circle at 18% 24%, color-mix(in srgb, var(--adi-accent) 16%, transparent) 0, transparent 23%),
+    radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--adi-text) 6%, transparent) 0, transparent 22%),
+    radial-gradient(circle at 72% 76%, color-mix(in srgb, var(--adi-accent) 10%, transparent) 0, transparent 24%),
+    radial-gradient(circle at 25% 82%, color-mix(in srgb, var(--adi-text) 4%, transparent) 0, transparent 20%);
+  filter: blur(24px);
+  animation: adiAuroraDrift 22s ease-in-out infinite alternate;
+}
+
+.adi-ambient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: .18;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--adi-border) 50%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--adi-border) 50%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 78%);
+}
+
+.adi-orb {
+  position: fixed;
+  z-index: -1;
+  width: 260px;
+  height: 260px;
+  border-radius: 999px;
+  pointer-events: none;
+  filter: blur(8px);
+  opacity: .22;
+  background: radial-gradient(circle, var(--adi-accent) 0%, transparent 68%);
+}
+
+.adi-orb.one {
+  top: 12%;
+  left: -90px;
+  animation: adiOrbOne 16s ease-in-out infinite alternate;
+}
+
+.adi-orb.two {
+  right: -110px;
+  top: 46%;
+  width: 340px;
+  height: 340px;
+  opacity: .16;
+  animation: adiOrbTwo 20s ease-in-out infinite alternate;
+}
+
 [data-testid="stAppViewBlockContainer"] {
   max-width: 1500px;
   padding-top: 1rem;
@@ -100,8 +173,8 @@ p, li, label {
 /* Top tabs */
 div[data-baseweb="tab-list"] {
   gap: .2rem;
-  background: var(--adi-surface);
-  border: 1px solid var(--adi-border);
+  background: color-mix(in srgb, var(--adi-surface) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--adi-border) 84%, transparent);
   border-radius: 14px;
   padding: .28rem;
   position: sticky;
@@ -336,6 +409,8 @@ div.stDownloadButton > button:active {
 .adi-hero {
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(20px) saturate(130%);
+  -webkit-backdrop-filter: blur(20px) saturate(130%);
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(420px, .95fr);
   min-height: 430px;
@@ -348,6 +423,21 @@ div.stDownloadButton > button:active {
   border-radius: 24px;
   box-shadow: 0 16px 42px var(--adi-shadow);
   animation: adiFadeUp .55s cubic-bezier(.22,.9,.28,1) both;
+}
+
+.adi-hero::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  pointer-events: none;
+  background: linear-gradient(
+    112deg,
+    transparent 15%,
+    color-mix(in srgb, var(--adi-accent) 10%, transparent) 40%,
+    transparent 62%
+  );
+  transform: translateX(-75%);
+  animation: adiHeroShimmer 8s ease-in-out infinite;
 }
 
 .adi-hero::after {
@@ -542,7 +632,9 @@ div.stDownloadButton > button:active {
   height: 100%;
   position: relative;
   overflow: hidden;
-  background: var(--adi-surface);
+  background: color-mix(in srgb, var(--adi-surface) 90%, transparent);
+  backdrop-filter: blur(16px) saturate(125%);
+  -webkit-backdrop-filter: blur(16px) saturate(125%);
   border: 1px solid var(--adi-border);
   border-radius: 15px;
   padding: 1.05rem;
@@ -551,8 +643,27 @@ div.stDownloadButton > button:active {
   transition: transform var(--adi-fast) ease, border-color var(--adi-fast) ease, box-shadow var(--adi-fast) ease;
 }
 
+.adi-card::after {
+  content: "";
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  right: -55px;
+  bottom: -60px;
+  border-radius: 999px;
+  background: var(--adi-accent-soft);
+  filter: blur(4px);
+  opacity: 0;
+  transition: opacity var(--adi-medium) ease, transform var(--adi-medium) ease;
+}
+
+.adi-card:hover::after {
+  opacity: 1;
+  transform: scale(1.18);
+}
+
 .adi-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px) scale(1.008);
   border-color: color-mix(in srgb, var(--adi-accent) 52%, var(--adi-border));
   box-shadow: 0 14px 34px var(--adi-shadow);
 }
@@ -763,6 +874,28 @@ div.stDownloadButton > button:active {
   100% { left: 105%; opacity: 0; }
 }
 
+@keyframes adiAuroraDrift {
+  0% { transform: translate3d(-2%, -1%, 0) rotate(0deg) scale(1); }
+  50% { transform: translate3d(3%, 2%, 0) rotate(5deg) scale(1.04); }
+  100% { transform: translate3d(-1%, 4%, 0) rotate(-4deg) scale(1.08); }
+}
+
+@keyframes adiOrbOne {
+  from { transform: translate3d(0, 0, 0) scale(.95); }
+  to { transform: translate3d(90px, 70px, 0) scale(1.18); }
+}
+
+@keyframes adiOrbTwo {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-120px, -55px, 0) scale(1.12); }
+}
+
+@keyframes adiHeroShimmer {
+  0%, 64%, 100% { transform: translateX(-85%); opacity: 0; }
+  72% { opacity: 1; }
+  88% { transform: translateX(85%); opacity: .8; }
+}
+
 @media (max-width: 980px) {
   .adi-brandmeta { display: none; }
   .adi-hero {
@@ -815,6 +948,18 @@ def apply_v2_theme(theme: str = "Dark") -> None:
     </style>
     """
     st.markdown(variables + _BASE_CSS, unsafe_allow_html=True)
+
+
+def render_ambient_background() -> None:
+    """Render the lightweight animated V2 background layer."""
+    st.markdown(
+        """
+        <div class="adi-ambient" aria-hidden="true"></div>
+        <div class="adi-orb one" aria-hidden="true"></div>
+        <div class="adi-orb two" aria-hidden="true"></div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def render_hero(theme: str = "Dark") -> None:
