@@ -29,7 +29,12 @@ verification/agent path.
 1. Start the V2 Streamlit app.
 2. Upload the PDF and process it.
 3. Ask one clearly answerable question from the document.
-4. Pass the release only if:
+4. During that same single end-to-end run, visually confirm:
+   - the navy/blue/cyan theme loads without broken styling;
+   - Overview, Documents, Assistant, Evaluation, V1 vs V2, and Configuration are visible;
+   - the Assistant shows Sources / Question + Answer / Evidence as three clear zones;
+   - the layout remains readable without overlapping or clipped controls.
+5. Pass the release only if:
    - a grounded answer is returned;
    - at least one valid citation is shown;
    - verification is not unsupported;
