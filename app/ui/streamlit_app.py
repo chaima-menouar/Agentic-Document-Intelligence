@@ -6,6 +6,7 @@ import base64
 import json
 import shutil
 import tempfile
+import time
 from pathlib import Path
 
 import streamlit as st
@@ -54,6 +55,8 @@ def _ensure_state() -> None:
         "hybrid_retriever": None,
         "reranked_retriever": None,
         "history": [],
+        "session_events": [],
+        "feedback": {},
         "upload_payloads": {},
     }
     for key, value in defaults.items():
@@ -71,6 +74,8 @@ def _reset_workspace() -> None:
     st.session_state.hybrid_retriever = None
     st.session_state.reranked_retriever = None
     st.session_state.history = []
+    st.session_state.session_events = []
+    st.session_state.feedback = {}
     st.session_state.upload_payloads = {}
 
 
