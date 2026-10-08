@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import base64
+import json
 import shutil
 import tempfile
 from pathlib import Path
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 from app.agent import AdaptiveAgenticVerifiedRAG, AgenticVerifiedRAG
 from app.rag import ClassicalRAG, ExtractiveGenerator, GroundedLocalGenerator
@@ -14,6 +17,15 @@ from app.retrieval import (
     HybridRetriever,
     LocalCrossEncoderReranker,
     SemanticRetriever,
+)
+from app.ui.theme import (
+    apply_v2_theme,
+    config_line,
+    feature_card,
+    render_hero,
+    render_pipeline,
+    status_pills,
+    zone_intro,
 )
 from app.ui.workspace import build_local_workspace
 from app.verification import (
@@ -30,11 +42,8 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("Agentic Document Intelligence V2")
-st.caption(
-    "Local-first document QA with OCR, inspectable citations, semantic verification, "
-    "hybrid retrieval, and adaptive agentic recovery."
-)
+apply_v2_theme()
+render_hero()
 
 
 def _ensure_state() -> None:
@@ -45,6 +54,7 @@ def _ensure_state() -> None:
         "hybrid_retriever": None,
         "reranked_retriever": None,
         "history": [],
+        "upload_payloads": {},
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -61,6 +71,7 @@ def _reset_workspace() -> None:
     st.session_state.hybrid_retriever = None
     st.session_state.reranked_retriever = None
     st.session_state.history = []
+    st.session_state.upload_payloads = {}
 
 
 def _get_generator(mode: str, model: str, base_url: str):
@@ -184,9 +195,48 @@ with st.sidebar:
         st.rerun()
 
 
-documents_tab, assistant_tab, comparison_tab = st.tabs(
-    ["Documents", "Assistant", "V1 vs V2"]
+overview_tab, documents_tab, assistant_tab, evaluation_tab, comparison_tab, configuration_tab = st.tabs(
+    ["Overview", "Documents", "Assistant", "Evaluation", "V1 vs V2", "Configuration"]
 )
+
+with overview_tab:
+    render_pipeline()
+    status_pills(
+        [
+            ("V2 release candidate", "info"),
+            ("Local-first", ""),
+            ("Evidence-grounded", ""),
+            ("No paid API required", "gold"),
+        ]
+    )
+
+    st.markdown('<div class="adi-section">Core capabilities</div>', unsafe_allow_html=True)
+    cap1, cap2, cap3 = st.columns(3)
+    with cap1:
+        feature_card("OCR", "Document ingestion", "Text PDFs and scanned pages with local OCR, page provenance, and extraction-quality signals.")
+    with cap2:
+        feature_card("RAG", "Evidence retrieval", "Validated dense BGE + FAISS with optional BM25 fusion and local cross-encoder reranking.")
+    with cap3:
+        feature_card("NLI", "Claim verification", "Every answer can be decomposed into claims and checked against cited evidence with local semantic entailment.")
+
+    cap4, cap5, cap6 = st.columns(3)
+    with cap4:
+        feature_card("AI", "Grounded generation", "Deterministic extractive baseline plus guarded local LLM generation with citation repair and safe fallback.")
+    with cap5:
+        feature_card("↻", "Adaptive recovery", "The agent identifies evidence failures, re-retrieves within a strict budget, and exposes its action trace.")
+    with cap6:
+        feature_card("A/B", "Evaluation workspace", "Inspect session behavior, benchmark V1 against V2, and compare safety, retrieval, and recovery metrics.")
+
+    overview_result = st.session_state.get("workspace_result")
+    st.markdown('<div class="adi-section">Workspace status</div>', unsafe_allow_html=True)
+    if overview_result is None:
+        st.info("No active corpus yet. Open Documents, upload one or more PDFs, then process the workspace.")
+    else:
+        o1, o2, o3, o4 = st.columns(4)
+        o1.metric("Documents", len(overview_result.documents))
+        o2.metric("Chunks", overview_result.total_chunks)
+        o3.metric("Vectors", overview_result.index_manifest.get("vector_count", 0))
+        o4.metric("OCR pages", sum(item.ocr_page_count for item in overview_result.documents))
 
 with documents_tab:
     st.subheader("Documents")
