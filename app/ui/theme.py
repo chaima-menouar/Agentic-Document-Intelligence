@@ -1,45 +1,22 @@
-"""Mantine-inspired dark/light visual system for the V2 Streamlit interface."""
+"""Final dark/gold visual system for Agentic Document Intelligence."""
 
 from __future__ import annotations
 
+import base64
 import html
-import textwrap
+from pathlib import Path
 
 import streamlit as st
 
 
-THEMES = {
-    "Dark": {
-        "bg": "#1A1B1E",
-        "bg2": "#141517",
-        "surface": "#25262B",
-        "surface2": "#2C2E33",
-        "surface3": "#373A40",
-        "text": "#F8F9FA",
-        "muted": "#909296",
-        "border": "#373A40",
-        "accent": "#FFD43B",
-        "accent_hover": "#FCC419",
-        "accent_soft": "rgba(255, 212, 59, 0.11)",
-        "shadow": "rgba(0, 0, 0, 0.34)",
-        "button_text": "#1A1B1E",
-    },
-    "Light": {
-        "bg": "#F8F9FA",
-        "bg2": "#F1F3F5",
-        "surface": "#FFFFFF",
-        "surface2": "#F8F9FA",
-        "surface3": "#E9ECEF",
-        "text": "#1A1B1E",
-        "muted": "#868E96",
-        "border": "#DEE2E6",
-        "accent": "#FFD43B",
-        "accent_hover": "#FAB005",
-        "accent_soft": "rgba(255, 212, 59, 0.16)",
-        "shadow": "rgba(33, 37, 41, 0.12)",
-        "button_text": "#1A1B1E",
-    },
-}
+_BG_PATH = Path(__file__).resolve().parent / "assets" / "adi_background.svg"
+
+
+def _background_data_uri() -> str:
+    if not _BG_PATH.exists():
+        return ""
+    encoded = base64.b64encode(_BG_PATH.read_bytes()).decode("ascii")
+    return f"data:image/svg+xml;base64,{encoded}"
 
 
 _BASE_CSS = r"""
@@ -47,9 +24,18 @@ _BASE_CSS = r"""
 * { box-sizing: border-box; }
 
 :root {
-  --adi-radius-xl: 28px;
-  --adi-radius-lg: 18px;
-  --adi-radius-md: 13px;
+  --adi-bg: #101113;
+  --adi-bg2: #17181b;
+  --adi-surface: rgba(31, 33, 37, .78);
+  --adi-surface-strong: rgba(34, 36, 41, .92);
+  --adi-surface2: rgba(44, 46, 51, .82);
+  --adi-text: #F8F9FA;
+  --adi-muted: #A5A7AB;
+  --adi-border: rgba(255,255,255,.095);
+  --adi-gold: #FFD43B;
+  --adi-gold2: #FCC419;
+  --adi-gold-soft: rgba(255, 212, 59, .11);
+  --adi-shadow: rgba(0,0,0,.34);
   --adi-fast: 180ms;
   --adi-medium: 360ms;
 }
@@ -61,98 +47,45 @@ html, body, [data-testid="stAppViewContainer"] {
 }
 
 [data-testid="stAppViewContainer"] {
-  position: relative;
-  isolation: isolate;
-  overflow-x: hidden;
+  min-height: 100vh;
   background:
-    radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--adi-accent) 16%, transparent) 0%, transparent 24%),
-    radial-gradient(circle at 88% 22%, color-mix(in srgb, var(--adi-accent) 10%, transparent) 0%, transparent 22%),
-    radial-gradient(circle at 68% 82%, color-mix(in srgb, var(--adi-text) 5%, transparent) 0%, transparent 25%),
-    linear-gradient(135deg, var(--adi-bg) 0%, var(--adi-bg2) 48%, var(--adi-bg) 100%);
-  background-size: 140% 140%, 145% 145%, 150% 150%, 100% 100%;
-  animation: adiBackgroundFlow 18s ease-in-out infinite alternate;
+    linear-gradient(180deg, rgba(10,11,13,.73), rgba(10,11,13,.87)),
+    var(--adi-background-image),
+    linear-gradient(135deg, var(--adi-bg), var(--adi-bg2));
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  animation: adiBgDrift 22s ease-in-out infinite alternate;
 }
 
-.adi-ambient {
+[data-testid="stAppViewContainer"]::before {
+  content: "";
   position: fixed;
   inset: 0;
-  z-index: 0;
   pointer-events: none;
-  overflow: hidden;
-  background:
-    linear-gradient(
-      115deg,
-      transparent 0%,
-      color-mix(in srgb, var(--adi-accent) 5%, transparent) 38%,
-      transparent 62%
-    );
-}
-
-.adi-ambient::before {
-  content: "";
-  position: absolute;
-  inset: -30%;
-  background:
-    radial-gradient(circle at 18% 24%, color-mix(in srgb, var(--adi-accent) 16%, transparent) 0, transparent 23%),
-    radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--adi-text) 6%, transparent) 0, transparent 22%),
-    radial-gradient(circle at 72% 76%, color-mix(in srgb, var(--adi-accent) 10%, transparent) 0, transparent 24%),
-    radial-gradient(circle at 25% 82%, color-mix(in srgb, var(--adi-text) 4%, transparent) 0, transparent 20%);
-  filter: blur(24px);
-  animation: adiAuroraDrift 22s ease-in-out infinite alternate;
-}
-
-.adi-ambient::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  opacity: .18;
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--adi-border) 50%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--adi-border) 50%, transparent) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: linear-gradient(to bottom, black 0%, transparent 78%);
-}
-
-.adi-orb {
-  position: fixed;
   z-index: 0;
-  width: 260px;
-  height: 260px;
-  border-radius: 999px;
-  pointer-events: none;
-  filter: blur(8px);
-  opacity: .22;
-  background: radial-gradient(circle, var(--adi-accent) 0%, transparent 68%);
-}
-
-.adi-orb.one {
-  top: 12%;
-  left: -90px;
-  animation: adiOrbOne 16s ease-in-out infinite alternate;
-}
-
-.adi-orb.two {
-  right: -110px;
-  top: 46%;
-  width: 340px;
-  height: 340px;
-  opacity: .16;
-  animation: adiOrbTwo 20s ease-in-out infinite alternate;
+  background:
+    radial-gradient(circle at 12% 15%, rgba(255,212,59,.08), transparent 26%),
+    radial-gradient(circle at 88% 22%, rgba(252,196,25,.06), transparent 24%);
+  animation: adiGlowShift 14s ease-in-out infinite alternate;
 }
 
 [data-testid="stAppViewBlockContainer"] {
   position: relative;
   z-index: 1;
-  max-width: 1500px;
-  padding-top: 1rem;
+  max-width: 1480px;
+  padding-top: 1.15rem;
   padding-bottom: 4rem;
 }
 
 [data-testid="stHeader"] { background: transparent; }
 
 [data-testid="stSidebar"] {
-  background: var(--adi-surface);
+  background: rgba(28, 30, 34, .90);
   border-right: 1px solid var(--adi-border);
+  backdrop-filter: blur(18px) saturate(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
 }
 
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
@@ -166,71 +99,70 @@ h1, h2, h3, h4 {
   letter-spacing: -.035em;
 }
 
-p, li, label {
-  color: color-mix(in srgb, var(--adi-text) 84%, var(--adi-muted));
-}
+p, li, label { color: color-mix(in srgb, var(--adi-text) 86%, var(--adi-muted)); }
 
 [data-testid="stCaptionContainer"],
 [data-testid="stCaptionContainer"] p {
   color: var(--adi-muted) !important;
 }
 
-[data-testid="stMarkdownContainer"] a { color: var(--adi-text); }
+[data-testid="stMarkdownContainer"] a { color: var(--adi-gold); }
 
-/* Top tabs */
+/* Navigation */
 div[data-baseweb="tab-list"] {
-  gap: .2rem;
-  background: color-mix(in srgb, var(--adi-surface) 88%, transparent);
-  border: 1px solid color-mix(in srgb, var(--adi-border) 84%, transparent);
-  border-radius: 14px;
-  padding: .28rem;
+  gap: .28rem;
+  padding: .3rem;
   position: sticky;
   top: .55rem;
   z-index: 20;
-  box-shadow: 0 10px 28px var(--adi-shadow);
+  background: rgba(28,30,34,.82);
+  border: 1px solid var(--adi-border);
+  border-radius: 15px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 12px 30px var(--adi-shadow);
 }
 
 button[data-baseweb="tab"] {
   min-height: 42px;
   border-radius: 10px;
   color: var(--adi-muted);
-  font-weight: 700;
-  padding: 0 .9rem;
-  transition: background var(--adi-fast) ease, color var(--adi-fast) ease, transform var(--adi-fast) ease;
+  font-weight: 720;
+  padding: 0 1rem;
+  transition: transform var(--adi-fast) ease, color var(--adi-fast) ease, background var(--adi-fast) ease;
 }
 
 button[data-baseweb="tab"]:hover {
   color: var(--adi-text);
-  background: var(--adi-surface2);
+  background: rgba(255,255,255,.045);
   transform: translateY(-1px);
 }
 
 button[data-baseweb="tab"][aria-selected="true"] {
-  color: var(--adi-button-text);
-  background: var(--adi-accent);
-  border: 1px solid var(--adi-accent);
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--adi-accent) 20%, transparent);
+  color: #17181b;
+  background: var(--adi-gold);
+  border: 1px solid var(--adi-gold);
 }
 
-/* Native controls */
+/* Controls */
 div.stButton > button,
 div.stDownloadButton > button {
-  border: 1px solid var(--adi-accent);
-  border-radius: 10px;
-  min-height: 42px;
-  font-weight: 750;
-  background: var(--adi-accent);
-  color: var(--adi-button-text);
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--adi-accent) 14%, transparent);
+  min-height: 43px;
+  border-radius: 11px;
+  border: 1px solid var(--adi-gold);
+  background: var(--adi-gold);
+  color: #17181b;
+  font-weight: 800;
+  box-shadow: 0 9px 22px rgba(255,212,59,.13);
   transition: transform var(--adi-fast) ease, background var(--adi-fast) ease, box-shadow var(--adi-fast) ease;
 }
 
 div.stButton > button:hover,
 div.stDownloadButton > button:hover {
   transform: translateY(-2px);
-  background: var(--adi-accent-hover);
-  border-color: var(--adi-accent-hover);
-  box-shadow: 0 12px 28px color-mix(in srgb, var(--adi-accent) 22%, transparent);
+  background: var(--adi-gold2);
+  border-color: var(--adi-gold2);
+  box-shadow: 0 13px 30px rgba(255,212,59,.20);
 }
 
 div.stButton > button:active,
@@ -241,109 +173,100 @@ div.stDownloadButton > button:active {
 [data-testid="stTextArea"] textarea,
 [data-baseweb="select"] > div,
 [data-baseweb="input"] > div {
-  background: var(--adi-surface) !important;
-  border: 1px solid var(--adi-border) !important;
   color: var(--adi-text) !important;
-  border-radius: 10px !important;
+  background: rgba(28,30,34,.86) !important;
+  border: 1px solid var(--adi-border) !important;
+  border-radius: 11px !important;
   box-shadow: none !important;
 }
 
 [data-testid="stTextArea"] textarea:focus,
 [data-baseweb="select"] > div:focus-within,
 [data-baseweb="input"] > div:focus-within {
-  border-color: var(--adi-accent) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--adi-accent) 18%, transparent) !important;
+  border-color: rgba(255,212,59,.75) !important;
+  box-shadow: 0 0 0 3px rgba(255,212,59,.10) !important;
 }
 
 [data-baseweb="popover"] > div,
 [data-baseweb="menu"] {
-  background: var(--adi-surface) !important;
+  background: #24262b !important;
   border: 1px solid var(--adi-border) !important;
-  border-radius: 10px !important;
-  box-shadow: 0 18px 40px var(--adi-shadow) !important;
+  border-radius: 11px !important;
+  box-shadow: 0 18px 42px rgba(0,0,0,.45) !important;
 }
 
 [role="option"] { color: var(--adi-text) !important; }
 [role="option"]:hover,
 [aria-selected="true"][role="option"] {
-  background: var(--adi-accent-soft) !important;
+  background: var(--adi-gold-soft) !important;
 }
 
 [data-testid="stFileUploader"] {
-  background: var(--adi-surface);
-  border: 1px dashed color-mix(in srgb, var(--adi-accent) 48%, var(--adi-border));
-  border-radius: 14px;
-  padding: .65rem;
-  transition: border-color var(--adi-fast) ease, box-shadow var(--adi-fast) ease;
+  background: rgba(28,30,34,.72);
+  border: 1px dashed rgba(255,212,59,.40);
+  border-radius: 16px;
+  padding: .72rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: border-color var(--adi-fast) ease, box-shadow var(--adi-fast) ease, transform var(--adi-fast) ease;
 }
 
 [data-testid="stFileUploader"]:hover {
-  border-color: var(--adi-accent);
-  box-shadow: 0 0 0 3px var(--adi-accent-soft);
+  border-color: var(--adi-gold);
+  box-shadow: 0 0 0 3px rgba(255,212,59,.08);
+  transform: translateY(-1px);
 }
 
 [data-testid="stMetric"] {
   position: relative;
   overflow: hidden;
-  background: var(--adi-surface);
-  border: 1px solid var(--adi-border);
-  border-radius: 14px;
-  padding: 1rem;
   min-height: 102px;
-  box-shadow: 0 8px 24px var(--adi-shadow);
+  padding: 1rem;
+  background: rgba(31,33,37,.74);
+  border: 1px solid var(--adi-border);
+  border-radius: 15px;
+  box-shadow: 0 10px 26px var(--adi-shadow);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
 
 [data-testid="stMetric"]::before {
   content: "";
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
+  left: 0; top: 0; bottom: 0;
   width: 3px;
-  background: var(--adi-accent);
+  background: var(--adi-gold);
 }
 
 [data-testid="stMetricValue"] {
   color: var(--adi-text);
-  font-weight: 820;
+  font-weight: 850;
   letter-spacing: -.04em;
 }
 
-[data-testid="stVerticalBlockBorderWrapper"] {
-  border-color: var(--adi-border) !important;
-  background: var(--adi-surface);
-  border-radius: 16px !important;
-  box-shadow: 0 8px 24px var(--adi-shadow);
-}
-
-[data-testid="stExpander"] {
-  background: var(--adi-surface);
-  border: 1px solid var(--adi-border);
-  border-radius: 12px;
-  overflow: hidden;
-}
-
+[data-testid="stVerticalBlockBorderWrapper"],
+[data-testid="stExpander"],
 [data-testid="stAlert"],
 [data-testid="stStatusWidget"] {
-  border-radius: 12px;
-  border: 1px solid var(--adi-border);
-  background: var(--adi-surface);
+  background: rgba(31,33,37,.76) !important;
+  border: 1px solid var(--adi-border) !important;
+  border-radius: 15px !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 [data-testid="stSlider"] [role="slider"] {
-  background: var(--adi-accent) !important;
-  border-color: var(--adi-accent) !important;
-  box-shadow: 0 0 0 4px var(--adi-accent-soft);
+  background: var(--adi-gold) !important;
+  border-color: var(--adi-gold) !important;
+  box-shadow: 0 0 0 4px var(--adi-gold-soft);
 }
 
 [data-testid="stCheckbox"] span[data-baseweb="checkbox"][aria-checked="true"] > div {
-  background: var(--adi-accent) !important;
-  border-color: var(--adi-accent) !important;
+  background: var(--adi-gold) !important;
+  border-color: var(--adi-gold) !important;
 }
 
-[data-testid="stProgress"] > div > div {
-  background: var(--adi-accent) !important;
-}
+[data-testid="stProgress"] > div > div { background: var(--adi-gold) !important; }
 
 [data-testid="stCodeBlock"],
 [data-testid="stDataFrame"] {
@@ -352,25 +275,22 @@ div.stDownloadButton > button:active {
   overflow: hidden;
 }
 
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--adi-surface3) transparent;
-}
-
-/* Brand bar */
+/* Brand */
 .adi-brandbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 60px;
-  padding: .7rem .95rem;
-  margin-bottom: .75rem;
-  background: var(--adi-surface);
+  min-height: 58px;
+  padding: .72rem 1rem;
+  margin-bottom: .8rem;
+  background: rgba(31,33,37,.72);
   border: 1px solid var(--adi-border);
   border-radius: 16px;
-  box-shadow: 0 8px 24px var(--adi-shadow);
-  animation: adiFadeIn .45s ease both;
+  box-shadow: 0 10px 28px var(--adi-shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: adiFade .45s ease both;
 }
 
 .adi-brand {
@@ -379,21 +299,21 @@ div.stDownloadButton > button:active {
   gap: .72rem;
   color: var(--adi-text);
   font-size: 1rem;
-  font-weight: 820;
+  font-weight: 850;
   letter-spacing: -.025em;
 }
 
 .adi-brandmark {
-  width: 34px;
-  height: 34px;
+  width: 35px;
+  height: 35px;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  color: #1A1B1E;
-  background: var(--adi-accent);
-  font-size: .72rem;
-  font-weight: 900;
-  box-shadow: 0 0 0 5px var(--adi-accent-soft);
+  color: #17181b;
+  background: var(--adi-gold);
+  font-size: .7rem;
+  font-weight: 950;
+  box-shadow: 0 0 0 5px rgba(255,212,59,.09);
 }
 
 .adi-brandmeta {
@@ -405,89 +325,72 @@ div.stDownloadButton > button:active {
 }
 
 .adi-live-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--adi-accent);
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--adi-gold);
+  box-shadow: 0 0 15px rgba(255,212,59,.5);
   animation: adiPulse 2s ease-out infinite;
 }
 
-/* Hero inspired by the supplied reference */
+/* Hero: deliberately clean; artwork is the background */
 .adi-hero {
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(20px) saturate(130%);
-  -webkit-backdrop-filter: blur(20px) saturate(130%);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(420px, .95fr);
-  min-height: 430px;
+  min-height: 390px;
+  display: flex;
   align-items: center;
-  gap: 2rem;
-  padding: 3.3rem 3.2rem;
+  padding: 3.5rem 3.4rem;
   margin-bottom: 1rem;
-  background: var(--adi-surface);
+  border-radius: 28px;
+  background:
+    linear-gradient(90deg, rgba(26,27,30,.91) 0%, rgba(26,27,30,.75) 52%, rgba(26,27,30,.36) 100%);
   border: 1px solid var(--adi-border);
-  border-radius: 24px;
-  box-shadow: 0 16px 42px var(--adi-shadow);
+  box-shadow: 0 18px 46px rgba(0,0,0,.36);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   animation: adiFadeUp .55s cubic-bezier(.22,.9,.28,1) both;
-}
-
-.adi-hero::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  pointer-events: none;
-  background: linear-gradient(
-    112deg,
-    transparent 15%,
-    color-mix(in srgb, var(--adi-accent) 10%, transparent) 40%,
-    transparent 62%
-  );
-  transform: translateX(-75%);
-  animation: adiHeroShimmer 8s ease-in-out infinite;
 }
 
 .adi-hero::after {
   content: "";
   position: absolute;
-  width: 360px;
-  height: 360px;
-  right: -120px;
-  top: -150px;
-  border-radius: 50%;
-  background: var(--adi-accent-soft);
-  filter: blur(4px);
+  inset: 0;
   pointer-events: none;
+  background: linear-gradient(112deg, transparent 28%, rgba(255,212,59,.06) 48%, transparent 68%);
+  transform: translateX(-100%);
+  animation: adiHeroSweep 9s ease-in-out infinite;
+}
+
+.adi-hero-copy {
+  position: relative;
+  z-index: 2;
+  width: min(760px, 75%);
 }
 
 .adi-kicker {
-  color: var(--adi-muted);
+  color: #C8B873;
   font-size: .72rem;
-  font-weight: 800;
-  letter-spacing: .09em;
+  font-weight: 850;
+  letter-spacing: .11em;
   text-transform: uppercase;
 }
 
 .adi-title {
-  max-width: 760px;
-  margin: .65rem 0 .7rem 0;
+  margin: .7rem 0 .8rem;
   color: var(--adi-text);
-  font-size: clamp(2.5rem, 4.2vw, 4.9rem);
+  font-size: clamp(2.6rem, 4.6vw, 5.15rem);
   line-height: .98;
-  font-weight: 900;
-  letter-spacing: -.064em;
+  font-weight: 950;
+  letter-spacing: -.065em;
 }
 
-.adi-title .accent {
-  color: var(--adi-accent);
-}
+.adi-title .accent { color: var(--adi-gold); }
 
 .adi-subtitle {
-  max-width: 720px;
-  color: var(--adi-muted);
-  font-size: 1.02rem;
+  max-width: 690px;
+  color: #B8BABE;
+  font-size: 1rem;
   line-height: 1.7;
-  margin-bottom: 1.2rem;
+  margin-bottom: 1.25rem;
 }
 
 .adi-chip-row {
@@ -499,291 +402,99 @@ div.stDownloadButton > button:active {
 .adi-chip {
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--adi-border);
-  border-radius: 9px;
-  padding: .43rem .65rem;
-  background: var(--adi-surface2);
+  padding: .45rem .68rem;
+  border-radius: 10px;
+  background: rgba(37,39,44,.72);
+  border: 1px solid rgba(255,255,255,.08);
   color: var(--adi-text);
-  font-size: .74rem;
-  font-weight: 700;
-  transition: transform var(--adi-fast) ease, border-color var(--adi-fast) ease;
+  font-size: .73rem;
+  font-weight: 760;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .adi-chip strong {
-  color: var(--adi-accent);
-  margin-right: .28rem;
+  color: var(--adi-gold);
+  margin-right: .3rem;
 }
 
-.adi-chip:hover {
-  transform: translateY(-2px);
-  border-color: var(--adi-accent);
-}
-
-/* Animated intelligence visual */
-.adi-visual-stage {
-  position: relative;
-  min-height: 350px;
-  display: grid;
-  place-items: center;
-  overflow: visible;
-}
-
-.adi-core-wrap {
-  position: relative;
-  width: 330px;
-  height: 330px;
-  display: grid;
-  place-items: center;
-}
-
-.adi-core-ring,
-.adi-core-ring::before,
-.adi-core-ring::after {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-}
-
-.adi-core-ring {
-  border: 1px solid color-mix(in srgb, var(--adi-accent) 38%, transparent);
-  animation: adiSpin 18s linear infinite;
-}
-
-.adi-core-ring::before,
-.adi-core-ring::after {
-  content: "";
-}
-
-.adi-core-ring::before {
-  inset: 34px;
-  border: 1px dashed color-mix(in srgb, var(--adi-accent) 36%, var(--adi-border));
-  animation: adiSpinReverse 13s linear infinite;
-}
-
-.adi-core-ring::after {
-  inset: 72px;
-  border: 1px solid color-mix(in srgb, var(--adi-text) 10%, var(--adi-border));
-}
-
-.adi-core {
-  position: relative;
-  z-index: 4;
-  width: 118px;
-  height: 118px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  color: #1A1B1E;
-  background:
-    radial-gradient(circle at 34% 30%, #fff6b3 0%, var(--adi-accent) 28%, var(--adi-accent-hover) 74%);
-  box-shadow:
-    0 0 0 12px color-mix(in srgb, var(--adi-accent) 9%, transparent),
-    0 0 48px color-mix(in srgb, var(--adi-accent) 38%, transparent);
-  animation: adiCorePulse 3.5s ease-in-out infinite;
-}
-
-.adi-core strong {
-  font-size: 1.22rem;
-  letter-spacing: -.04em;
-}
-
-.adi-node {
-  position: absolute;
-  z-index: 5;
-  min-width: 108px;
-  padding: .56rem .68rem;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--adi-border) 82%, transparent);
-  background: color-mix(in srgb, var(--adi-surface) 86%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 12px 28px var(--adi-shadow);
-  color: var(--adi-text);
-  font-size: .69rem;
-  font-weight: 800;
-  text-align: center;
-}
-
-.adi-node small {
-  display: block;
-  margin-top: .15rem;
-  color: var(--adi-muted);
-  font-size: .56rem;
-  font-weight: 600;
-}
-
-.adi-node.n1 { top: 18px; left: 10px; animation: adiNodeFloat 5.2s ease-in-out infinite; }
-.adi-node.n2 { top: 34px; right: -8px; animation: adiNodeFloat 5.8s ease-in-out -.8s infinite; }
-.adi-node.n3 { bottom: 26px; left: -10px; animation: adiNodeFloat 6.1s ease-in-out -1.5s infinite; }
-.adi-node.n4 { bottom: 12px; right: 4px; animation: adiNodeFloat 5.5s ease-in-out -2.2s infinite; }
-
-.adi-signal {
-  position: absolute;
-  z-index: 2;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--adi-accent);
-  box-shadow: 0 0 16px var(--adi-accent);
-}
-
-.adi-signal.s1 { animation: adiOrbitOne 6s linear infinite; }
-.adi-signal.s2 { animation: adiOrbitTwo 8s linear infinite reverse; }
-
-.adi-visual-caption {
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: max-content;
-  max-width: 100%;
-  color: var(--adi-muted);
-  font-size: .66rem;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  font-weight: 800;
-}
-
-/* Sections/cards */
+/* Reusable content */
 .adi-section {
   display: flex;
   align-items: center;
   gap: .55rem;
   color: var(--adi-text);
   font-size: 1.05rem;
-  font-weight: 820;
-  margin: .55rem 0 .7rem;
+  font-weight: 850;
+  margin: .65rem 0 .75rem;
 }
 
 .adi-section::before {
   content: "";
-  width: 20px;
-  height: 4px;
+  width: 21px; height: 4px;
   border-radius: 99px;
-  background: var(--adi-accent);
+  background: var(--adi-gold);
 }
 
 .adi-card {
   height: 100%;
   position: relative;
   overflow: hidden;
-  background: color-mix(in srgb, var(--adi-surface) 90%, transparent);
-  backdrop-filter: blur(16px) saturate(125%);
-  -webkit-backdrop-filter: blur(16px) saturate(125%);
+  padding: 1.1rem;
+  border-radius: 16px;
+  background: rgba(31,33,37,.73);
   border: 1px solid var(--adi-border);
-  border-radius: 15px;
-  padding: 1.05rem;
-  box-shadow: 0 8px 24px var(--adi-shadow);
-  animation: adiFadeUp .45s ease both;
+  box-shadow: 0 10px 28px var(--adi-shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   transition: transform var(--adi-fast) ease, border-color var(--adi-fast) ease, box-shadow var(--adi-fast) ease;
 }
 
-.adi-card::after {
-  content: "";
-  position: absolute;
-  width: 120px;
-  height: 120px;
-  right: -55px;
-  bottom: -60px;
-  border-radius: 999px;
-  background: var(--adi-accent-soft);
-  filter: blur(4px);
-  opacity: 0;
-  transition: opacity var(--adi-medium) ease, transform var(--adi-medium) ease;
-}
-
-.adi-card:hover::after {
-  opacity: 1;
-  transform: scale(1.18);
-}
-
 .adi-card:hover {
-  transform: translateY(-6px) scale(1.008);
-  border-color: color-mix(in srgb, var(--adi-accent) 52%, var(--adi-border));
-  box-shadow: 0 14px 34px var(--adi-shadow);
+  transform: translateY(-4px);
+  border-color: rgba(255,212,59,.30);
+  box-shadow: 0 15px 36px rgba(0,0,0,.38);
 }
 
 .adi-card-title {
   color: var(--adi-text);
-  font-weight: 800;
-  margin-bottom: .35rem;
+  font-weight: 820;
+  margin-bottom: .36rem;
 }
 
 .adi-card-copy {
   color: var(--adi-muted);
-  line-height: 1.52;
-  font-size: .88rem;
+  line-height: 1.55;
+  font-size: .87rem;
 }
 
 .adi-icon {
-  width: 36px;
-  height: 36px;
+  width: 37px; height: 37px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: .7rem;
-  border-radius: 9px;
-  background: var(--adi-accent-soft);
-  border: 1px solid color-mix(in srgb, var(--adi-accent) 38%, var(--adi-border));
-  color: var(--adi-accent);
+  margin-bottom: .72rem;
+  border-radius: 10px;
+  background: var(--adi-gold-soft);
+  border: 1px solid rgba(255,212,59,.22);
+  color: var(--adi-gold);
   font-size: .76rem;
   font-weight: 900;
 }
 
-/* Pipeline */
-.adi-flow {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: .65rem;
-  margin: .7rem 0 1.1rem;
-}
-
-.adi-flow-step {
-  position: relative;
-  min-height: 88px;
-  padding: .85rem;
-  background: var(--adi-surface);
-  border: 1px solid var(--adi-border);
-  border-radius: 13px;
-  box-shadow: 0 7px 20px var(--adi-shadow);
-  overflow: hidden;
-}
-
-.adi-flow-step::before {
-  content: "";
-  position: absolute;
-  left: -30%;
-  top: 0;
-  width: 30%;
-  height: 3px;
-  background: var(--adi-accent);
-  animation: adiScanLine 3.6s ease-in-out infinite;
-}
-
-.adi-flow-name {
-  color: var(--adi-text);
-  font-size: .82rem;
-  font-weight: 800;
-}
-
-.adi-flow-copy {
-  color: var(--adi-muted);
-  font-size: .7rem;
-  margin-top: .28rem;
-}
-
-/* Zones/status/gauge */
 .adi-zone {
-  border: 1px solid var(--adi-border);
-  background: var(--adi-surface);
-  border-radius: 14px;
-  padding: .9rem;
   min-height: 88px;
   margin-bottom: .7rem;
+  padding: .92rem;
+  border-radius: 15px;
+  background: rgba(31,33,37,.70);
+  border: 1px solid var(--adi-border);
+  backdrop-filter: blur(13px);
+  -webkit-backdrop-filter: blur(13px);
 }
 
 .adi-zone-label {
-  color: var(--adi-accent);
+  color: var(--adi-gold);
   font-size: .68rem;
   letter-spacing: .09em;
   text-transform: uppercase;
@@ -801,21 +512,20 @@ div.stDownloadButton > button:active {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  padding: .34rem .6rem;
-  margin: 0 .32rem .32rem 0;
+  padding: .36rem .62rem;
+  margin: 0 .34rem .34rem 0;
   font-size: .71rem;
   font-weight: 780;
   border: 1px solid var(--adi-border);
-  background: var(--adi-surface2);
+  background: rgba(37,39,44,.76);
   color: var(--adi-text);
 }
 
 .adi-status.info,
 .adi-status.gold,
 .adi-status.magenta {
-  border-color: color-mix(in srgb, var(--adi-accent) 45%, var(--adi-border));
-  background: var(--adi-accent-soft);
-  color: var(--adi-text);
+  border-color: rgba(255,212,59,.28);
+  background: var(--adi-gold-soft);
 }
 
 .adi-gauge-wrap {
@@ -823,161 +533,92 @@ div.stDownloadButton > button:active {
   align-items: center;
   gap: .8rem;
   margin: .55rem 0 .7rem;
-  padding: .72rem;
-  border-radius: 13px;
-  background: var(--adi-surface);
+  padding: .75rem;
+  border-radius: 14px;
+  background: rgba(31,33,37,.72);
   border: 1px solid var(--adi-border);
 }
 
 .adi-gauge {
   --value: 0;
-  width: 62px;
-  height: 62px;
-  flex: 0 0 62px;
-  display: grid;
-  place-items: center;
+  width: 62px; height: 62px; flex: 0 0 62px;
+  display: grid; place-items: center;
   border-radius: 50%;
   background:
-    radial-gradient(circle closest-side, var(--adi-surface) 72%, transparent 73% 99%),
-    conic-gradient(var(--adi-accent) calc(var(--value) * 1%), var(--adi-surface3) 0);
+    radial-gradient(circle closest-side, #24262b 72%, transparent 73% 99%),
+    conic-gradient(var(--adi-gold) calc(var(--value) * 1%), #3a3c42 0);
 }
 
-.adi-gauge strong {
-  color: var(--adi-text);
-  font-size: .76rem;
-}
-
-.adi-gauge-title {
-  color: var(--adi-text);
-  font-weight: 800;
-  font-size: .82rem;
-}
-
-.adi-gauge-copy {
-  color: var(--adi-muted);
-  font-size: .72rem;
-  line-height: 1.4;
-}
+.adi-gauge strong { color: var(--adi-text); font-size: .76rem; }
+.adi-gauge-title { color: var(--adi-text); font-weight: 820; font-size: .82rem; }
+.adi-gauge-copy { color: var(--adi-muted); font-size: .72rem; line-height: 1.4; }
 
 .adi-benchmark {
-  border-left: 3px solid var(--adi-accent);
-  background: var(--adi-surface);
+  border-left: 3px solid var(--adi-gold);
+  background: rgba(31,33,37,.70);
   border-radius: 11px;
-  padding: .8rem .9rem;
+  padding: .82rem .92rem;
   color: var(--adi-muted);
   margin: .35rem 0;
-  box-shadow: 0 6px 18px var(--adi-shadow);
 }
 
 .adi-config-line {
   display: flex;
   justify-content: space-between;
   gap: .7rem;
-  padding: .58rem 0;
+  padding: .6rem 0;
   border-bottom: 1px solid var(--adi-border);
 }
 
 .adi-config-line:last-child { border-bottom: none; }
 .adi-config-key { color: var(--adi-muted); }
-.adi-config-value { color: var(--adi-text); font-weight: 700; text-align: right; }
+.adi-config-value { color: var(--adi-text); font-weight: 720; text-align: right; }
 
-@keyframes adiBackgroundFlow {
-  0% { background-position: 0% 0%, 100% 0%, 50% 100%, 0 0; }
-  50% { background-position: 12% 10%, 86% 14%, 58% 88%, 0 0; }
-  100% { background-position: 22% 16%, 76% 20%, 66% 76%, 0 0; }
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3a3c42 transparent;
 }
 
-@keyframes adiSpin {
-  to { transform: rotate(360deg); }
+@keyframes adiBgDrift {
+  0% { background-position: center top; }
+  100% { background-position: 51% 2%; }
 }
 
-@keyframes adiSpinReverse {
-  to { transform: rotate(-360deg); }
+@keyframes adiGlowShift {
+  from { opacity: .72; transform: scale(1); }
+  to { opacity: 1; transform: scale(1.035); }
 }
 
-@keyframes adiCorePulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 0 12px color-mix(in srgb, var(--adi-accent) 9%, transparent), 0 0 48px color-mix(in srgb, var(--adi-accent) 38%, transparent); }
-  50% { transform: scale(1.055); box-shadow: 0 0 0 20px color-mix(in srgb, var(--adi-accent) 5%, transparent), 0 0 70px color-mix(in srgb, var(--adi-accent) 50%, transparent); }
-}
-
-@keyframes adiNodeFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-
-@keyframes adiOrbitOne {
-  0% { transform: rotate(0deg) translateX(138px) rotate(0deg); }
-  100% { transform: rotate(360deg) translateX(138px) rotate(-360deg); }
-}
-
-@keyframes adiOrbitTwo {
-  0% { transform: rotate(0deg) translateX(102px) rotate(0deg); }
-  100% { transform: rotate(360deg) translateX(102px) rotate(-360deg); }
-}
-
-@keyframes adiFadeIn {
+@keyframes adiFade {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
 @keyframes adiFadeUp {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes adiPulse {
-  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--adi-accent) 38%, transparent); }
+  0% { box-shadow: 0 0 0 0 rgba(255,212,59,.38); }
   70% { box-shadow: 0 0 0 9px transparent; }
   100% { box-shadow: 0 0 0 0 transparent; }
 }
 
-@keyframes adiCardFloat {
-  0%, 100% { margin-top: 0; }
-  50% { margin-top: -8px; }
-}
-
-@keyframes adiScanLine {
-  0% { left: -30%; opacity: 0; }
-  25% { opacity: 1; }
-  75% { opacity: 1; }
-  100% { left: 105%; opacity: 0; }
-}
-
-@keyframes adiAuroraDrift {
-  0% { transform: translate3d(-2%, -1%, 0) rotate(0deg) scale(1); }
-  50% { transform: translate3d(3%, 2%, 0) rotate(5deg) scale(1.04); }
-  100% { transform: translate3d(-1%, 4%, 0) rotate(-4deg) scale(1.08); }
-}
-
-@keyframes adiOrbOne {
-  from { transform: translate3d(0, 0, 0) scale(.95); }
-  to { transform: translate3d(90px, 70px, 0) scale(1.18); }
-}
-
-@keyframes adiOrbTwo {
-  from { transform: translate3d(0, 0, 0) scale(1); }
-  to { transform: translate3d(-120px, -55px, 0) scale(1.12); }
-}
-
-@keyframes adiHeroShimmer {
-  0%, 64%, 100% { transform: translateX(-85%); opacity: 0; }
-  72% { opacity: 1; }
-  88% { transform: translateX(85%); opacity: .8; }
+@keyframes adiHeroSweep {
+  0%, 68%, 100% { transform: translateX(-100%); opacity: 0; }
+  76% { opacity: 1; }
+  90% { transform: translateX(100%); opacity: .8; }
 }
 
 @media (max-width: 980px) {
   .adi-brandmeta { display: none; }
   .adi-hero {
-    grid-template-columns: 1fr;
-    padding: 2rem 1.4rem;
+    min-height: 360px;
+    padding: 2.2rem 1.5rem;
+    background: rgba(26,27,30,.82);
   }
-  .adi-visual-stage {
-    height: 300px;
-    max-width: 520px;
-    margin: 0 auto;
-    width: 100%;
-  }
-  .adi-flow { grid-template-columns: 1fr; }
+  .adi-hero-copy { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -992,120 +633,74 @@ div.stDownloadButton > button:active {
 
 
 def available_themes() -> list[str]:
-    return ["Dark", "Light"]
+    """Kept for compatibility; the final product uses one polished theme."""
+    return ["Dark"]
 
 
 def apply_v2_theme(theme: str = "Dark") -> None:
-    palette = THEMES.get(theme, THEMES["Dark"])
-    variables = f"""
-    <style>
-    :root {{
-      --adi-bg: {palette["bg"]};
-      --adi-bg2: {palette["bg2"]};
-      --adi-surface: {palette["surface"]};
-      --adi-surface2: {palette["surface2"]};
-      --adi-surface3: {palette["surface3"]};
-      --adi-text: {palette["text"]};
-      --adi-muted: {palette["muted"]};
-      --adi-border: {palette["border"]};
-      --adi-accent: {palette["accent"]};
-      --adi-accent-hover: {palette["accent_hover"]};
-      --adi-accent-soft: {palette["accent_soft"]};
-      --adi-shadow: {palette["shadow"]};
-      --adi-button-text: {palette["button_text"]};
-    }}
-    </style>
-    """
-    st.markdown(variables + _BASE_CSS, unsafe_allow_html=True)
+    del theme
+    background = _background_data_uri()
+    background_css = (
+        f'url("{background}")'
+        if background
+        else "linear-gradient(135deg, #101113, #17181b)"
+    )
+    st.markdown(
+        f"<style>:root {{ --adi-background-image: {background_css}; }}</style>"
+        + _BASE_CSS,
+        unsafe_allow_html=True,
+    )
 
 
 def render_ambient_background() -> None:
-    """Render the lightweight animated V2 background layer."""
-    st.markdown(
-        """
-        <div class="adi-ambient" aria-hidden="true"></div>
-        <div class="adi-orb one" aria-hidden="true"></div>
-        <div class="adi-orb two" aria-hidden="true"></div>
-        """,
-        unsafe_allow_html=True,
-    )
+    """Compatibility no-op: the generated artwork is now the app background."""
 
 
 def render_hero(theme: str = "Dark") -> None:
-    safe_theme = html.escape(theme)
-    hero_html = f"""
-    <div class="adi-brandbar">
-      <div class="adi-brand">
-        <span class="adi-brandmark">AI</span>
-        Agentic Document Intelligence
-      </div>
-      <div class="adi-brandmeta">
-        <span class="adi-live-dot"></span>
-        V2 · {safe_theme} mode · local-first
-      </div>
-    </div>
-
-    <section class="adi-hero">
-      <div>
-        <div class="adi-kicker">Evidence-grounded AI for documents</div>
-        <div class="adi-title">
-          Ask your documents.<br>
-          <span class="accent">Verify every answer.</span>
-        </div>
-        <div class="adi-subtitle">
-          Ingest text or scanned PDFs, retrieve inspectable evidence, verify
-          generated claims, and let a bounded agent recover missing support —
-          all with a local-first architecture.
-        </div>
-        <div class="adi-chip-row">
-          <span class="adi-chip"><strong>01</strong> OCR ingestion</span>
-          <span class="adi-chip"><strong>02</strong> Evidence RAG</span>
-          <span class="adi-chip"><strong>03</strong> Semantic verification</span>
-          <span class="adi-chip"><strong>04</strong> Agentic recovery</span>
-        </div>
-      </div>
-
-      <div class="adi-visual-stage" aria-hidden="true">
-        <div class="adi-core-wrap">
-          <div class="adi-core-ring"></div>
-          <div class="adi-signal s1"></div>
-          <div class="adi-signal s2"></div>
-
-          <div class="adi-node n1">OCR<small>scanned pages</small></div>
-          <div class="adi-node n2">RAG<small>evidence retrieval</small></div>
-          <div class="adi-node n3">NLI<small>claim verification</small></div>
-          <div class="adi-node n4">AGENT<small>bounded recovery</small></div>
-
-          <div class="adi-core"><strong>ADI V2</strong></div>
-          <div class="adi-visual-caption">evidence → answer → verify → recover</div>
-        </div>
-      </div>
-    </section>
-    """
-    st.markdown(textwrap.dedent(hero_html).strip(), unsafe_allow_html=True)
-
-
-def render_pipeline() -> None:
+    del theme
     st.markdown(
         """
-        <div class="adi-flow">
-          <div class="adi-flow-step"><div class="adi-flow-name">01 · Ingest</div><div class="adi-flow-copy">PDF + OCR provenance</div></div>
-          <div class="adi-flow-step"><div class="adi-flow-name">02 · Retrieve</div><div class="adi-flow-copy">Dense / hybrid evidence</div></div>
-          <div class="adi-flow-step"><div class="adi-flow-name">03 · Answer</div><div class="adi-flow-copy">Grounded generation</div></div>
-          <div class="adi-flow-step"><div class="adi-flow-name">04 · Verify</div><div class="adi-flow-copy">Semantic support</div></div>
-          <div class="adi-flow-step"><div class="adi-flow-name">05 · Recover</div><div class="adi-flow-copy">Bounded re-retrieval</div></div>
+        <div class="adi-brandbar">
+          <div class="adi-brand">
+            <span class="adi-brandmark">AI</span>
+            Agentic Document Intelligence
+          </div>
+          <div class="adi-brandmeta">
+            <span class="adi-live-dot"></span>
+            Local-first · evidence-grounded
+          </div>
         </div>
+
+        <section class="adi-hero">
+          <div class="adi-hero-copy">
+            <div class="adi-kicker">Evidence-grounded AI for documents</div>
+            <div class="adi-title">
+              Ask your documents.<br>
+              <span class="accent">Verify every answer.</span>
+            </div>
+            <div class="adi-subtitle">
+              Read text or scanned PDFs, retrieve inspectable evidence, verify
+              generated claims, and recover missing support with a bounded
+              evidence-aware agent.
+            </div>
+            <div class="adi-chip-row">
+              <span class="adi-chip"><strong>01</strong> OCR ingestion</span>
+              <span class="adi-chip"><strong>02</strong> Evidence retrieval</span>
+              <span class="adi-chip"><strong>03</strong> Semantic verification</span>
+              <span class="adi-chip"><strong>04</strong> Agentic recovery</span>
+            </div>
+          </div>
+        </section>
         """,
         unsafe_allow_html=True,
     )
 
 
-def feature_card(
-    icon: str,
-    title: str,
-    copy: str,
-    accent: str = "b",
-) -> None:
+def render_pipeline() -> None:
+    """Deprecated visual retained only for import compatibility."""
+
+
+def feature_card(icon: str, title: str, copy: str, accent: str = "b") -> None:
     del accent
     st.markdown(
         f"""
