@@ -759,6 +759,136 @@ with assistant_tab:
 
 
 
+with evaluation_tab:
+    st.markdown('<div class="adi-section">Evaluation & action log</div>', unsafe_allow_html=True)
+    st.caption(
+        "Monitor the current session and keep the validated V1/V2 benchmark visible next to live assistant behavior."
+    )
+
+    session_history = st.session_state.history
+    session_queries = len(session_history)
+    session_citations = 0
+    session_claims = 0
+    session_supported = 0
+    session_rounds = 0
+    session_extra_chunks = 0
+
+    for history_item in session_history:
+        if isinstance(history_item, tuple):
+            item_mode, item_answer = history_item
+        else:
+            item_mode, item_answer = "classical", history_item
+        session_citations += len(getattr(item_answer, "citations", []))
+        verifications = getattr(item_answer, "verifications", [])
+        session_claims += len(verifications)
+        session_supported += sum(
+            verification.status == "supported"
+            for verification in verifications
+        )
+        if item_mode == "agentic":
+            session_rounds += getattr(item_answer, "rounds_used", 0)
+            session_extra_chunks += getattr(
+                item_answer,
+                "additional_chunks_considered",
+                0,
+            )
+
+    st.markdown('<div class="adi-section">Live session</div>', unsafe_allow_html=True)
+    live1, live2, live3, live4 = st.columns(4)
+    live1.metric("Questions", session_queries)
+    live2.metric("Citations", session_citations)
+    live3.metric(
+        "Supported claims",
+        f"{session_supported}/{session_claims}" if session_claims else "—",
+    )
+    live4.metric("Agent extra chunks", session_extra_chunks)
+
+    st.markdown('<div class="adi-section">Validated V1 → V2 benchmark</div>', unsafe_allow_html=True)
+    bench1, bench2, bench3, bench4 = st.columns(4)
+    bench1.metric("Citation precision", "100%", "+100 pp")
+    bench2.metric("Verifier accuracy", "66.7%", "+33.4 pp")
+    bench3.metric("Safe abstention", "100%", "maintained")
+    bench4.metric("Unsupported rounds", "2.0", "-1.0 vs V1")
+
+    eval_left, eval_right = st.columns(2)
+    with eval_left:
+        st.markdown(
+            """
+            <div class="adi-benchmark">
+              <strong style="color:#eaf7ff">Retrieval decision</strong><br>
+              Full QASPER Recall@5: dense BGE <strong>66.10%</strong> vs plain
+              hybrid RRF <strong>65.43%</strong>. Dense therefore remains the
+              validated default instead of being replaced only because hybrid is newer.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            """
+            <div class="adi-benchmark">
+              <strong style="color:#eaf7ff">Reranker signal</strong><br>
+              On the matched 50-question sample, dense Recall@5 was
+              <strong>70%</strong> and hybrid + local reranker reached
+              <strong>74%</strong>.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with eval_right:
+        st.markdown(
+            """
+            <div class="adi-benchmark">
+              <strong style="color:#eaf7ff">Adaptive agent</strong><br>
+              Recoverable-claim recovery stayed at <strong>90%</strong>, while
+              unsupported-case retrieval dropped from <strong>3 rounds / 9 chunks</strong>
+              to <strong>2 rounds / 6 chunks</strong>.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            """
+            <div class="adi-benchmark">
+              <strong style="color:#eaf7ff">Evaluation principle</strong><br>
+              V2 keeps improvements optional when a benchmark does not justify
+              replacing the validated V1 component.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown('<div class="adi-section">Recent search / verification activity</div>', unsafe_allow_html=True)
+    if not session_history:
+        st.info("Run a question in Assistant to populate the action log.")
+    else:
+        for index, history_item in enumerate(reversed(session_history[-5:]), start=1):
+            if isinstance(history_item, tuple):
+                item_mode, item_answer = history_item
+            else:
+                item_mode, item_answer = "classical", history_item
+            with st.expander(
+                f"{index}. {item_mode.replace('_', ' ').title()} · {item_answer.question}"
+            ):
+                final_text = getattr(
+                    item_answer,
+                    "final_answer",
+                    getattr(item_answer, "answer", ""),
+                )
+                st.write(final_text)
+                st.caption(
+                    f"citations={len(getattr(item_answer, 'citations', []))} · "
+                    f"verification={getattr(item_answer, 'final_verification_status', getattr(item_answer, 'verification_status', 'n/a'))}"
+                )
+                steps = getattr(item_answer, "steps", [])
+                for step in steps:
+                    st.write(
+                        f"Round {step.round_index} · {step.action} · "
+                        f"new chunks={step.new_chunks} · resolved={step.resolved}"
+                    )
+                    st.caption(step.query)
+
+
 with comparison_tab:
     st.subheader("V1 vs V2 side-by-side")
     st.caption(
@@ -927,3 +1057,92 @@ with comparison_tab:
                         st.caption(step.query)
             except Exception as exc:
                 st.error(f"Could not run the V1/V2 comparison: {exc}")
+
+
+with configuration_tab:
+    st.markdown('<div class="adi-section">Configuration workspace</div>', unsafe_allow_html=True)
+    st.caption(
+        "The sidebar remains the fast control surface; this space explains the active experiment configuration in one inspectable view."
+    )
+
+    cfg_left, cfg_right = st.columns(2)
+    with cfg_left:
+        st.markdown("### Active pipeline")
+        config_html = "".join(
+            [
+                config_line("Assistant mode", assistant_mode),
+                config_line("Generator", generator_mode),
+                config_line("Retrieval", retrieval_mode),
+                config_line("Verifier", verifier_mode),
+                config_line("Top-K evidence", str(top_k)),
+                config_line("Agent policy", agent_policy_mode),
+                config_line(
+                    "Agent chunk budget",
+                    str(agent_budget)
+                    if assistant_mode == "Agentic Verified RAG"
+                    and agent_policy_mode == "V2 adaptive budgeted"
+                    else "not active",
+                ),
+            ]
+        )
+        st.markdown(
+            f'<div class="adi-card">{config_html}</div>',
+            unsafe_allow_html=True,
+        )
+
+    with cfg_right:
+        st.markdown("### Ingestion & models")
+        ingestion_html = "".join(
+            [
+                config_line("OCR fallback", "enabled" if ocr_fallback else "disabled"),
+                config_line("OCR language", "English · eng"),
+                config_line(
+                    "OCR trigger",
+                    f"< {min_text_chars} embedded-text chars"
+                    if ocr_fallback
+                    else "not active",
+                ),
+                config_line("Embedding model", "BAAI/bge-small-en-v1.5"),
+                config_line("Vector index", "FAISS"),
+                config_line("Paid external API", "not required"),
+            ]
+        )
+        st.markdown(
+            f'<div class="adi-card">{ingestion_html}</div>',
+            unsafe_allow_html=True,
+        )
+
+    st.markdown('<div class="adi-section">Mode guide</div>', unsafe_allow_html=True)
+    guide1, guide2, guide3 = st.columns(3)
+    with guide1:
+        feature_card(
+            "A",
+            "Classical RAG",
+            "Retrieve evidence, generate an answer, and expose citations. Best for the simplest baseline comparison.",
+        )
+    with guide2:
+        feature_card(
+            "B",
+            "Verified RAG",
+            "Adds claim-level evidence checks and can remove unsupported claims in corrected mode.",
+        )
+    with guide3:
+        feature_card(
+            "C",
+            "Agentic Verified RAG",
+            "Adds failure-aware bounded retrieval, recovery traces, early stopping, and a strict evidence budget.",
+        )
+
+    st.markdown('<div class="adi-section">Recommended release-demo configuration</div>', unsafe_allow_html=True)
+    status_pills(
+        [
+            ("Agentic Verified RAG", "info"),
+            ("Dense BGE + FAISS", ""),
+            ("V2 semantic NLI", ""),
+            ("V2 adaptive budgeted", "gold"),
+            ("OCR enabled", "info"),
+        ]
+    )
+    st.caption(
+        "The offline extractive generator is recommended for the single final release test so the result does not depend on a separately running local LLM server."
+    )
