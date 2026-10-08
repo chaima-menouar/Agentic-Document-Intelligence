@@ -215,6 +215,24 @@ Both passed in the consolidated V1/V2 CI benchmark.
 
 ## 10. V2 Streamlit UI
 
+The final V2 interface uses a dark navy / blue / cyan document-intelligence
+visual system with rounded evidence panels, status pills, and restrained scan,
+flow, pulse, and fade animations. The design keeps citations and verification
+status visually dominant instead of using decorative motion for its own sake.
+
+The application is organized into six spaces:
+
+- **Overview** — architecture flow, capability cards, release/workspace status;
+- **Documents** — PDF upload, OCR/index metrics, document status, and a
+  side-by-side original-page vs extracted/OCR-text inspector;
+- **Assistant** — a three-zone layout for **Sources**, **Question + Answer**, and
+  **Evidence**, plus expandable citations and agent traces;
+- **Evaluation** — live session metrics, response latency, local-LLM call count,
+  claim/citation support, benchmark snapshots, action log, and human review;
+- **V1 vs V2** — controlled side-by-side behavior comparison;
+- **Configuration** — active generator, retrieval, verifier, chunking, top-k,
+  agent policy/budget, OCR, embedding, and corpus settings.
+
 The V2 UI exposes:
 
 - OCR controls and OCR-page count;
@@ -227,6 +245,7 @@ The V2 UI exposes:
 - dense/sparse/fusion/rerank retrieval scores;
 - adaptive failure reason, action, new chunks, support delta, and early-stop
   reason;
+- live evaluation and human-review controls;
 - a **V1 vs V2** side-by-side demo tab.
 
 The side-by-side tab intentionally uses the same dense retriever and extractive
