@@ -796,6 +796,7 @@ with evaluation_tab:
     )
 
     session_history = st.session_state.history
+    session_events = st.session_state.session_events
     session_queries = len(session_history)
     session_citations = 0
     session_claims = 0
@@ -832,6 +833,20 @@ with evaluation_tab:
         f"{session_supported}/{session_claims}" if session_claims else "—",
     )
     live4.metric("Agent extra chunks", session_extra_chunks)
+
+    avg_latency = (
+        sum(event["latency_seconds"] for event in session_events) / len(session_events)
+        if session_events
+        else 0.0
+    )
+    total_llm_calls = sum(event["llm_calls"] for event in session_events)
+    perf1, perf2, perf3 = st.columns(3)
+    perf1.metric(
+        "Average response time",
+        f"{avg_latency:.2f}s" if session_events else "—",
+    )
+    perf2.metric("Local LLM calls", total_llm_calls)
+    perf3.metric("Human ratings", len(st.session_state.feedback))
 
     st.markdown('<div class="adi-section">Validated V1 → V2 benchmark</div>', unsafe_allow_html=True)
     bench1, bench2, bench3, bench4 = st.columns(4)
@@ -906,9 +921,22 @@ with evaluation_tab:
                     getattr(item_answer, "answer", ""),
                 )
                 st.write(final_text)
+                event_position = len(session_history) - index
+                event = (
+                    session_events[event_position]
+                    if 0 <= event_position < len(session_events)
+                    else None
+                )
+                event_suffix = (
+                    f" · latency={event['latency_seconds']:.2f}s · "
+                    f"llm_calls={event['llm_calls']}"
+                    if event is not None
+                    else ""
+                )
                 st.caption(
                     f"citations={len(getattr(item_answer, 'citations', []))} · "
                     f"verification={getattr(item_answer, 'final_verification_status', getattr(item_answer, 'verification_status', 'n/a'))}"
+                    + event_suffix
                 )
                 steps = getattr(item_answer, "steps", [])
                 for step in steps:
@@ -917,6 +945,41 @@ with evaluation_tab:
                         f"new chunks={step.new_chunks} · resolved={step.resolved}"
                     )
                     st.caption(step.query)
+
+    st.markdown('<div class="adi-section">Human evaluation</div>', unsafe_allow_html=True)
+    if not session_history:
+        st.info("Ask at least one question before adding human feedback.")
+    else:
+        feedback_index = len(session_history) - 1
+        feedback_entry = st.session_state.feedback.get(feedback_index, {})
+        feedback_col, note_col = st.columns([1, 1.5])
+        with feedback_col:
+            rating_options = [
+                "Not rated",
+                "Supported & useful",
+                "Needs review",
+                "Incorrect",
+            ]
+            default_rating = feedback_entry.get("rating", "Not rated")
+            feedback_rating = st.selectbox(
+                "Latest-answer rating",
+                rating_options,
+                index=rating_options.index(default_rating),
+                key="latest_human_rating",
+            )
+        with note_col:
+            feedback_note = st.text_input(
+                "Reviewer note",
+                value=feedback_entry.get("note", ""),
+                placeholder="Optional note about answer quality, citation quality, or missing evidence.",
+                key="latest_human_note",
+            )
+        if st.button("Save human evaluation", key="save_human_evaluation"):
+            st.session_state.feedback[feedback_index] = {
+                "rating": feedback_rating,
+                "note": feedback_note,
+            }
+            st.success("Human evaluation saved for the latest answer.")
 
 
 with comparison_tab:
