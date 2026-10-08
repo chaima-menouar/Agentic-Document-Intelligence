@@ -239,17 +239,32 @@ with overview_tab:
         o4.metric("OCR pages", sum(item.ocr_page_count for item in overview_result.documents))
 
 with documents_tab:
-    st.subheader("Documents")
-    st.write(
-        "Upload one or more English PDFs. V2 can OCR scanned or text-poor "
-        "pages locally when OCR is enabled."
+    st.markdown('<div class="adi-section">Document workspace</div>', unsafe_allow_html=True)
+    st.caption(
+        "Build a provenance-preserving corpus from text PDFs or scanned pages. "
+        "Every processed page stays traceable to the evidence shown later."
     )
 
-    uploaded_files = st.file_uploader(
-        "PDF files",
-        type=["pdf"],
-        accept_multiple_files=True,
-    )
+    upload_col, ingest_col = st.columns([1.55, 1])
+    with upload_col:
+        uploaded_files = st.file_uploader(
+            "PDF files",
+            type=["pdf"],
+            accept_multiple_files=True,
+            help="Upload one or more English PDFs. OCR can recover scanned/text-poor pages.",
+        )
+    with ingest_col:
+        zone_intro(
+            "Ingestion pipeline",
+            "Local PDF extraction → OCR fallback when needed → provenance-preserving chunks → BGE embeddings → FAISS index.",
+        )
+        status_pills(
+            [
+                ("Local OCR", "info"),
+                ("Page provenance", ""),
+                ("Multi-PDF", ""),
+            ]
+        )
 
     if st.button(
         "Process documents",
@@ -261,6 +276,10 @@ with documents_tab:
         st.session_state.workspace_dir = str(workspace_dir)
 
         uploads = [(item.name, item.getvalue()) for item in uploaded_files]
+        st.session_state.upload_payloads = {
+            f"{index:03d}_{Path(name).name}": payload
+            for index, (name, payload) in enumerate(uploads, start=1)
+        }
         try:
             with st.status("Building local document workspace...", expanded=True) as status:
                 st.write("Extracting text and preserving page provenance...")
@@ -309,6 +328,75 @@ with documents_tab:
                 if item.warnings:
                     for warning in item.warnings:
                         st.warning(warning)
+
+        st.markdown('<div class="adi-section">Inspect document & extracted evidence</div>', unsafe_allow_html=True)
+        inspection_items = {item.filename: item for item in result.documents}
+        inspection_name = st.selectbox(
+            "Document to inspect",
+            list(inspection_items.keys()),
+            key="document_inspector",
+        )
+        inspection_item = inspection_items[inspection_name]
+
+        page_chunks: dict[int, list[str]] = {}
+        try:
+            for raw_line in result.chunks_path.read_text(encoding="utf-8").splitlines():
+                payload = json.loads(raw_line)
+                if payload.get("document_id") != inspection_item.document_id:
+                    continue
+                page_number = payload.get("page_number")
+                if page_number is None:
+                    continue
+                page_chunks.setdefault(int(page_number), []).append(payload.get("text", ""))
+        except (OSError, json.JSONDecodeError):
+            page_chunks = {}
+
+        available_pages = sorted(page_chunks) or list(range(1, inspection_item.page_count + 1))
+        inspection_page = st.selectbox(
+            "Page",
+            available_pages,
+            key="document_inspector_page",
+        )
+
+        preview_col, text_col = st.columns(2)
+        with preview_col:
+            zone_intro(
+                "Original page",
+                "Visual PDF preview for the selected page. Use it to compare the source with extracted/OCR text.",
+            )
+            original_payload = st.session_state.upload_payloads.get(inspection_name)
+            if original_payload:
+                encoded_pdf = base64.b64encode(original_payload).decode("ascii")
+                components.html(
+                    f"""
+                    <iframe
+                      src="data:application/pdf;base64,{encoded_pdf}#page={inspection_page}&toolbar=0"
+                      width="100%"
+                      height="520"
+                      style="border:1px solid rgba(98,230,255,.18);border-radius:16px;background:#0b1628;">
+                    </iframe>
+                    """,
+                    height=540,
+                )
+            else:
+                st.info("Original PDF preview is available after processing files in this session.")
+
+        with text_col:
+            zone_intro(
+                "Extracted evidence",
+                "Normalized text used by retrieval. OCR-derived pages remain linked to the same page provenance.",
+            )
+            extracted_text = "\n\n".join(page_chunks.get(inspection_page, []))
+            if extracted_text:
+                st.text_area(
+                    "Extracted / OCR text",
+                    value=extracted_text,
+                    height=480,
+                    disabled=True,
+                    key=f"extracted_page_{inspection_item.document_id}_{inspection_page}",
+                )
+            else:
+                st.info("No retrieval chunk text was produced for this page.")
 
 with assistant_tab:
     st.subheader("Assistant")
