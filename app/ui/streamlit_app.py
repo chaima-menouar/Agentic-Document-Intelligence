@@ -21,11 +21,13 @@ from app.retrieval import (
 )
 from app.ui.theme import (
     apply_v2_theme,
+    available_themes,
     config_line,
     feature_card,
     render_hero,
     render_pipeline,
     status_pills,
+    verification_gauge,
     zone_intro,
 )
 from app.ui.workspace import build_local_workspace
@@ -43,8 +45,9 @@ st.set_page_config(
     layout="wide",
 )
 
-apply_v2_theme()
-render_hero()
+active_theme = st.session_state.get("ui_theme", "Aurora")
+apply_v2_theme(active_theme)
+render_hero(active_theme)
 
 
 def _ensure_state() -> None:
@@ -102,6 +105,15 @@ def _get_verifier(mode: str):
 _ensure_state()
 
 with st.sidebar:
+    st.header("Experience")
+    ui_theme = st.selectbox(
+        "Visual theme",
+        available_themes(),
+        key="ui_theme",
+        help="Switch the complete interface palette without changing the RAG pipeline.",
+    )
+    st.caption("Aurora · Prism · Ember · Pearl — same system, different visual identity.")
+    st.divider()
     st.header("Configuration")
     st.info(
         "Recommended V2 demo: Agentic Verified RAG + dense BGE (validated default) "
@@ -218,19 +230,19 @@ with overview_tab:
     st.markdown('<div class="adi-section">Core capabilities</div>', unsafe_allow_html=True)
     cap1, cap2, cap3 = st.columns(3)
     with cap1:
-        feature_card("OCR", "Document ingestion", "Text PDFs and scanned pages with local OCR, page provenance, and extraction-quality signals.")
+        feature_card("OCR", "Document ingestion", "Text PDFs and scanned pages with local OCR, page provenance, and extraction-quality signals.", accent="b")
     with cap2:
-        feature_card("RAG", "Evidence retrieval", "Validated dense BGE + FAISS with optional BM25 fusion and local cross-encoder reranking.")
+        feature_card("RAG", "Evidence retrieval", "Validated dense BGE + FAISS with optional BM25 fusion and local cross-encoder reranking.", accent="a")
     with cap3:
-        feature_card("NLI", "Claim verification", "Every answer can be decomposed into claims and checked against cited evidence with local semantic entailment.")
+        feature_card("NLI", "Claim verification", "Every answer can be decomposed into claims and checked against cited evidence with local semantic entailment.", accent="c")
 
     cap4, cap5, cap6 = st.columns(3)
     with cap4:
-        feature_card("AI", "Grounded generation", "Deterministic extractive baseline plus guarded local LLM generation with citation repair and safe fallback.")
+        feature_card("AI", "Grounded generation", "Deterministic extractive baseline plus guarded local LLM generation with citation repair and safe fallback.", accent="e")
     with cap5:
-        feature_card("↻", "Adaptive recovery", "The agent identifies evidence failures, re-retrieves within a strict budget, and exposes its action trace.")
+        feature_card("↻", "Adaptive recovery", "The agent identifies evidence failures, re-retrieves within a strict budget, and exposes its action trace.", accent="d")
     with cap6:
-        feature_card("A/B", "Evaluation workspace", "Inspect session behavior, benchmark V1 against V2, and compare safety, retrieval, and recovery metrics.")
+        feature_card("A/B", "Evaluation workspace", "Inspect session behavior, benchmark V1 against V2, and compare safety, retrieval, and recovery metrics.", accent="a")
 
     overview_result = st.session_state.get("workspace_result")
     st.markdown('<div class="adi-section">Workspace status</div>', unsafe_allow_html=True)
@@ -504,9 +516,11 @@ with assistant_tab:
                         item.status == "supported"
                         for item in latest_verifications
                     )
-                    st.metric(
-                        "Supported claims",
-                        f"{supported}/{len(latest_verifications)}",
+                    verification_gauge(
+                        supported / len(latest_verifications),
+                        "Verified support",
+                        f"{supported} of {len(latest_verifications)} claims are fully supported by cited evidence.",
+                        accent="d" if supported == len(latest_verifications) else "e",
                     )
                     for verification in latest_verifications[:3]:
                         icon = {
@@ -1163,6 +1177,7 @@ with configuration_tab:
         st.markdown("### Active pipeline")
         config_html = "".join(
             [
+                config_line("Visual theme", ui_theme),
                 config_line("Assistant mode", assistant_mode),
                 config_line("Generator", generator_mode),
                 config_line("Retrieval", retrieval_mode),
@@ -1229,18 +1244,21 @@ with configuration_tab:
             "A",
             "Classical RAG",
             "Retrieve evidence, generate an answer, and expose citations. Best for the simplest baseline comparison.",
+            accent="b",
         )
     with guide2:
         feature_card(
             "B",
             "Verified RAG",
             "Adds claim-level evidence checks and can remove unsupported claims in corrected mode.",
+            accent="c",
         )
     with guide3:
         feature_card(
             "C",
             "Agentic Verified RAG",
             "Adds failure-aware bounded retrieval, recovery traces, early stopping, and a strict evidence budget.",
+            accent="d",
         )
 
     st.markdown('<div class="adi-section">Recommended release-demo configuration</div>', unsafe_allow_html=True)
