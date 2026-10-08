@@ -24,6 +24,7 @@ from app.ui.theme import (
     available_themes,
     config_line,
     feature_card,
+    render_ambient_background,
     render_hero,
     render_pipeline,
     status_pills,
@@ -50,6 +51,7 @@ if active_theme not in available_themes():
     active_theme = "Dark"
     st.session_state.ui_theme = active_theme
 apply_v2_theme(active_theme)
+render_ambient_background()
 render_hero(active_theme)
 
 
