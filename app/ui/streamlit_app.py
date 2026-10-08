@@ -965,14 +965,14 @@ with evaluation_tab:
                 "Latest-answer rating",
                 rating_options,
                 index=rating_options.index(default_rating),
-                key="latest_human_rating",
+                key=f"latest_human_rating_{feedback_index}",
             )
         with note_col:
             feedback_note = st.text_input(
                 "Reviewer note",
                 value=feedback_entry.get("note", ""),
                 placeholder="Optional note about answer quality, citation quality, or missing evidence.",
-                key="latest_human_note",
+                key=f"latest_human_note_{feedback_index}",
             )
         if st.button("Save human evaluation", key="save_human_evaluation"):
             st.session_state.feedback[feedback_index] = {
