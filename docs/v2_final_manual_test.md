@@ -30,10 +30,13 @@ verification/agent path.
 2. Upload the PDF and process it.
 3. Ask one clearly answerable question from the document.
 4. During that same single end-to-end run, visually confirm:
-   - the navy/blue/cyan theme loads without broken styling;
+   - the cinematic multi-color interface loads without broken styling;
+   - the animated evidence-core hero, orbiting OCR/RAG/VERIFY/AGENT nodes, animated pipeline, and card micro-interactions render smoothly;
+   - the theme selector can switch between Aurora, Prism, Ember, and Pearl without changing application state;
    - Overview, Documents, Assistant, Evaluation, V1 vs V2, and Configuration are visible;
    - the Assistant shows Sources / Question + Answer / Evidence as three clear zones;
-   - the layout remains readable without overlapping or clipped controls.
+   - evidence verification uses the circular support gauge when claim verification is available;
+   - the layout remains readable without overlapping or clipped controls on the active screen size.
 5. Pass the release only if:
    - a grounded answer is returned;
    - at least one valid citation is shown;
