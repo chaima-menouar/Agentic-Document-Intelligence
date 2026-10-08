@@ -391,7 +391,7 @@ with documents_tab:
                       src="data:application/pdf;base64,{encoded_pdf}#page={inspection_page}&toolbar=0"
                       width="100%"
                       height="520"
-                      style="border:1px solid rgba(98,230,255,.18);border-radius:16px;background:#0b1628;">
+                      style="border:1px solid #373A40;border-radius:14px;background:#1A1B1E;">
                     </iframe>
                     """,
                     height=540,
