@@ -720,7 +720,7 @@ div.stDownloadButton > button:active {
   background:
     linear-gradient(145deg,
       color-mix(in srgb, var(--card-accent) 25%, transparent),
-      color-mix(in srgb, var(--panel-strong) 74%, transparent));
+      color-mix(in srgb, var(--adi-panel-strong) 74%, transparent));
   border: 1px solid color-mix(in srgb, var(--card-accent) 34%, var(--adi-line));
   color: var(--card-accent);
   font-size: .83rem;
