@@ -30,9 +30,10 @@ verification/agent path.
 2. Upload the PDF and process it.
 3. Ask one clearly answerable question from the document.
 4. During that same single end-to-end run, visually confirm:
-   - the cinematic multi-color interface loads without broken styling;
-   - the animated evidence-core hero, orbiting OCR/RAG/VERIFY/AGENT nodes, animated pipeline, and card micro-interactions render smoothly;
-   - the theme selector can switch between Aurora, Prism, Ember, and Pearl without changing application state;
+   - the Mantine-inspired charcoal/neutral interface loads without broken styling;
+   - the warm-yellow accent is used consistently for active tabs, buttons, focus states, pipeline motion, and verification visuals;
+   - the hero document/evidence cards animate subtly without distracting from the content;
+   - the appearance switch changes cleanly between Dark and Light without losing workspace state;
    - Overview, Documents, Assistant, Evaluation, V1 vs V2, and Configuration are visible;
    - the Assistant shows Sources / Question + Answer / Evidence as three clear zones;
    - evidence verification uses the circular support gauge when claim verification is available;
