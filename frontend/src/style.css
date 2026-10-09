@@ -450,3 +450,77 @@ body::before{
 :root[data-theme="light"] .meaning-step{animation-name:cardDanceA!important}
 :root[data-theme="light"] .step-retrieve,:root[data-theme="light"] .step-answer{animation-name:cardDanceB!important}
 @media(prefers-reduced-motion:reduce){:root[data-theme="light"] .meaning-glow{opacity:.4}}
+
+
+/* Light mode v3: flat-clean surface, no ambient bloom/haze. */
+:root[data-theme="light"] body{
+  background:#f7f6f2!important;
+}
+:root[data-theme="light"] body::before,
+:root[data-theme="light"] body::after{
+  display:none!important;
+  content:none!important;
+  background:none!important;
+  filter:none!important;
+  animation:none!important;
+}
+:root[data-theme="light"] .meaning-glow,
+:root[data-theme="light"] .topic-art::before,
+:root[data-theme="light"] .topic-art::after{
+  display:none!important;
+}
+:root[data-theme="light"] .topic-art{
+  filter:none!important;
+}
+:root[data-theme="light"] .meaning-orbit{
+  opacity:.24!important;
+  box-shadow:none!important;
+}
+:root[data-theme="light"] .meaning-docs{
+  filter:none!important;
+}
+:root[data-theme="light"] .meaning-docs span{
+  box-shadow:0 8px 18px rgba(27,25,32,.16)!important;
+}
+:root[data-theme="light"] .meaning-core{
+  box-shadow:0 8px 20px rgba(27,25,32,.16)!important;
+}
+:root[data-theme="light"] .meaning-core::before,
+:root[data-theme="light"] .meaning-core::after{
+  display:none!important;
+}
+:root[data-theme="light"] .core-ring{
+  box-shadow:none!important;
+  opacity:.55;
+}
+:root[data-theme="light"] .meaning-step{
+  box-shadow:0 7px 16px rgba(27,25,32,.14)!important;
+}
+:root[data-theme="light"] .meaning-step::after{
+  display:none!important;
+}
+:root[data-theme="light"] .step-number{
+  box-shadow:none!important;
+}
+:root[data-theme="light"] .meaning-answer{
+  box-shadow:0 9px 22px rgba(27,25,32,.16)!important;
+}
+:root[data-theme="light"] .meaning-answer::before{
+  display:none!important;
+}
+:root[data-theme="light"] .meaning-sparks{
+  display:none!important;
+}
+:root[data-theme="light"] .workspace,
+:root[data-theme="light"] .workspace:hover{
+  background:#fffdfa!important;
+  box-shadow:0 8px 28px rgba(32,29,37,.08)!important;
+  border-color:rgba(35,32,40,.10)!important;
+}
+:root[data-theme="light"] .brand-icon,
+:root[data-theme="light"] .yellow-dot,
+:root[data-theme="light"] .theme-toggle-thumb,
+:root[data-theme="light"] .answer-cites span{
+  box-shadow:none!important;
+  filter:none!important;
+}
