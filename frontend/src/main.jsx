@@ -17,6 +17,8 @@ function Icon({name,size=20}) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]||paths.file}</svg>;
 }
 function App(){
+  const [theme,setTheme]=useState(()=>localStorage.getItem('adi-theme')||'dark');
+  useEffect(()=>{document.documentElement.dataset.theme=theme;localStorage.setItem('adi-theme',theme);},[theme]);
   const [tab,setTab]=useState('documents'),[workspace,setWorkspace]=useState(EMPTY),[settings,setSettings]=useState(DEFAULTS);
   const [loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('');
   const [files,setFiles]=useState([]),[question,setQuestion]=useState(''),[scope,setScope]=useState(''),[selected,setSelected]=useState(null);
@@ -50,7 +52,7 @@ function App(){
   function update(key,value){setSettings(s=>({...s,[key]:value}));}
   return <div className="app-shell">
     <a className="skip-link" href="#workspace">Skip to workspace</a>
-    <header className="topbar"><a className="brand" href="#" onClick={()=>setTab('documents')}><span className="brand-icon"><Icon name="file"/></span><span>Agentic<span className="brand-sub">Document Intelligence</span></span></a><span className="header-note">A little more clarity.<span className="yellow-dot"/></span></header>
+    <header className="topbar"><a className="brand" href="#" onClick={()=>setTab('documents')}><span className="brand-icon"><Icon name="file"/></span><span>Agentic<span className="brand-sub">Document Intelligence</span></span></a><div className="header-actions"><span className="header-note">A little more clarity.<span className="yellow-dot"/></span><button className="theme-toggle" type="button" onClick={()=>setTheme(t=>t==='dark'?'light':'dark')} aria-label={`Switch to ${theme==='dark'?'light':'dark'} mode`}><span className="theme-toggle-track"><span className="theme-icon">☀</span><span className="theme-icon">☾</span><span className="theme-toggle-thumb"/></span></button></div></header>
     <main>
       <section className="hero"><div className="hero-art topic-art" role="img" aria-label="Animated dark glass illustration of agentic document intelligence with RAG retrieval, verified evidence and cited answers">
 <div className="meaning-orbit meaning-orbit-one"/><div className="meaning-orbit meaning-orbit-two"/><div className="meaning-glow"/>
