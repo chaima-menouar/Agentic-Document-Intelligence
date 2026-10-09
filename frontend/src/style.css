@@ -284,3 +284,46 @@ body::before{
 @media(min-width:761px) and (max-width:1099px){.hero .topic-art{transform:scale(.82);transform-origin:right top}.hero>h1,.hero>.hero-copy{max-width:55%}}
 @media(max-width:760px){.meaning-orbit-one{width:340px!important;height:300px!important;right:calc(50% - 170px)!important}.meaning-orbit-two{width:245px!important;height:220px!important;right:calc(50% - 122px)!important}.meaning-docs{left:2px;top:108px;transform:scale(.7);transform-origin:left top}.meaning-core{left:calc(50% - 48px);top:118px;width:96px;height:96px}.step-upload{left:24%;top:15px}.step-retrieve{right:0;top:80px}.step-verify{right:0;top:206px}.step-answer{right:5%;top:278px}.meaning-answer{left:22%;top:225px;width:175px;height:95px;padding:10px 12px}.answer-cites{margin-top:6px}.meaning-path{display:none}.meaning-step{padding:7px 8px}.meaning-step strong{font-size:8px}.meaning-step small{font-size:7px}}
 @media(prefers-reduced-motion:reduce){.topic-art .meaning-orbit,.meaning-glow,.meaning-docs,.meaning-core,.core-ring,.meaning-step,.meaning-answer,.meaning-path::after,.meaning-sparks i{animation:none!important}}
+
+
+/* V2 extra motion pass: richer but still readable and GPU-friendly. */
+.hero .topic-art{filter:drop-shadow(0 24px 55px #0005)}
+.meaning-docs .doc-front{animation:docFrontPulse 4.8s ease-in-out infinite}
+.meaning-docs .doc-mid{animation:docMidFloat 6.4s ease-in-out -1.4s infinite}
+.meaning-docs .doc-back{animation:docBackFloat 7.2s ease-in-out -2.8s infinite}
+.meaning-step{will-change:transform;transition:border-color .3s,box-shadow .3s}
+.step-upload{animation:meaningFloat 5.1s ease-in-out -.4s infinite,stepGlow 7s ease-in-out 0s infinite}
+.step-retrieve{animation:meaningFloat 5.8s ease-in-out -1.6s infinite,stepGlow 7s ease-in-out 1.5s infinite}
+.step-verify{animation:meaningFloat 6.3s ease-in-out -2.7s infinite,stepGlow 7s ease-in-out 3s infinite}
+.step-answer{animation:meaningFloat 5.5s ease-in-out -3.8s infinite,stepGlow 7s ease-in-out 4.5s infinite}
+.meaning-core::before,.meaning-core::after{content:"";position:absolute;border-radius:50%;pointer-events:none}
+.meaning-core::before{inset:-26px;border:1px solid #b797ee3b;animation:coreWave 3.2s ease-out infinite}
+.meaning-core::after{inset:-42px;border:1px solid #ffd43b24;animation:coreWave 3.2s ease-out 1.6s infinite}
+.core-file svg{animation:coreIcon 3.8s ease-in-out infinite}
+.meaning-answer{overflow:hidden}
+.meaning-answer::before{content:"";position:absolute;inset:-80% -45%;background:linear-gradient(105deg,transparent 43%,#ffffff10 48%,#ffe88c26 50%,#ffffff0d 53%,transparent 58%);transform:translateX(-45%) rotate(8deg);animation:answerScan 6.5s ease-in-out infinite}
+.meaning-answer>i{position:relative;overflow:hidden}
+.meaning-answer>i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,#d6c3ff9c,transparent);transform:translateX(-100%);animation:textScan 4.2s ease-in-out infinite}
+.meaning-answer>i:nth-of-type(2)::after{animation-delay:.45s}.meaning-answer>i:nth-of-type(3)::after{animation-delay:.9s}
+.answer-cites span{animation:citePop 3.8s ease-in-out infinite}.answer-cites span:nth-child(3){animation-delay:.45s}.answer-cites span:nth-child(4){animation-delay:.9s}
+.meaning-path{box-shadow:0 0 9px #ffd43b12;animation:pathGlow 2.8s ease-in-out infinite alternate}.path-b{animation-delay:.4s}.path-c{animation-delay:.8s}.path-d{animation-delay:1.2s}
+.meaning-path::before{content:"";position:absolute;inset:-1px 0;background:linear-gradient(90deg,transparent,#b99af0aa,transparent);background-size:45% 100%;animation:pathSweep 3.2s linear infinite}
+.meaning-sparks i:nth-child(1){animation-duration:3.2s}.meaning-sparks i:nth-child(2){animation-duration:4.7s}.meaning-sparks i:nth-child(3){animation-duration:3.8s}.meaning-sparks i:nth-child(4){animation-duration:5.1s}.meaning-sparks i:nth-child(5){animation-duration:4.1s}
+.topic-art::after{content:"";position:absolute;left:8%;right:3%;bottom:0;height:48px;border-radius:50%;background:radial-gradient(ellipse,#9d76dc22,transparent 68%);filter:blur(9px);animation:groundGlow 5s ease-in-out infinite}
+.workspace{animation:workspaceBreath 9s ease-in-out infinite}
+.nav-item.active svg{animation:navIconPulse 2.8s ease-in-out infinite}
+@keyframes docFrontPulse{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-9px) rotate(2deg)}}
+@keyframes docMidFloat{0%,100%{transform:rotate(-6deg) translateY(0)}50%{transform:rotate(-2deg) translateY(-12px)}}
+@keyframes docBackFloat{0%,100%{transform:rotate(-13deg) translateY(0)}50%{transform:rotate(-17deg) translateY(8px)}}
+@keyframes stepGlow{0%,100%{box-shadow:0 14px 34px #0007;border-color:#ffffff35}18%{box-shadow:0 14px 40px #ffd43b22,0 0 18px #a37be51c;border-color:#ffd43b73}35%{box-shadow:0 14px 34px #0007;border-color:#ffffff35}}
+@keyframes coreWave{0%{opacity:.8;transform:scale(.72)}100%{opacity:0;transform:scale(1.28)}}
+@keyframes coreIcon{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.13) rotate(4deg)}}
+@keyframes answerScan{0%,35%{transform:translateX(-48%) rotate(8deg);opacity:0}50%{opacity:1}72%,100%{transform:translateX(48%) rotate(8deg);opacity:0}}
+@keyframes textScan{0%,35%{transform:translateX(-110%)}70%,100%{transform:translateX(110%)}}
+@keyframes citePop{0%,100%{transform:translateY(0);box-shadow:none}50%{transform:translateY(-3px);box-shadow:0 0 12px #ffd43b33}}
+@keyframes pathGlow{from{filter:brightness(.8)}to{filter:brightness(1.45)}}
+@keyframes pathSweep{from{background-position:-60% 0}to{background-position:160% 0}}
+@keyframes groundGlow{50%{opacity:.45;transform:scaleX(1.08)}}
+@keyframes workspaceBreath{0%,100%{box-shadow:0 25px 90px #0003}50%{box-shadow:0 29px 100px #0005,0 0 35px #9e78d80a}}
+@keyframes navIconPulse{50%{transform:translateY(-2px) scale(1.09);filter:drop-shadow(0 0 5px #ffd43b88)}}
+@media(prefers-reduced-motion:reduce){.meaning-docs .doc-front,.meaning-docs .doc-mid,.meaning-docs .doc-back,.meaning-step,.meaning-core::before,.meaning-core::after,.core-file svg,.meaning-answer::before,.meaning-answer>i::after,.answer-cites span,.meaning-path,.meaning-path::before,.topic-art::after,.workspace,.nav-item.active svg{animation:none!important}}
