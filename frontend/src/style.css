@@ -397,3 +397,7 @@ body::before{
 @keyframes eyebrowLine{0%,100%{transform:scaleX(.65);transform-origin:left;opacity:.6}50%{transform:scaleX(1.35);opacity:1}}
 @keyframes ctaLine{0%,100%{width:0;opacity:0}35%{width:135px;opacity:1}70%{width:45px;opacity:.35}}
 @media(prefers-reduced-motion:reduce){.meaning-docs span,.step-number,.meaning-step>svg,.step-glyph,.meaning-step::after,.meaning-answer .answer-head strong::after,.answer-cites b,.meaning-answer>i,.core-file,.hero .eyebrow>span,.hero .text-button::after{animation:none!important}}
+
+
+/* Remove straight connector lines from hero workflow; cards/core stay animated. */
+.meaning-path{display:none!important}
