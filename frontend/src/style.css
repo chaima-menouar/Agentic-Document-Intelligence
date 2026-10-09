@@ -596,3 +596,66 @@ body::before{
 :root[data-theme="light"] .meaning-core{
   border-color:#4a465333!important;
 }
+
+
+/* Light mode final flat pass: eliminate every remaining bright wash in hero artwork. */
+:root[data-theme="light"] body,
+:root[data-theme="light"] .app-shell,
+:root[data-theme="light"] main,
+:root[data-theme="light"] .hero{
+  background:#f5f4f0!important;
+}
+:root[data-theme="light"] .hero-art,
+:root[data-theme="light"] .topic-art{
+  background:transparent!important;
+  isolation:isolate;
+}
+:root[data-theme="light"] .meaning-orbit{
+  display:none!important;
+}
+:root[data-theme="light"] .meaning-core{
+  background:#242032!important;
+  border:1px solid #514968!important;
+  box-shadow:none!important;
+  animation:coreDrift 7s ease-in-out infinite!important;
+}
+:root[data-theme="light"] .core-ring{
+  display:none!important;
+}
+:root[data-theme="light"] .core-file{
+  background:#181721!important;
+  border:1px solid #61582f!important;
+  color:#e5b900!important;
+}
+:root[data-theme="light"] .core-file::after{
+  display:none!important;
+}
+:root[data-theme="light"] .meaning-docs span{
+  background:#302d3b!important;
+  border:1px solid #494554!important;
+  box-shadow:none!important;
+}
+:root[data-theme="light"] .meaning-step{
+  background:#302d38!important;
+  border:1px solid #4d4955!important;
+  box-shadow:none!important;
+}
+:root[data-theme="light"] .meaning-answer{
+  background:#302d3a!important;
+  border:1px solid #4d4958!important;
+  box-shadow:none!important;
+}
+:root[data-theme="light"] .meaning-answer>i::after{
+  display:none!important;
+}
+:root[data-theme="light"] .answer-cites span,
+:root[data-theme="light"] .step-number{
+  box-shadow:none!important;
+}
+:root[data-theme="light"] .workspace-header{
+  background:#faf9f5!important;
+}
+:root[data-theme="light"] .workspace{
+  background:#fffefa!important;
+  box-shadow:none!important;
+}
