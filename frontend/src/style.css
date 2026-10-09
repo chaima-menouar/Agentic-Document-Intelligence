@@ -524,3 +524,75 @@ body::before{
   box-shadow:none!important;
   filter:none!important;
 }
+
+
+/* Light mode hard reset: absolutely no glow, blur, bloom or luminous shadows. */
+:root[data-theme="light"] *,
+:root[data-theme="light"] *::before,
+:root[data-theme="light"] *::after{
+  text-shadow:none!important;
+}
+:root[data-theme="light"] .hero,
+:root[data-theme="light"] .hero-art,
+:root[data-theme="light"] .topic-art,
+:root[data-theme="light"] .meaning-docs,
+:root[data-theme="light"] .meaning-core,
+:root[data-theme="light"] .meaning-step,
+:root[data-theme="light"] .meaning-answer,
+:root[data-theme="light"] .workspace,
+:root[data-theme="light"] .workspace-header,
+:root[data-theme="light"] .dropzone{
+  filter:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+:root[data-theme="light"] .meaning-glow,
+:root[data-theme="light"] .meaning-sparks,
+:root[data-theme="light"] .meaning-core::before,
+:root[data-theme="light"] .meaning-core::after,
+:root[data-theme="light"] .topic-art::before,
+:root[data-theme="light"] .topic-art::after{
+  display:none!important;
+}
+:root[data-theme="light"] .meaning-docs span,
+:root[data-theme="light"] .meaning-core,
+:root[data-theme="light"] .meaning-step,
+:root[data-theme="light"] .meaning-answer,
+:root[data-theme="light"] .step-number,
+:root[data-theme="light"] .core-file,
+:root[data-theme="light"] .brand-icon,
+:root[data-theme="light"] .theme-toggle-track,
+:root[data-theme="light"] .theme-toggle-thumb,
+:root[data-theme="light"] .workspace,
+:root[data-theme="light"] .workspace:hover,
+:root[data-theme="light"] .dropzone,
+:root[data-theme="light"] .upload-icon,
+:root[data-theme="light"] .primary,
+:root[data-theme="light"] .secondary{
+  box-shadow:none!important;
+}
+:root[data-theme="light"] .meaning-orbit,
+:root[data-theme="light"] .core-ring{
+  opacity:.16!important;
+}
+:root[data-theme="light"] .meaning-orbit::before,
+:root[data-theme="light"] .meaning-orbit::after,
+:root[data-theme="light"] .core-ring::before,
+:root[data-theme="light"] .core-ring::after{
+  box-shadow:none!important;
+}
+:root[data-theme="light"] .hero h1 em{
+  background:none!important;
+  -webkit-text-fill-color:#e7b900!important;
+  color:#e7b900!important;
+  animation:none!important;
+}
+:root[data-theme="light"] .workspace{
+  border:1px solid #dedbd4!important;
+}
+:root[data-theme="light"] .meaning-step,
+:root[data-theme="light"] .meaning-answer,
+:root[data-theme="light"] .meaning-docs span,
+:root[data-theme="light"] .meaning-core{
+  border-color:#4a465333!important;
+}
