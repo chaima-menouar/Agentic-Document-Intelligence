@@ -39,3 +39,7 @@ data/external/
 
 # Generated vector indexes
 data/indexes/
+
+# React build output
+frontend/node_modules/
+frontend/dist/

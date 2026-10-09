@@ -2,3 +2,4 @@
 -r requirements-retrieval.txt
 -r requirements-ui.txt
 -r requirements-ocr.txt
+-r requirements-web.txt

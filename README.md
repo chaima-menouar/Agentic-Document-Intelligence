@@ -1,5 +1,18 @@
 # Agentic Document Intelligence
 
+## React application (recommended interface)
+
+The primary interface is now React with a generated charcoal/yellow document-AI background.
+It connects to the existing Python retrieval, OCR, verification, and adaptive agent through FastAPI.
+
+```bash
+bash scripts/run_web.sh
+```
+
+Open private port **8501** in Codespaces. Stop any old Streamlit process on that port first.
+See [React setup and features](docs/react_frontend.md) for requirements and development.
+
+
 An evidence-grounded document question-answering system for English PDF corpora.
 
 The project is developed as a 12-week academic project and compares three modes:
