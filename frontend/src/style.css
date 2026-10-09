@@ -327,3 +327,38 @@ body::before{
 @keyframes workspaceBreath{0%,100%{box-shadow:0 25px 90px #0003}50%{box-shadow:0 29px 100px #0005,0 0 35px #9e78d80a}}
 @keyframes navIconPulse{50%{transform:translateY(-2px) scale(1.09);filter:drop-shadow(0 0 5px #ffd43b88)}}
 @media(prefers-reduced-motion:reduce){.meaning-docs .doc-front,.meaning-docs .doc-mid,.meaning-docs .doc-back,.meaning-step,.meaning-core::before,.meaning-core::after,.core-file svg,.meaning-answer::before,.meaning-answer>i::after,.answer-cites span,.meaning-path,.meaning-path::before,.topic-art::after,.workspace,.nav-item.active svg{animation:none!important}}
+
+
+/* V2 cinematic motion boost: stronger continuous movement without changing layout. */
+.topic-art{animation:sceneHover 9s ease-in-out infinite}
+.meaning-orbit-one{animation-duration:19s!important}.meaning-orbit-two{animation-duration:24s!important}
+.meaning-glow{animation:glowRoam 8s ease-in-out infinite!important}
+.meaning-core{animation:coreBreathe 3.3s ease-in-out infinite,coreDrift 7s ease-in-out infinite!important}
+.core-ring{animation-duration:7.5s!important}
+.meaning-docs{animation:docsDrift 5.5s ease-in-out infinite!important}
+.meaning-step{transform-origin:center;backdrop-filter:blur(8px)}
+.step-upload{animation:cardDanceA 4.4s ease-in-out infinite,stepGlow 5.5s ease-in-out 0s infinite!important}
+.step-retrieve{animation:cardDanceB 4.9s ease-in-out -.8s infinite,stepGlow 5.5s ease-in-out 1.2s infinite!important}
+.step-verify{animation:cardDanceA 5.2s ease-in-out -1.7s infinite,stepGlow 5.5s ease-in-out 2.4s infinite!important}
+.step-answer{animation:cardDanceB 4.6s ease-in-out -2.6s infinite,stepGlow 5.5s ease-in-out 3.6s infinite!important}
+.meaning-path::after{animation-duration:1.15s!important}
+.meaning-path::before{animation-duration:2s!important}
+.meaning-answer{animation:answerFloat 4.8s ease-in-out infinite!important}
+.meaning-sparks i{animation-name:sparkFly!important}
+.meaning-sparks i:nth-child(1){--dx:32px;--dy:-28px}.meaning-sparks i:nth-child(2){--dx:-27px;--dy:34px}.meaning-sparks i:nth-child(3){--dx:38px;--dy:-18px}.meaning-sparks i:nth-child(4){--dx:-34px;--dy:-30px}.meaning-sparks i:nth-child(5){--dx:22px;--dy:39px}
+.topic-art::before{content:"";position:absolute;inset:35px 8px 18px 70px;border-radius:50%;pointer-events:none;background:conic-gradient(from 0deg,transparent 0 18%,#b18de41d 22%,transparent 29% 52%,#ffd43b1a 58%,transparent 64%);filter:blur(3px);animation:energySpin 11s linear infinite}
+.meaning-core .core-file::after{content:"";position:absolute;width:5px;height:5px;border-radius:50%;background:#fff0a4;box-shadow:0 0 12px #ffd43b;animation:coreSatellite 3.4s linear infinite}
+.meaning-core .core-file{position:relative}
+.answer-head span{animation:verifiedBlink 2s ease-in-out infinite}
+.meaning-answer{box-shadow:0 25px 55px #0008,0 0 25px #a37de41a}
+@keyframes sceneHover{0%,100%{transform:translate3d(0,0,0)}30%{transform:translate3d(-3px,-5px,0)}65%{transform:translate3d(4px,3px,0)}}
+@keyframes glowRoam{0%,100%{transform:translate(-8px,4px) scale(.92);opacity:.6}50%{transform:translate(14px,-10px) scale(1.16);opacity:1}}
+@keyframes coreDrift{0%,100%{translate:0 0}33%{translate:4px -7px}66%{translate:-5px 5px}}
+@keyframes docsDrift{0%,100%{transform:translate(0,0) rotate(-1deg)}35%{transform:translate(5px,-13px) rotate(2deg)}70%{transform:translate(-4px,-5px) rotate(-2deg)}}
+@keyframes cardDanceA{0%,100%{transform:translate(0,0) rotate(0)}35%{transform:translate(4px,-9px) rotate(1deg)}70%{transform:translate(-3px,-3px) rotate(-.7deg)}}
+@keyframes cardDanceB{0%,100%{transform:translate(0,0) rotate(0)}35%{transform:translate(-5px,-7px) rotate(-1deg)}70%{transform:translate(3px,-2px) rotate(.8deg)}}
+@keyframes sparkFly{0%,100%{opacity:.18;transform:translate(0,0) scale(.55)}35%{opacity:1;transform:translate(calc(var(--dx)*.45),calc(var(--dy)*.45)) scale(1.35)}70%{opacity:.55;transform:translate(var(--dx),var(--dy)) scale(.8)}}
+@keyframes energySpin{to{transform:rotate(360deg)}}
+@keyframes coreSatellite{from{transform:rotate(0deg) translateX(35px) rotate(0deg)}to{transform:rotate(360deg) translateX(35px) rotate(-360deg)}}
+@keyframes verifiedBlink{0%,100%{opacity:.55;filter:none}50%{opacity:1;filter:drop-shadow(0 0 5px #9ce2b5)}}
+@media(prefers-reduced-motion:reduce){.topic-art,.meaning-glow,.meaning-core,.meaning-docs,.meaning-step,.topic-art::before,.meaning-core .core-file::after,.answer-head span{animation:none!important}}
