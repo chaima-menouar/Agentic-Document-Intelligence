@@ -76,3 +76,35 @@ details[open]>p,details[open]>a{animation:panelAppear .3s ease both}
 @media(min-width:761px) and (max-width:1099px){.hero-art{right:-30px;transform:scale(.77);transform-origin:right center;opacity:.75}.hero>h1{max-width:590px}.hero>.hero-copy{max-width:390px}}
 @media(max-width:760px){.hero{min-height:0;padding-bottom:30px}.hero-art{position:relative;top:auto;right:auto;width:100%;height:265px;margin-top:17px;overflow:hidden}.art-code-card{right:calc(50% - 160px);top:42px;width:300px;height:205px;padding:15px 21px}.art-card-top{padding-bottom:10px;font-size:10px}.art-code{padding-top:17px;font-size:11px;gap:8px}.art-code-line{margin-top:12px}.orbit-outer{width:340px;height:340px;right:calc(50% - 170px);top:-30px}.orbit-inner{width:250px;height:250px;right:calc(50% - 125px);top:15px}.art-halo{right:calc(50% - 140px);width:280px;top:20px}.art-chip{font-size:10px;padding:8px 11px}.chip-ai{top:9px;right:calc(50% + 58px)}.chip-cloud{top:85px;right:0}.chip-data{top:218px;right:0}.art-mini-card{top:209px;right:calc(50% - 24px);padding:8px 11px;border-radius:12px}.art-mini-arrow{height:29px;width:29px;font-size:17px}.art-mini-card strong{font-size:10px}.art-mini-card small{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.art-orbit,.art-halo,.art-code-card,.art-chip,.art-mini-card{animation:none!important}.art-code-card{transform:rotate(-4deg)}}
+
+
+/* V2 kinetic depth: ambient particles, light sweeps, gentle orbiting, UI reveals. */
+.hero-art{perspective:900px}
+.motion-particles,.motion-sparkles,.motion-rings{position:absolute;inset:0;pointer-events:none}
+.motion-particles{overflow:hidden}
+.motion-particles i{--x:calc(7% + mod(var(--i)*29,86)*1%);position:absolute;top:calc(8% + (var(--i)*31%));left:calc(5% + (var(--i)*37%));height:4px;width:4px;border-radius:50%;background:#ffe5a0;box-shadow:0 0 12px #ffd43b;opacity:.4;animation:particleDrift calc(5s + var(--i)*.31s) ease-in-out infinite alternate;animation-delay:calc(var(--i)*-.58s)}
+.motion-particles i:nth-child(3n){background:#c6a3ff;box-shadow:0 0 12px #b391ea;height:6px;width:6px}
+.motion-particles i:nth-child(4n){height:2px;width:2px}
+.motion-scan{position:absolute;inset:35px 12px 35px 45px;transform:rotate(-12deg);background:linear-gradient(110deg,transparent 42%,#fff8d109 49%,#ffe28822 50%,transparent 58%);background-size:250% 100%;animation:lightSweep 10s linear infinite;mask-image:radial-gradient(ellipse,#000 25%,transparent 75%)}
+.motion-rings span{position:absolute;border:1px solid #ffffff18;border-radius:50%;right:40px;top:10px;width:420px;height:380px;animation:ringPulse 8s ease-out infinite}
+.motion-rings span:nth-child(2){animation-delay:-2.66s}.motion-rings span:nth-child(3){animation-delay:-5.33s}
+.motion-sparkles span{position:absolute;color:#fbe6a4;text-shadow:0 0 14px #ffd43b;animation:sparkleWander 5s ease-in-out infinite}
+.motion-sparkles span:nth-child(1){top:14%;left:24%;font-size:22px}.motion-sparkles span:nth-child(2){top:68%;right:17%;font-size:19px;animation-delay:-2s;color:#ccb3f1}.motion-sparkles span:nth-child(3){top:35%;right:6%;font-size:13px;animation-delay:-3s}.motion-sparkles span:nth-child(4){bottom:12%;left:18%;font-size:15px;animation-delay:-1.3s;color:#ccb3f1}
+.art-code-card{transition:box-shadow .45s ease}
+.hero-art:hover .art-code-card{box-shadow:0 45px 100px #000a,0 0 45px #ffd43b22}
+.art-chip{will-change:transform}
+.workspace{transition:box-shadow .4s ease,border-color .4s ease}
+.workspace:hover{border-color:#ffffff2b;box-shadow:0 30px 100px #0005}
+.nav-item.active::after{content:"";position:absolute;bottom:-2px;left:0;width:100%;height:2px;background:var(--yellow);box-shadow:0 0 14px #ffd43b88;animation:tabGlow .5s ease-out both}
+.upload-icon svg{animation:uploadSway 5s ease-in-out infinite}
+.badge.verified{animation:verifiedGlow 3.8s ease-in-out infinite}
+.spinner{box-shadow:0 0 16px #ffd43b28}
+@keyframes particleDrift{0%{transform:translate3d(-8px,17px,0) scale(.55);opacity:.12}50%{opacity:.78}100%{transform:translate3d(18px,-28px,0) scale(1.45);opacity:.24}}
+@keyframes lightSweep{0%{background-position:175% center}100%{background-position:-135% center}}
+@keyframes ringPulse{0%{opacity:0;transform:scale(.72)}30%{opacity:.45}100%{opacity:0;transform:scale(1.16)}}
+@keyframes sparkleWander{0%,100%{opacity:.3;transform:translateY(4px) rotate(-15deg) scale(.75)}50%{opacity:1;transform:translateY(-13px) rotate(20deg) scale(1.15)}}
+@keyframes tabGlow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes uploadSway{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes verifiedGlow{50%{box-shadow:0 0 14px #77c49627}}
+@media(max-width:760px){.motion-rings span{width:280px;height:260px;top:0;right:calc(50% - 140px)}.motion-scan{inset:10px}.motion-particles i:nth-child(n+9){display:none}}
+@media(prefers-reduced-motion:reduce){.motion-particles i,.motion-scan,.motion-rings span,.motion-sparkles span,.upload-icon svg,.badge.verified,.nav-item.active::after{animation:none!important}.motion-rings,.motion-scan,.motion-particles{display:none!important}}
