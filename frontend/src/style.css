@@ -3,3 +3,49 @@
 /* Animate the generated raster artwork, respecting reduced motion. */
 body{isolation:isolate;min-height:100vh}body::before{animation:backgroundFloat 24s ease-in-out infinite alternate;transform-origin:80% 25%}@keyframes backgroundFloat{from{transform:scale(1) translateY(0)}to{transform:scale(1.035) translateY(-7px)}}@media(max-width:760px){body::before{background-size:auto 500px;background-position:right top;opacity:.32;animation:none}}@media(prefers-reduced-motion:reduce){body::before{animation:none!important;transform:none!important}}
 @media(max-width:440px){.workspace nav{gap:20px;width:100%;justify-content:space-between}.nav-item svg{display:none}.nav-item{font-size:11px}body::before{opacity:.2}}
+
+
+/* V2 motion layer: restrained, theme-consistent movement; no extra packages. */
+@keyframes heroReveal{from{opacity:0;transform:translate3d(0,24px,0);filter:blur(5px)}to{opacity:1;transform:translate3d(0,0,0);filter:blur(0)}}
+@keyframes softGlow{0%,100%{box-shadow:0 0 0 0 #ffd43b00}50%{box-shadow:0 0 24px 2px #ffd43b22}}
+@keyframes floatIcon{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes dotPulse{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.45)}}
+@keyframes dropPulse{0%,100%{border-color:#ffffff26}50%{border-color:#ffd43b66}}
+@keyframes gradientSweep{from{background-position:140% 50%}to{background-position:-40% 50%}}
+@keyframes panelAppear{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes dialogAppear{from{opacity:0;transform:translateY(15px) scale(.975)}to{opacity:1;transform:translateY(0) scale(1)}}
+.hero .eyebrow{animation:heroReveal .65s cubic-bezier(.2,.75,.25,1) .08s both}
+.hero h1{animation:heroReveal .85s cubic-bezier(.2,.75,.25,1) .18s both}
+.hero-copy{animation:heroReveal .85s cubic-bezier(.2,.75,.25,1) .34s both}
+.hero .text-button{animation:heroReveal .8s cubic-bezier(.2,.75,.25,1) .48s both}
+.hero h1 em{background:linear-gradient(110deg,#ffd43b 20%,#fff0ab 45%,#ffd43b 68%);background-size:240% 100%;background-clip:text;-webkit-background-clip:text;color:transparent;animation:gradientSweep 8s ease-in-out 1.5s infinite alternate}
+.yellow-dot{animation:dotPulse 2.8s ease-in-out infinite}
+.brand-icon{animation:softGlow 5s ease-in-out infinite;transition:transform .3s ease,border-color .3s ease}
+.brand:hover .brand-icon{transform:rotate(-7deg) scale(1.07);border-color:var(--yellow)}
+.text-button svg,.primary svg,.secondary svg,.activity-list svg{transition:transform .25s ease}
+.text-button:hover svg,.primary:hover:not(:disabled) svg,.secondary:hover:not(:disabled) svg,.activity-list>button:hover svg{transform:translateX(5px)}
+.primary,.secondary,.danger{transition:transform .22s ease,box-shadow .22s ease,background .22s ease,border-color .22s ease}
+.primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 25px #ffd43b22}
+.secondary:hover:not(:disabled),.danger:hover:not(:disabled){transform:translateY(-2px)}
+.primary:active:not(:disabled),.secondary:active:not(:disabled),.danger:active:not(:disabled){transform:translateY(0) scale(.98)}
+.nav-item{position:relative;transition:color .24s ease}
+.nav-item svg{transition:transform .25s ease}
+.nav-item:hover svg{transform:translateY(-2px)}
+.workspace-body>.section-heading,.workspace-body>.dropzone,.workspace-body>.documents-list,.workspace-body>.empty-state,.workspace-body>.question-form,.workspace-body>.answer-layout,.workspace-body>.metrics,.workspace-body>.settings-grid,.workspace-body>.activity-list{animation:panelAppear .55s cubic-bezier(.2,.75,.25,1) both}
+.dropzone{transition:background .3s,border-color .3s,transform .3s,box-shadow .3s}
+.dropzone:hover,.dropzone:focus-within{background:#ffd43b07;border-color:#ffd43b66;box-shadow:inset 0 0 30px #ffd43b05}
+.dropzone.dragging{transform:scale(1.012);box-shadow:0 0 36px #ffd43b1a;animation:dropPulse 1.5s ease-in-out infinite}
+.upload-icon{animation:floatIcon 4s ease-in-out infinite;transition:background .3s,transform .3s}
+.dropzone:hover .upload-icon{background:#ffd43b19}
+.document-row,.activity-list>button{transition:background .24s ease,padding .24s ease}
+.document-row:hover,.activity-list>button:hover{background:#ffffff06}
+.document-row:hover{padding-left:9px;padding-right:9px}
+.metrics>div{transition:transform .28s ease,border-color .28s ease,box-shadow .28s ease}
+.metrics>div:hover{transform:translateY(-5px);border-color:#ffd43b55;box-shadow:0 10px 32px #0003}
+.notice{animation:panelAppear .35s ease-out both}
+.modal-backdrop{animation:panelAppear .25s ease-out both}
+.modal{animation:dialogAppear .3s cubic-bezier(.2,.75,.25,1) both}
+details[open]>summary{color:#ffe28a}
+details[open]>p,details[open]>a{animation:panelAppear .3s ease both}
+@media(max-width:760px){.document-row:hover{padding-left:0;padding-right:0}.hero h1 em{animation-duration:12s}}
+@media(prefers-reduced-motion:reduce){.hero .eyebrow,.hero h1,.hero-copy,.hero .text-button,.hero h1 em,.yellow-dot,.brand-icon,.dropzone.dragging,.upload-icon,.workspace-body>.section-heading,.workspace-body>.dropzone,.workspace-body>.documents-list,.workspace-body>.empty-state,.workspace-body>.question-form,.workspace-body>.answer-layout,.workspace-body>.metrics,.workspace-body>.settings-grid,.workspace-body>.activity-list,.notice,.modal-backdrop,.modal,details[open]>p,details[open]>a{animation:none!important;filter:none!important}.primary:hover:not(:disabled),.secondary:hover:not(:disabled),.danger:hover:not(:disabled),.metrics>div:hover,.document-row:hover,.brand:hover .brand-icon,.dropzone.dragging,.text-button:hover svg,.primary:hover svg,.secondary:hover svg,.activity-list>button:hover svg,.nav-item:hover svg{transform:none!important}}
