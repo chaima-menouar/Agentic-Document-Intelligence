@@ -6,7 +6,40 @@ import streamlit as st
 _BASE_CSS = """
 <style>
 :root { --adi-bg:#18191c; --adi-surface:#222327; --adi-text:#f5f5f2; --adi-muted:#acadb5; --adi-border:#37383f; --adi-gold:#ffd43b; --adi-soft:rgba(255,212,59,.08); }
-[data-testid="stAppViewContainer"] { background:radial-gradient(ellipse at 85% 0%,rgba(255,212,59,.045),transparent 45%),var(--adi-bg); color:var(--adi-text); }
+[data-testid="stAppViewContainer"] {
+  position:relative;
+  isolation:isolate;
+  background:linear-gradient(145deg,#141518 0%,#1d1e22 52%,#141518 100%);
+  color:var(--adi-text);
+}
+/* Decorative layers never intercept uploads, scrolling, or sidebar controls. */
+[data-testid="stAppViewContainer"]::before,
+[data-testid="stAppViewContainer"]::after {
+  content:'';
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+}
+/* A quiet document-grid texture, strongest around the outer edges. */
+[data-testid="stAppViewContainer"]::before {
+  background-image:
+    linear-gradient(rgba(255,212,59,.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,212,59,.045) 1px,transparent 1px),
+    radial-gradient(circle,rgba(255,212,59,.20) 1px,transparent 1.5px);
+  background-size:72px 72px,72px 72px,144px 144px;
+  background-position:center top;
+  -webkit-mask-image:linear-gradient(90deg,#000,rgba(0,0,0,.12) 35%,rgba(0,0,0,.12) 65%,#000);
+  mask-image:linear-gradient(90deg,#000,rgba(0,0,0,.12) 35%,rgba(0,0,0,.12) 65%,#000);
+}
+/* Warm yellow light ties the page to the existing accent color. */
+[data-testid="stAppViewContainer"]::after {
+  background:
+    radial-gradient(ellipse at 94% 8%,rgba(255,212,59,.14),transparent 42%),
+    radial-gradient(ellipse at 2% 82%,rgba(255,212,59,.075),transparent 38%);
+  animation:adiAmbient 14s ease-in-out infinite alternate;
+}
+[data-testid="stMain"], section.main, [data-testid="stSidebar"] { position:relative; z-index:1; }
 [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlockContainer"] { max-width:1280px; padding:2.2rem 2.5rem 4rem; }
 [data-testid="stHeader"] { background:transparent; }
 [data-testid="stSidebar"] { background:#202125; border-right:1px solid var(--adi-border); }
@@ -64,14 +97,17 @@ button:focus-visible,a:focus-visible { outline:2px solid var(--adi-gold); outlin
 .adi-config-line:last-child { border-bottom:0; } .adi-config-key { color:var(--adi-muted); } .adi-config-value { color:var(--adi-text); text-align:right; }
 @keyframes adiEnter { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 @keyframes adiFloat { 0%,100% { transform:translateY(0) rotate(-7deg); } 50% { transform:translateY(-7px) rotate(-5deg); } }
+@keyframes adiAmbient { from { opacity:.6; } to { opacity:1; } }
 @media(max-width:760px) {
+  [data-testid="stAppViewContainer"]::before { opacity:.5; }
+  [data-testid="stAppViewContainer"]::after { animation:none; opacity:.7; }
   [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlockContainer"] { padding:1.6rem 1rem 3rem; }
   .adi-brandmeta { display:none; } .adi-brandbar { margin-bottom:1rem; }
   .adi-hero { grid-template-columns:1fr; gap:0; padding:1rem 0 2rem; }
   .adi-art { display:none; } .adi-hero h1 { font-size:2.5rem; }
   [data-testid="stTabs"] [role="tablist"] { gap:1rem; }
 }
-@media(prefers-reduced-motion:reduce) { .adi-hero,.adi-paper.front { animation:none; } [data-testid="stButton"] button,[data-testid="stDownloadButton"] button { transition:none; } }
+@media(prefers-reduced-motion:reduce) { .adi-hero,.adi-paper.front,[data-testid="stAppViewContainer"]::after { animation:none; } [data-testid="stButton"] button,[data-testid="stDownloadButton"] button { transition:none; } }
 </style>
 """
 
