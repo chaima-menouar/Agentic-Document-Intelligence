@@ -188,3 +188,38 @@ details[open]>p,details[open]>a{animation:panelAppear .3s ease both}
 @media(min-width:761px) and (max-width:1099px){.hero .topic-art{right:-24px;top:29px;transform:scale(.79);transform-origin:right top}.hero>h1,.hero>.hero-copy{max-width:55%}}
 @media(max-width:760px){.hero .topic-art{position:relative;top:auto;right:auto;width:100%;height:315px;margin:20px auto 0;overflow:hidden;transform:none}.topic-card{width:290px;height:210px;right:calc(50% - 160px);top:61px;padding:15px 18px}.topic-card-top{font-size:10px;padding-bottom:10px}.topic-code{font-size:11px;gap:8px;padding-top:16px}.topic-progress{margin-top:13px}.topic-orbit-one{width:360px;height:330px;right:calc(50% - 180px);top:-10px}.topic-orbit-two{width:250px;height:235px;right:calc(50% - 125px);top:32px}.topic-glow{right:calc(50% - 150px);width:300px}.topic-doc-stack{top:102px;left:0;transform:scale(.7);transform-origin:left top}.topic-tag{font-size:10px;padding:7px 9px}.tag-agent{top:24px;left:10%}.tag-rag{top:110px;right:0}.tag-verify{top:256px;right:0}.tag-cite{top:263px;left:1%}.topic-note{top:276px;right:27%;padding:6px 9px}.topic-note-icon{width:24px;height:24px;font-size:16px}.topic-note strong{font-size:9px}.topic-note small{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.topic-orbit,.topic-glow,.topic-doc-stack,.topic-card,.topic-tag,.topic-note,.topic-sparks i,.topic-progress{animation:none!important}.topic-card{transform:rotate(-3deg)}}
+
+/* Premium abstract backdrop: supersedes the older photographic background. */
+:root{background:#0e1016}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(ellipse at 18% 12%,rgba(157,117,207,.18),transparent 43%),
+    radial-gradient(ellipse at 82% 23%,rgba(255,212,59,.105),transparent 36%),
+    radial-gradient(ellipse at 52% 75%,rgba(114,86,173,.10),transparent 47%),
+    linear-gradient(165deg,#0d0f15 0%,#151720 51%,#0e1016 100%);
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:-4%;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse at 30% 35%,rgba(197,167,240,.13),transparent 36%),
+    radial-gradient(ellipse at 74% 54%,rgba(255,212,59,.075),transparent 32%),
+    linear-gradient(90deg,rgba(255,255,255,.028) 1px,transparent 1px),
+    linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px);
+  background-size:auto,auto,46px 46px,46px 46px;
+  background-position:center;
+  mask-image:linear-gradient(to bottom,#0008,transparent 92%);
+  opacity:.7;
+  transform-origin:center;
+  animation:abstractAmbient 20s ease-in-out infinite alternate;
+}
+@keyframes abstractAmbient{
+  from{transform:translate3d(-.6%,0,0) scale(1)}
+  to{transform:translate3d(.8%,-.7%,0) scale(1.02)}
+}
+@media(max-width:760px){body::before{background-size:auto,auto,34px 34px,34px 34px;opacity:.35}}
+@media(prefers-reduced-motion:reduce){body::before{animation:none!important;transform:none!important}}
