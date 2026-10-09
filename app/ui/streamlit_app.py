@@ -41,6 +41,7 @@ st.set_page_config(
     page_title="Agentic Document Intelligence",
     page_icon="📄",
     layout="wide",
+    initial_sidebar_state="collapsed",
 )
 
 active_theme = "Dark"
@@ -104,11 +105,7 @@ _ensure_state()
 
 with st.sidebar:
     st.header("Configuration")
-    st.info(
-        "Recommended setup: Agentic Verified RAG + dense BGE retrieval + "
-        "semantic NLI verification + adaptive budgeted recovery. "
-        "Enable the grounded local LLM only when a local Ollama/LM Studio endpoint is running."
-    )
+    st.caption("Tune answer generation, evidence retrieval, and PDF processing.")
     assistant_mode = st.selectbox(
         "Assistant mode",
         ["Agentic Verified RAG", "Verified + Corrected RAG", "Verified RAG", "Classical RAG"],
@@ -183,66 +180,20 @@ with st.sidebar:
         st.rerun()
 
 
-overview_tab, documents_tab, assistant_tab, evaluation_tab, configuration_tab = st.tabs(
-    ["Overview", "Documents", "Assistant", "Evaluation", "Configuration"]
+documents_tab, assistant_tab, evaluation_tab, configuration_tab = st.tabs(
+    ["Documents", "Assistant", "Evaluation", "Settings"]
 )
 
-with overview_tab:
-    st.markdown('<div class="adi-section">Core capabilities</div>', unsafe_allow_html=True)
-    cap1, cap2, cap3 = st.columns(3)
-    with cap1:
-        feature_card("OCR", "Document ingestion", "Text PDFs and scanned pages with local OCR, page provenance, and extraction-quality signals.", accent="b")
-    with cap2:
-        feature_card("RAG", "Evidence retrieval", "Validated dense BGE + FAISS with optional BM25 fusion and local cross-encoder reranking.", accent="a")
-    with cap3:
-        feature_card("NLI", "Claim verification", "Every answer can be decomposed into claims and checked against cited evidence with local semantic entailment.", accent="c")
-
-    cap4, cap5, cap6 = st.columns(3)
-    with cap4:
-        feature_card("AI", "Grounded generation", "Deterministic extractive baseline plus guarded local LLM generation with citation repair and safe fallback.", accent="e")
-    with cap5:
-        feature_card("↻", "Adaptive recovery", "The agent identifies evidence failures, re-retrieves within a strict budget, and exposes its action trace.", accent="d")
-    with cap6:
-        feature_card("QA", "Evaluation workspace", "Inspect answer quality, retrieval behavior, verification, recovery, and human feedback in one place.", accent="a")
-
-    overview_result = st.session_state.get("workspace_result")
-    st.markdown('<div class="adi-section">Workspace status</div>', unsafe_allow_html=True)
-    if overview_result is None:
-        st.info("No active corpus yet. Open Documents, upload one or more PDFs, then process the workspace.")
-    else:
-        o1, o2, o3, o4 = st.columns(4)
-        o1.metric("Documents", len(overview_result.documents))
-        o2.metric("Chunks", overview_result.total_chunks)
-        o3.metric("Vectors", overview_result.index_manifest.get("vector_count", 0))
-        o4.metric("OCR pages", sum(item.ocr_page_count for item in overview_result.documents))
-
 with documents_tab:
-    st.markdown('<div class="adi-section">Document workspace</div>', unsafe_allow_html=True)
-    st.caption(
-        "Build a provenance-preserving corpus from text PDFs or scanned pages. "
-        "Every processed page stays traceable to the evidence shown later."
+    st.html('<div class="adi-section">Add your documents</div>')
+    st.caption("Upload English PDFs to start. Text documents and scanned pages are supported.")
+    uploaded_files = st.file_uploader(
+        "PDF files",
+        type=["pdf"],
+        accept_multiple_files=True,
+        help="Add one or more PDFs. Scanned pages are read with local OCR when enabled.",
+        label_visibility="collapsed",
     )
-
-    upload_col, ingest_col = st.columns([1.55, 1])
-    with upload_col:
-        uploaded_files = st.file_uploader(
-            "PDF files",
-            type=["pdf"],
-            accept_multiple_files=True,
-            help="Upload one or more English PDFs. OCR can recover scanned/text-poor pages.",
-        )
-    with ingest_col:
-        zone_intro(
-            "Ingestion pipeline",
-            "Local PDF extraction → OCR fallback when needed → provenance-preserving chunks → BGE embeddings → FAISS index.",
-        )
-        status_pills(
-            [
-                ("Local OCR", "info"),
-                ("Page provenance", ""),
-                ("Multi-PDF", ""),
-            ]
-        )
 
     if st.button(
         "Process documents",
@@ -307,7 +258,7 @@ with documents_tab:
                     for warning in item.warnings:
                         st.warning(warning)
 
-        st.markdown('<div class="adi-section">Inspect document & extracted evidence</div>', unsafe_allow_html=True)
+        st.html('<div class="adi-section">Inspect document & extracted evidence</div>')
         inspection_items = {item.filename: item for item in result.documents}
         inspection_name = st.selectbox(
             "Document to inspect",
@@ -377,9 +328,9 @@ with documents_tab:
                 st.info("No retrieval chunk text was produced for this page.")
 
 with assistant_tab:
-    st.markdown('<div class="adi-section">Grounded assistant</div>', unsafe_allow_html=True)
+    st.html('<div class="adi-section">Grounded assistant</div>')
     st.caption(
-        "The workspace is intentionally split into Sources, Question + Answer, and Evidence so every response remains inspectable."
+        "Ask about your documents, then inspect the cited passages and claim checks."
     )
     dense_retriever = st.session_state.get("retriever")
     if retrieval_mode == "Hybrid RRF":
@@ -756,7 +707,7 @@ with assistant_tab:
 
 
 with evaluation_tab:
-    st.markdown('<div class="adi-section">Evaluation & action log</div>', unsafe_allow_html=True)
+    st.html('<div class="adi-section">Evaluation & action log</div>')
     st.caption(
         "Monitor the current session alongside the validated release benchmark and live assistant behavior."
     )
@@ -790,7 +741,7 @@ with evaluation_tab:
                 0,
             )
 
-    st.markdown('<div class="adi-section">Live session</div>', unsafe_allow_html=True)
+    st.html('<div class="adi-section">Live session</div>')
     live1, live2, live3, live4 = st.columns(4)
     live1.metric("Questions", session_queries)
     live2.metric("Citations", session_citations)
@@ -814,7 +765,7 @@ with evaluation_tab:
     perf2.metric("Local LLM calls", total_llm_calls)
     perf3.metric("Human ratings", len(st.session_state.feedback))
 
-    st.markdown('<div class="adi-section">Validated release benchmark</div>', unsafe_allow_html=True)
+    st.html('<div class="adi-section">Validated release benchmark</div>')
     bench1, bench2, bench3, bench4 = st.columns(4)
     bench1.metric("Citation precision", "100%", "high precision")
     bench2.metric("Verifier accuracy", "66.7%", "semantic check")
@@ -823,51 +774,39 @@ with evaluation_tab:
 
     eval_left, eval_right = st.columns(2)
     with eval_left:
-        st.markdown(
-            """
+        st.html("""
             <div class="adi-benchmark">
               <strong style="color:#eaf7ff">Retrieval decision</strong><br>
               Full QASPER Recall@5 keeps dense BGE at <strong>66.10%</strong>,
               so dense retrieval remains the validated default for the release.
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            """
+            """)
+        st.html("""
             <div class="adi-benchmark">
               <strong style="color:#eaf7ff">Reranker signal</strong><br>
               On the matched 50-question sample, dense Recall@5 was
               <strong>70%</strong> and hybrid + local reranker reached
               <strong>74%</strong>.
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
+            """)
 
     with eval_right:
-        st.markdown(
-            """
+        st.html("""
             <div class="adi-benchmark">
               <strong style="color:#eaf7ff">Adaptive agent</strong><br>
               Recoverable-claim recovery reaches <strong>90%</strong>, while
               unsupported cases stay bounded at about <strong>2 rounds / 6 chunks</strong>.
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            """
+            """)
+        st.html("""
             <div class="adi-benchmark">
               <strong style="color:#eaf7ff">Release principle</strong><br>
               The final interface exposes the strongest validated configuration
               while keeping safe fallbacks inside the pipeline.
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
+            """)
 
-    st.markdown('<div class="adi-section">Recent search / verification activity</div>', unsafe_allow_html=True)
+    st.html('<div class="adi-section">Recent search / verification activity</div>')
     if not session_history:
         st.info("Run a question in Assistant to populate the action log.")
     else:
@@ -910,7 +849,7 @@ with evaluation_tab:
                     )
                     st.caption(step.query)
 
-    st.markdown('<div class="adi-section">Human evaluation</div>', unsafe_allow_html=True)
+    st.html('<div class="adi-section">Human evaluation</div>')
     if not session_history:
         st.info("Ask at least one question before adding human feedback.")
     else:
@@ -947,9 +886,9 @@ with evaluation_tab:
 
 
 with configuration_tab:
-    st.markdown('<div class="adi-section">Configuration workspace</div>', unsafe_allow_html=True)
+    st.html('<div class="adi-section">Configuration workspace</div>')
     st.caption(
-        "The sidebar remains the fast control surface; this space explains the active experiment configuration in one inspectable view."
+        "Open the sidebar using the top-left arrow to change these settings."
     )
 
     cfg_left, cfg_right = st.columns(2)
@@ -979,10 +918,7 @@ with configuration_tab:
                 ),
             ]
         )
-        st.markdown(
-            f'<div class="adi-card">{config_html}</div>',
-            unsafe_allow_html=True,
-        )
+        st.html(f'<div class="adi-card">{config_html}</div>')
 
     with cfg_right:
         st.markdown("### Ingestion & models")
@@ -1009,12 +945,9 @@ with configuration_tab:
                 config_line("Paid external API", "not required"),
             ]
         )
-        st.markdown(
-            f'<div class="adi-card">{ingestion_html}</div>',
-            unsafe_allow_html=True,
-        )
+        st.html(f'<div class="adi-card">{ingestion_html}</div>')
 
-    st.markdown('<div class="adi-section">Mode guide</div>', unsafe_allow_html=True)
+    st.html('<div class="adi-section">Mode guide</div>')
     guide1, guide2, guide3 = st.columns(3)
     with guide1:
         feature_card(
@@ -1038,7 +971,7 @@ with configuration_tab:
             accent="d",
         )
 
-    st.markdown('<div class="adi-section">Recommended release-demo configuration</div>', unsafe_allow_html=True)
+    st.html('<div class="adi-section">Recommended release-demo configuration</div>')
     status_pills(
         [
             ("Agentic Verified RAG", "info"),
