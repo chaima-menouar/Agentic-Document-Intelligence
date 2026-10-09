@@ -52,20 +52,13 @@ function App(){
     <a className="skip-link" href="#workspace">Skip to workspace</a>
     <header className="topbar"><a className="brand" href="#" onClick={()=>setTab('documents')}><span className="brand-icon"><Icon name="file"/></span><span>Agentic<span className="brand-sub">Document Intelligence</span></span></a><span className="header-note">A little more clarity.<span className="yellow-dot"/></span></header>
     <main>
-      <section className="hero"><div className="hero-art evidence-flow" aria-label="Illustration of the research pipeline from PDF documents through retrieval, AI synthesis and evidence verification to a sourced answer" role="img">
-<div className="flow-heading"><span className="flow-heading-pulse"/> EVIDENCE-FIRST INTELLIGENCE</div>
-<div className="flow-pipeline">
-<div className="flow-stage stage-pdf"><span className="flow-symbol">▤</span><strong>PDF Sources</strong><small>Document ingestion</small></div>
-<div className="flow-link"><span/></div>
-<div className="flow-stage stage-search"><span className="flow-symbol">⌕</span><strong>Retrieval</strong><small>Relevant passages</small></div>
-<div className="flow-link"><span/></div>
-<div className="flow-stage stage-agent"><span className="flow-symbol">✧</span><strong>AI Agent</strong><small>Generate claims</small></div>
-<div className="flow-link"><span/></div>
-<div className="flow-stage stage-verify"><span className="flow-symbol">✓</span><strong>Verification</strong><small>Check evidence</small></div>
-<div className="flow-link"><span/></div>
-<div className="flow-stage stage-answer"><span className="flow-symbol">↗</span><strong>Answer</strong><small>Cited & grounded</small></div>
-</div>
-<div className="flow-footer"><span className="flow-live"><span/> Research pipeline</span><span>Retrieve → Reason → Verify</span></div>
+      <section className="hero"><div className="hero-art topic-art" role="img" aria-label="Animated dark glass illustration of agentic document intelligence with RAG retrieval, verified evidence and cited answers">
+<div className="topic-orbit topic-orbit-one"/><div className="topic-orbit topic-orbit-two"/><div className="topic-glow"/>
+<div className="topic-doc-stack"><span/><span/><span/></div>
+<div className="topic-card"><div className="topic-card-top"><span className="topic-dots"><i/><i/><i/></span><span>evidence_agent.py</span></div><div className="topic-code"><span><b>class</b> RAGAgent:</span><span className="topic-indent"><b>def</b> verify(claim):</span><span className="topic-indent2">evidence = <em>retrieve()</em></span><span className="topic-indent2"><b>return</b> <em>cite(evidence)</em></span></div><span className="topic-progress"/></div>
+<span className="topic-tag tag-agent">✧ <strong>Agentic AI</strong></span><span className="topic-tag tag-rag">⌕ <strong>RAG Retrieval</strong></span><span className="topic-tag tag-verify">✓ <strong>Verification</strong></span><span className="topic-tag tag-cite">▤ <strong>Citations</strong></span>
+<div className="topic-note"><span className="topic-note-icon">↗</span><span><strong>Retrieve · Verify · Cite</strong><small>Grounded document answers</small></span></div>
+<div className="topic-sparks"><i/><i/><i/><i/><i/></div>
 </div><p className="eyebrow"><span/> YOUR KNOWLEDGE, CONNECTED</p><h1>Make room<br/>for <em>clear answers.</em></h1><p className="hero-copy">Turn your documents into a conversation.<br/>Find answers, check the evidence, and keep the source in sight.</p><button className="text-button" onClick={()=>document.getElementById('workspace').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}>Explore your workspace <Icon name="arrow" size={17}/></button></section>
       <section className="workspace" id="workspace" aria-label="Document workspace">
         <div className="workspace-header"><nav aria-label="Workspace sections">{Object.entries(labels).map(([key,label])=><button key={key} aria-current={tab===key?'page':undefined} className={tab===key?'nav-item active':'nav-item'} onClick={()=>{setTab(key);setNotice('');}}><Icon name={{documents:'file',assistant:'chat',activity:'activity',settings:'settings'}[key]} size={17}/>{label}</button>)}</nav><span className="document-count">{workspace.documents.length} document{workspace.documents.length!==1?'s':''}</span></div>
