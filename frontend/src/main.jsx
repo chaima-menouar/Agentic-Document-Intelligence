@@ -53,12 +53,16 @@ function App(){
     <header className="topbar"><a className="brand" href="#" onClick={()=>setTab('documents')}><span className="brand-icon"><Icon name="file"/></span><span>Agentic<span className="brand-sub">Document Intelligence</span></span></a><span className="header-note">A little more clarity.<span className="yellow-dot"/></span></header>
     <main>
       <section className="hero"><div className="hero-art topic-art" role="img" aria-label="Animated dark glass illustration of agentic document intelligence with RAG retrieval, verified evidence and cited answers">
-<div className="topic-orbit topic-orbit-one"/><div className="topic-orbit topic-orbit-two"/><div className="topic-glow"/>
-<div className="topic-doc-stack"><span/><span/><span/></div>
-<div className="topic-card"><div className="topic-card-top"><span className="topic-dots"><i/><i/><i/></span><span>evidence_agent.py</span></div><div className="topic-code"><span><b>class</b> RAGAgent:</span><span className="topic-indent"><b>def</b> verify(claim):</span><span className="topic-indent2">evidence = <em>retrieve()</em></span><span className="topic-indent2"><b>return</b> <em>cite(evidence)</em></span></div><span className="topic-progress"/></div>
-<span className="topic-tag tag-agent">✧ <strong>Agentic AI</strong></span><span className="topic-tag tag-rag">⌕ <strong>RAG Retrieval</strong></span><span className="topic-tag tag-verify">✓ <strong>Verification</strong></span><span className="topic-tag tag-cite">▤ <strong>Citations</strong></span>
-<div className="topic-note"><span className="topic-note-icon">↗</span><span><strong>Retrieve · Verify · Cite</strong><small>Grounded document answers</small></span></div>
-<div className="topic-sparks"><i/><i/><i/><i/><i/></div>
+<div className="meaning-orbit meaning-orbit-one"/><div className="meaning-orbit meaning-orbit-two"/><div className="meaning-glow"/>
+<div className="meaning-docs" aria-hidden="true"><span className="doc-back">TXT</span><span className="doc-mid">W</span><span className="doc-front">PDF</span></div>
+<div className="meaning-core"><span className="core-ring"/><span className="core-file"><Icon name="file" size={25}/></span></div>
+<div className="meaning-step step-upload"><span className="step-number">1</span><Icon name="upload" size={17}/><span><strong>Upload Documents</strong><small>PDF · DOCX · TXT</small></span></div>
+<div className="meaning-step step-retrieve"><span className="step-number">2</span><span className="step-glyph">⌕</span><span><strong>Retrieve Evidence</strong><small>Find relevant information</small></span></div>
+<div className="meaning-step step-verify"><span className="step-number">3</span><Icon name="check" size={18}/><span><strong>Verify Claims</strong><small>Check sources & evidence</small></span></div>
+<div className="meaning-step step-answer"><span className="step-number">4</span><Icon name="file" size={17}/><span><strong>Clear Answer</strong><small>Cited and reliable</small></span></div>
+<div className="meaning-answer"><div className="answer-head"><strong>Answer</strong><span>✓ verified</span></div><i/><i/><i/><div className="answer-cites"><b>Citations</b><span>1</span><span>2</span><span>3</span></div></div>
+<div className="meaning-path path-a"/><div className="meaning-path path-b"/><div className="meaning-path path-c"/><div className="meaning-path path-d"/>
+<div className="meaning-sparks"><i/><i/><i/><i/><i/></div>
 </div><p className="eyebrow"><span/> YOUR KNOWLEDGE, CONNECTED</p><h1>Make room<br/>for <em>clear answers.</em></h1><p className="hero-copy">Turn your documents into a conversation.<br/>Find answers, check the evidence, and keep the source in sight.</p><button className="text-button" onClick={()=>document.getElementById('workspace').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}>Explore your workspace <Icon name="arrow" size={17}/></button></section>
       <section className="workspace" id="workspace" aria-label="Document workspace">
         <div className="workspace-header"><nav aria-label="Workspace sections">{Object.entries(labels).map(([key,label])=><button key={key} aria-current={tab===key?'page':undefined} className={tab===key?'nav-item active':'nav-item'} onClick={()=>{setTab(key);setNotice('');}}><Icon name={{documents:'file',assistant:'chat',activity:'activity',settings:'settings'}[key]} size={17}/>{label}</button>)}</nav><span className="document-count">{workspace.documents.length} document{workspace.documents.length!==1?'s':''}</span></div>
