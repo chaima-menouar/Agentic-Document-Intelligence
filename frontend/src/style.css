@@ -108,3 +108,29 @@ details[open]>p,details[open]>a{animation:panelAppear .3s ease both}
 @keyframes verifiedGlow{50%{box-shadow:0 0 14px #77c49627}}
 @media(max-width:760px){.motion-rings span{width:280px;height:260px;top:0;right:calc(50% - 140px)}.motion-scan{inset:10px}.motion-particles i:nth-child(n+9){display:none}}
 @media(prefers-reduced-motion:reduce){.motion-particles i,.motion-scan,.motion-rings span,.motion-sparkles span,.upload-icon svg,.badge.verified,.nav-item.active::after{animation:none!important}.motion-rings,.motion-scan,.motion-particles{display:none!important}}
+
+
+/* Third motion layer: traveling data nodes, drifting PDF tiles and breathing mesh. */
+.kinetic-scene{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:40px}
+.kinetic-grid{position:absolute;inset:15px;background-image:linear-gradient(#ffd43b0b 1px,transparent 1px),linear-gradient(90deg,#ffd43b0b 1px,transparent 1px);background-size:35px 35px;mask-image:radial-gradient(ellipse at center,#0002 15%,transparent 70%);animation:gridBreath 9s ease-in-out infinite}
+.kinetic-path{position:absolute;width:130px;height:130px;border:1px dashed #ffd43b40;border-radius:50%;animation:kineticSpin 14s linear infinite}
+.path-one{left:18px;top:180px;transform-origin:65px 65px}.path-two{right:8px;top:4px;width:100px;height:100px;border-color:#b89afc66;animation-duration:19s;animation-direction:reverse}
+.kinetic-path::after{content:"";position:absolute;top:0;left:50%;width:9px;height:9px;background:#ffd43b;border-radius:50%;box-shadow:0 0 16px #ffd43b}
+.path-two::after{background:#b89afc;box-shadow:0 0 14px #b89afc}
+.kinetic-nodes span{position:absolute;height:6px;width:6px;border-radius:50%;background:#ffe394;box-shadow:0 0 10px #ffd43b;animation:nodeTravel 8s ease-in-out infinite}
+.kinetic-nodes span:nth-child(1){left:8%;top:22%;animation-delay:-1s}
+.kinetic-nodes span:nth-child(2){left:30%;top:82%;animation-delay:-3s;background:#ba99ec}
+.kinetic-nodes span:nth-child(3){right:8%;top:48%;animation-delay:-5s}
+.kinetic-nodes span:nth-child(4){right:27%;top:8%;animation-delay:-2s;background:#ba99ec}
+.kinetic-nodes span:nth-child(5){left:48%;top:55%;animation-delay:-6s}
+.kinetic-file{position:absolute;width:57px;height:72px;border-radius:9px;padding:9px;background:linear-gradient(150deg,#53515eeb,#262531ed);border:1px solid #ffffff45;box-shadow:0 13px 30px #0006;display:flex;flex-direction:column;gap:6px;animation:fileTumble 9s ease-in-out infinite}
+.kinetic-file span{font-size:17px;line-height:1;color:#ffdf72;margin-bottom:3px}.kinetic-file i{display:block;width:100%;height:3px;background:#c9b9da66;border-radius:4px}.kinetic-file i:last-child{width:60%}
+.file-one{left:52px;top:69px;transform:rotate(-15deg);animation-delay:-2s}.file-two{right:25px;bottom:12px;transform:rotate(12deg);animation-delay:-5s}
+.kinetic-focus{position:absolute;left:45%;bottom:5%;font-size:24px;color:#ffd43b;filter:drop-shadow(0 0 16px #ffd43b);animation:focusPulse 5s ease-in-out infinite}
+@keyframes gridBreath{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.04)}}
+@keyframes kineticSpin{to{transform:rotate(360deg)}}
+@keyframes nodeTravel{0%,100%{transform:translate(0,0) scale(.7);opacity:.15}30%{opacity:1}55%{transform:translate(24px,-26px) scale(1.55);opacity:.9}80%{transform:translate(-9px,10px) scale(.8);opacity:.35}}
+@keyframes fileTumble{0%,100%{transform:translateY(0) rotate(-12deg)}50%{transform:translateY(-18px) rotate(3deg)}}
+@keyframes focusPulse{0%,100%{transform:scale(.7) rotate(-20deg);opacity:.4}50%{transform:scale(1.2) rotate(20deg);opacity:1}}
+@media(max-width:760px){.kinetic-file{transform:scale(.75)}.file-one{left:7px;top:32px}.file-two{right:7px;bottom:4px}.kinetic-path{opacity:.55}.kinetic-focus{bottom:0}.kinetic-scene{border-radius:20px}}
+@media(prefers-reduced-motion:reduce){.kinetic-grid,.kinetic-path,.kinetic-nodes span,.kinetic-file,.kinetic-focus{animation:none!important}.kinetic-grid{opacity:.3}}
