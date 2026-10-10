@@ -20,6 +20,7 @@ class ProcessedDocumentSummary:
     filename: str
     page_count: int
     chunk_count: int
+    ocr_page_count: int
     warnings: tuple[str, ...]
 
 
@@ -46,6 +47,9 @@ def prepare_uploaded_pdfs(
     *,
     chunk_size_words: int = 220,
     overlap_words: int = 40,
+    ocr_fallback: bool = False,
+    min_text_chars: int = 40,
+    ocr_language: str = "eng",
 ) -> tuple[Path, tuple[ProcessedDocumentSummary, ...], int]:
     """Persist uploaded PDFs, extract them, and write canonical chunks JSONL."""
     workspace_dir.mkdir(parents=True, exist_ok=True)
@@ -66,7 +70,12 @@ def prepare_uploaded_pdfs(
             pdf_path = uploads_dir / _safe_pdf_name(filename, index)
             pdf_path.write_bytes(payload)
 
-            extraction = extract_pdf(pdf_path)
+            extraction = extract_pdf(
+                pdf_path,
+                ocr_fallback=ocr_fallback,
+                min_text_chars=min_text_chars,
+                ocr_language=ocr_language,
+            )
             document = pdf_extraction_to_document(extraction)
             chunks = chunk_document(
                 document,
@@ -83,6 +92,7 @@ def prepare_uploaded_pdfs(
                     filename=extraction.filename,
                     page_count=extraction.page_count,
                     chunk_count=len(chunks),
+                    ocr_page_count=len(extraction.quality.ocr_pages),
                     warnings=tuple(extraction.quality.warnings),
                 )
             )
@@ -91,8 +101,8 @@ def prepare_uploaded_pdfs(
         raise ValueError("No valid PDF uploads were provided.")
     if total_chunks == 0:
         raise ValueError(
-            "The uploaded PDFs produced no text chunks. "
-            "Scanned PDFs without extractable text are not supported in V1."
+            "The uploaded PDFs produced no text chunks, including after the "
+            "configured OCR fallback."
         )
 
     return chunks_path, tuple(summaries), total_chunks
@@ -107,6 +117,9 @@ def build_local_workspace(
     chunk_size_words: int = 220,
     overlap_words: int = 40,
     batch_size: int = 64,
+    ocr_fallback: bool = True,
+    min_text_chars: int = 40,
+    ocr_language: str = "eng",
 ) -> WorkspaceBuildResult:
     """Create a local multi-PDF semantic workspace and FAISS index."""
     chunks_path, summaries, total_chunks = prepare_uploaded_pdfs(
@@ -114,6 +127,9 @@ def build_local_workspace(
         workspace_dir,
         chunk_size_words=chunk_size_words,
         overlap_words=overlap_words,
+        ocr_fallback=ocr_fallback,
+        min_text_chars=min_text_chars,
+        ocr_language=ocr_language,
     )
 
     index_dir = workspace_dir / "index"
@@ -146,6 +162,7 @@ def workspace_summary_json(result: WorkspaceBuildResult) -> str:
                 "filename": item.filename,
                 "page_count": item.page_count,
                 "chunk_count": item.chunk_count,
+                "ocr_page_count": item.ocr_page_count,
                 "warnings": list(item.warnings),
             }
             for item in result.documents

@@ -1,0 +1,97 @@
+name: v2-v1-vs-v2-evaluation
+
+on:
+  push:
+    branches: ["v2-development"]
+    paths:
+      - "app/evaluation/**"
+      - "app/agent/**"
+      - "app/rag/**"
+      - "app/verification/**"
+      - "app/models/**"
+      - "scripts/evaluate_v1_v2.py"
+      - "scripts/evaluate_agent_policies.py"
+      - "tests/test_v2_metrics.py"
+      - ".github/workflows/v2-v1-vs-v2-evaluation.yml"
+  pull_request:
+    branches: ["v2-development"]
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  compare-v1-v2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install base dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Install CPU retrieval and NLI dependencies
+        run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install -r requirements-retrieval.txt
+
+      - name: Run evaluation metric and regression tests
+        run: >
+          pytest -q
+          tests/test_v2_metrics.py
+          tests/test_grounded_local_generator.py
+          tests/test_semantic_verifier.py
+          tests/test_adaptive_agent.py
+
+      - name: Download selected BGE validation index
+        uses: actions/download-artifact@v4
+        with:
+          name: qasper-validation-index-bge-small-v1.5
+          path: data/indexes/qasper-bge-small
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 37443041910
+
+      - name: Run consolidated V1 vs V2 benchmark
+        run: |
+          python scripts/evaluate_v1_v2.py             --index data/indexes/qasper-bge-small             --output data/evaluation/v1_vs_v2.json             --agent-cases 20
+
+      - name: Validate V2 safety and regression gates
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(
+              Path("data/evaluation/v1_vs_v2.json").read_text()
+          )
+          score = report["scorecard"]
+
+          assert score["generation_citation_precision"]["v2"] == 1.0
+          assert score["generation_citation_precision"]["v1"] == 0.0
+          assert score["unsupported_safe_abstention_rate"]["v2"] == 1.0
+          assert (
+              score["recoverable_claim_recovery_rate"]["v2"]
+              >= score["recoverable_claim_recovery_rate"]["v1"]
+          )
+          assert (
+              score["unsupported_average_additional_chunks"]["v2"]
+              <= score["unsupported_average_additional_chunks"]["v1"]
+          )
+          assert all(
+              item["passed"]
+              for item in report["regressions"].values()
+          )
+          print(json.dumps(report["scorecard"], indent=2))
+          PY
+
+      - name: Upload V1 vs V2 evaluation
+        uses: actions/upload-artifact@v4
+        with:
+          name: v2-v1-vs-v2-evaluation
+          path: data/evaluation/v1_vs_v2.json
+          retention-days: 30

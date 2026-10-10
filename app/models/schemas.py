@@ -15,12 +15,16 @@ class PageExtraction(BaseModel):
     text: str
     char_count: int = Field(ge=0)
     is_empty: bool
+    extraction_method: str = "text"
+    ocr_applied: bool = False
+    ocr_confidence: float | None = Field(default=None, ge=0.0, le=100.0)
 
 
 class ExtractionQuality(BaseModel):
     """Simple quality signals produced during text extraction."""
 
     empty_pages: list[int] = Field(default_factory=list)
+    ocr_pages: list[int] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
 
 
@@ -89,6 +93,7 @@ class AnswerCitation(BaseModel):
     page_number: int | None = Field(default=None, ge=1)
     section: str | None = None
     text: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class RAGAnswer(BaseModel):
@@ -121,6 +126,9 @@ class ClaimVerification(BaseModel):
     status: str
     support_score: float = Field(ge=0.0, le=1.0)
     reason: str
+    verifier_method: str = "lexical"
+    lexical_support_score: float | None = Field(default=None, ge=0.0, le=1.0)
+    semantic_entailment_score: float | None = Field(default=None, ge=0.0, le=1.0)
 
 
 class VerifiedRAGAnswer(BaseModel):
@@ -163,6 +171,12 @@ class AgenticRetrievalStep(BaseModel):
     retrieved_labels: list[str] = Field(default_factory=list)
     support_score: float = Field(ge=0.0, le=1.0)
     resolved: bool
+    action: str = "retrieve"
+    failure_reason: str | None = None
+    support_score_before: float = Field(default=0.0, ge=0.0, le=1.0)
+    support_improvement: float = Field(default=0.0, ge=-1.0, le=1.0)
+    new_chunks: int = Field(default=0, ge=0)
+    stopped_early: bool = False
 
 
 class AgenticRAGAnswer(BaseModel):
@@ -177,6 +191,9 @@ class AgenticRAGAnswer(BaseModel):
     correction_status: str
     rounds_used: int = Field(ge=0)
     additional_chunks_considered: int = Field(ge=0)
+    retrieval_budget: int | None = Field(default=None, ge=1)
+    budget_exhausted: bool = False
+    early_stop_reason: str | None = None
     recovered_claim_ids: list[str] = Field(default_factory=list)
     unresolved_claim_ids: list[str] = Field(default_factory=list)
     steps: list[AgenticRetrievalStep] = Field(default_factory=list)

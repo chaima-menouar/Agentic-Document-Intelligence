@@ -80,6 +80,8 @@ class CitationGroundingVerifier:
                         status="unsupported",
                         support_score=0.0,
                         reason="The claim has no citation label.",
+                        verifier_method="lexical",
+                        lexical_support_score=0.0,
                     )
                 )
                 continue
@@ -94,6 +96,8 @@ class CitationGroundingVerifier:
                         status="unsupported",
                         support_score=0.0,
                         reason="The cited labels do not map to retrieved evidence.",
+                        verifier_method="lexical",
+                        lexical_support_score=0.0,
                     )
                 )
                 continue
@@ -124,6 +128,8 @@ class CitationGroundingVerifier:
                     status=status,
                     support_score=score,
                     reason=reason,
+                    verifier_method="lexical",
+                    lexical_support_score=score,
                 )
             )
 

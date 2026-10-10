@@ -1,0 +1,99 @@
+name: v2-ocr-e2e
+
+on:
+  push:
+    branches: ["v2-development"]
+    paths:
+      - "app/ingestion/**"
+      - "app/models/schemas.py"
+      - "app/ui/workspace.py"
+      - "app/ui/streamlit_app.py"
+      - "tests/test_pdf_extractor.py"
+      - "requirements-ocr.txt"
+      - "requirements-all.txt"
+      - ".devcontainer/devcontainer.json"
+      - ".github/workflows/v2-ocr-e2e.yml"
+  pull_request:
+    branches: ["v2-development"]
+    paths:
+      - "app/ingestion/**"
+      - "app/models/schemas.py"
+      - "app/ui/workspace.py"
+      - "app/ui/streamlit_app.py"
+      - "tests/test_pdf_extractor.py"
+      - "requirements-ocr.txt"
+      - "requirements-all.txt"
+      - ".devcontainer/devcontainer.json"
+      - ".github/workflows/v2-ocr-e2e.yml"
+
+jobs:
+  ocr-scanned-pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install Tesseract
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr tesseract-ocr-eng
+      - name: Install CPU Torch
+        run: python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+
+      - name: Install V2 dependencies
+        run: python -m pip install -r requirements-all.txt
+      - name: Run OCR ingestion unit tests
+        run: pytest -q tests/test_pdf_extractor.py
+      - name: Validate real image-only PDF OCR
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import tempfile
+
+          import pymupdf
+          from PIL import Image, ImageDraw
+
+          from app.ingestion import extract_pdf
+
+          with tempfile.TemporaryDirectory() as tmp:
+              root = Path(tmp)
+              image_path = root / "scan.png"
+              pdf_path = root / "scan.pdf"
+
+              image = Image.new("RGB", (1800, 500), "white")
+              draw = ImageDraw.Draw(image)
+              draw.text(
+                  (100, 180),
+                  "Agentic document intelligence uses verified evidence.",
+                  fill="black",
+              )
+              image.save(image_path)
+
+              with pymupdf.open() as doc:
+                  page = doc.new_page(width=900, height=250)
+                  page.insert_image(page.rect, filename=str(image_path))
+                  doc.save(pdf_path)
+
+              result = extract_pdf(
+                  pdf_path,
+                  ocr_fallback=True,
+                  min_text_chars=40,
+                  ocr_language="eng",
+                  ocr_dpi=250,
+              )
+              page = result.pages[0]
+              normalized = page.text.lower()
+              assert page.ocr_applied is True
+              assert page.extraction_method == "ocr"
+              assert page.page_number == 1
+              assert page.page_id.endswith(":p0001")
+              assert "agentic" in normalized
+              assert "evidence" in normalized
+              assert result.quality.ocr_pages == [1]
+              print(page.text)
+              print("OCR confidence:", page.ocr_confidence)
+          PY
+      - name: Validate Streamlit module
+        run: python -m py_compile app/ui/streamlit_app.py
