@@ -190,23 +190,37 @@ class SemanticCitationGroundingVerifier:
                 results.append(self._fallback(claim, citations, exc))
                 continue
 
-            if semantic_score >= self.supported_threshold:
+            # NLI models can be brittle on document fragments, headings and
+            # extractive sentences.  A claim that is substantially copied from
+            # its *mapped citation* should not be rejected solely because the
+            # NLI confidence is low.  Citation mapping is still mandatory, so
+            # this safeguard cannot turn an uncited claim into a supported one.
+            lexical_supported = lexical_score >= self.lexical_fallback.supported_threshold
+            lexical_review = lexical_score >= self.lexical_fallback.review_threshold
+
+            if semantic_score >= self.supported_threshold or lexical_supported:
                 status = "supported"
-                reason = (
-                    "The local NLI model finds the cited evidence semantically "
-                    "entails the claim."
-                )
-            elif semantic_score >= self.review_threshold:
+                if semantic_score >= self.supported_threshold:
+                    reason = (
+                        "The local NLI model finds the cited evidence semantically "
+                        "entails the claim."
+                    )
+                else:
+                    reason = (
+                        "The claim is strongly grounded in its mapped citation; "
+                        "lexical grounding confirms support despite low NLI confidence."
+                    )
+            elif semantic_score >= self.review_threshold or lexical_review:
                 status = "needs_review"
                 reason = (
-                    "The cited evidence is semantically related, but entailment "
-                    "confidence is not strong enough for automatic support."
+                    "The mapped citation provides partial grounding, but support "
+                    "is not strong enough for automatic verification."
                 )
             else:
                 status = "unsupported"
                 reason = (
-                    "The local NLI model finds weak entailment between the cited "
-                    "evidence and the claim."
+                    "Both semantic entailment and lexical grounding are weak for "
+                    "the mapped citation."
                 )
 
             results.append(
