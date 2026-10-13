@@ -44,3 +44,9 @@ Vite proxies `/api` to the local Python server. Production uses `npm run build` 
 ## Artwork
 
 Active image: `frontend/public/background-documents-realistic.png`, generated with built-in imagegen. Prompt: photoreal paper documents linked to a graphite AI module and yellow glass verification indicator, charcoal backdrop, quiet negative space at left, no text or metallic spectacle. The previously proposed gold and abstract backgrounds are not used.
+
+## Current visual direction
+
+The React interface uses a cream/peach landing page, orange controls, bold headings, a document illustration and a dark rounded workspace, inspired by the requested Vox Trace reference. ADI retains its own branding and document-specific content. Documents, Assistant, Activity, Settings, citations, feedback, text inspection, theme selection and session export remain functional.
+
+Optional orchestration: see [n8n integration](../integrations/n8n/README.md). The supplied workflow is manual and inactive.

@@ -127,3 +127,20 @@ def test_dated_question_uses_matching_year() -> None:
     answer = ExtractiveGenerator().generate(prompt)
     assert "2025 was 12 million" in answer
     assert "2024" not in answer
+
+
+def test_translation_score_keeps_requested_direction() -> None:
+    prompt = _prompt("What BLEU score is reported for English-to-French translation?",
+        "[S1] page=1\nEnglish-to-German translation achieved a BLEU score of 28.4.\n\n[S2] page=1\nEnglish-to-French translation achieved a BLEU score of 41.8.")
+    answer = ExtractiveGenerator().generate(prompt)
+    assert "41.8" in answer and "28.4" not in answer
+
+
+def test_numeric_answer_recognizes_spelled_out_counts() -> None:
+    prompt = _prompt("How many tasks were evaluated?", "[S1] page=1\nThe model was evaluated on eleven tasks.")
+    assert "eleven" in ExtractiveGenerator().generate(prompt)
+
+
+def test_generator_does_not_cut_a_long_sentence_mid_claim() -> None:
+    prompt = _prompt("What did the study find?", "[S1] page=1\nThe study found " + "many preliminary observations " * 30 + "but did not establish a result.")
+    assert ExtractiveGenerator().generate(prompt) == "INSUFFICIENT_EVIDENCE"

@@ -17,7 +17,7 @@ _SOURCE_BLOCK_RE = re.compile(
     re.DOTALL,
 )
 _YEAR_RE = re.compile(r"\b(?:18|19|20)\d{2}\b")
-_NUMBER_RE = re.compile(r"\b\d+(?:\.\d+)?\b")
+_NUMBER_RE = re.compile(r"\b(?:\d+(?:\.\d+)?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|hundred|thousand|million)\b", re.IGNORECASE)
 
 _STOPWORDS = {
     "a", "about", "an", "and", "are", "as", "at", "be", "been", "by",
@@ -279,7 +279,7 @@ def _requires_year(question: str) -> bool:
 
 def _requires_number(question: str) -> bool:
     lowered = question.lower()
-    return "how many" in lowered or "how much" in lowered or "number of" in lowered
+    return any(cue in lowered for cue in ("how many", "how much", "number of", "what score", "what f1 score", "what bleu score", "what glue score", "what absolute improvement"))
 
 
 def _candidate_score(question: str, sentence: str) -> float:
@@ -340,6 +340,15 @@ class ExtractiveGenerator:
                 if sentence.strip()
             ]
             for sentence in sentences:
+                # PDF title/author blocks sometimes run directly into the abstract.
+                if "Abstract " in sentence:
+                    sentence = sentence.rsplit("Abstract ", 1)[-1].strip()
+                if len(sentence) > self.max_chars:
+                    continue  # Never truncate a sentence into a misleading fragment.
+                normalized_sentence = re.sub(r"(?<=\w)-\s+(?=\w)", "-", sentence.lower())
+                qualifiers = re.findall(r"\b[a-z]+-to-[a-z]+\b", question.lower())
+                if any(qualifier not in normalized_sentence for qualifier in qualifiers):
+                    continue
                 # A dated question must not be answered with unrelated evidence
                 # merely because it shares generic research/project terms.
                 if not set(_YEAR_RE.findall(question)).issubset(set(_YEAR_RE.findall(sentence))):
@@ -367,5 +376,5 @@ class ExtractiveGenerator:
         if score < 4.0:
             return "INSUFFICIENT_EVIDENCE"
 
-        sentence = sentence[: self.max_chars].rstrip()
+        sentence = sentence.rstrip()
         return f"{sentence} [S{label}]"

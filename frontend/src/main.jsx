@@ -20,8 +20,8 @@ function Icon({name,size=20}) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]||paths.file}</svg>;
 }
 function App(){
-  const [theme,setTheme]=useState(()=>localStorage.getItem('adi-theme')||'dark');
-  useEffect(()=>{document.documentElement.dataset.theme=theme;localStorage.setItem('adi-theme',theme);},[theme]);
+  const [theme,setTheme]=useState(()=>localStorage.getItem('adi-theme-v2')||'light');
+  useEffect(()=>{document.documentElement.dataset.theme=theme;localStorage.setItem('adi-theme-v2',theme);},[theme]);
   const [tab,setTab]=useState('documents'),[workspace,setWorkspace]=useState(EMPTY),[settings,setSettings]=useState(DEFAULTS);
   const [loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('');
   const [files,setFiles]=useState([]),[question,setQuestion]=useState(''),[scope,setScope]=useState(''),[selected,setSelected]=useState(null);
@@ -59,20 +59,12 @@ function App(){
   function update(key,value){setSettings(s=>({...s,[key]:value}));}
   return <div className="app-shell">
     <a className="skip-link" href="#workspace">Skip to workspace</a>
-    <header className="topbar"><a className="brand" href="#" onClick={()=>setTab('documents')}><span className="brand-icon"><Icon name="file"/></span><span>Agentic<span className="brand-sub">Document Intelligence</span></span></a><div className="header-actions"><span className="header-note">A little more clarity.<span className="yellow-dot"/></span><button className="theme-toggle" type="button" onClick={()=>setTheme(t=>t==='dark'?'light':'dark')} aria-label={`Switch to ${theme==='dark'?'light':'dark'} mode`}><span className="theme-toggle-track"><span className="theme-icon">☀</span><span className="theme-icon">☾</span><span className="theme-toggle-thumb"/></span></button></div></header>
+    <header className="topbar"><a className="brand" href="#" onClick={()=>setTab('documents')}><span className="brand-icon"><Icon name="file"/></span><span>Agentic<span className="brand-sub">Document Intelligence</span></span></a><div className="header-actions"><a className="header-link" href="https://github.com/chaima-menouar/Agentic-Document-Intelligence" target="_blank" rel="noreferrer">GitHub</a><button className="theme-toggle" type="button" onClick={()=>setTheme(t=>t==='dark'?'light':'dark')} aria-label={`Switch to ${theme==='dark'?'light':'dark'} mode`}><span className="theme-toggle-track"><span className="theme-icon">☀</span><span className="theme-icon">☾</span><span className="theme-toggle-thumb"/></span></button><a className="header-cta" href="#workspace">Start exploring</a></div></header>
     <main>
-      <section className="hero"><div className="hero-art topic-art" role="img" aria-label="Animated dark glass illustration of agentic document intelligence with RAG retrieval, verified evidence and cited answers">
-<div className="meaning-orbit meaning-orbit-one"/><div className="meaning-orbit meaning-orbit-two"/><div className="meaning-glow"/>
-<div className="meaning-docs" aria-hidden="true"><span className="doc-back">TXT</span><span className="doc-mid">W</span><span className="doc-front">PDF</span></div>
-<div className="meaning-core"><span className="core-ring"/><span className="core-file"><Icon name="file" size={25}/></span></div>
-<div className="meaning-step step-upload"><span className="step-number">1</span><Icon name="upload" size={17}/><span><strong>Upload Documents</strong><small>PDF · DOCX · TXT</small></span></div>
-<div className="meaning-step step-retrieve"><span className="step-number">2</span><span className="step-glyph">⌕</span><span><strong>Retrieve Evidence</strong><small>Find relevant information</small></span></div>
-<div className="meaning-step step-verify"><span className="step-number">3</span><Icon name="check" size={18}/><span><strong>Verify Claims</strong><small>Check sources & evidence</small></span></div>
-<div className="meaning-step step-answer"><span className="step-number">4</span><Icon name="file" size={17}/><span><strong>Clear Answer</strong><small>Cited and reliable</small></span></div>
-<div className="meaning-answer"><div className="answer-head"><strong>Answer</strong><span>✓ verified</span></div><i/><i/><i/><div className="answer-cites"><b>Citations</b><span>1</span><span>2</span><span>3</span></div></div>
-<div className="meaning-path path-a"/><div className="meaning-path path-b"/><div className="meaning-path path-c"/><div className="meaning-path path-d"/>
-<div className="meaning-sparks"><i/><i/><i/><i/><i/></div>
-</div><p className="eyebrow"><span/> YOUR KNOWLEDGE, CONNECTED</p><h1>Make room<br/>for <em>clear answers.</em></h1><p className="hero-copy">Turn your documents into a conversation.<br/>Find answers, check the evidence, and keep the source in sight.</p><button className="text-button" onClick={()=>document.getElementById('workspace').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}>Explore your workspace <Icon name="arrow" size={17}/></button></section>
+      <section className="hero">
+        <div className="hero-content"><p className="eyebrow">EVIDENCE-GROUNDED DOCUMENT ASSISTANT</p><h1>Get clear answers.<br/>Keep the evidence<br/><em>in sight.</em></h1><p className="hero-copy">Ask your documents a question. Find the relevant passage, check each claim, and follow the answer back to its source.</p><div className="hero-benefits"><span><Icon name="file" size={16}/>English PDFs</span><span><Icon name="check" size={16}/>Inspectable citations</span><span><Icon name="activity" size={16}/>Bounded retrieval</span></div><button className="hero-cta" onClick={()=>document.getElementById('workspace').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}>Open your workspace <Icon name="arrow" size={17}/></button></div>
+        <div className="hero-visual" aria-label="Document assistant workflow illustration"><div className="landscape landscape-back"/><div className="landscape landscape-front"/><div className="hero-sun"/><div className="preview-doc"><Icon name="file" size={32}/><strong>Your document</strong><div/><div/><div/></div><div className="preview-answer"><div className="preview-label"><span className="live-dot"/>Evidence first<span>HOW IT WORKS</span></div><p>Ask a question about your sources.</p><div className="preview-rule"/><strong>Read the answer. Inspect the citation.</strong><small><Icon name="check" size={13}/>Review claim support and missing evidence.</small></div></div>
+      </section>
       <section className="workspace" id="workspace" aria-label="Document workspace">
         <div className="workspace-header"><nav aria-label="Workspace sections">{Object.entries(labels).map(([key,label])=><button key={key} aria-current={tab===key?'page':undefined} className={tab===key?'nav-item active':'nav-item'} onClick={()=>{setTab(key);setNotice('');}}><Icon name={{documents:'file',assistant:'chat',activity:'activity',settings:'settings'}[key]} size={17}/>{label}</button>)}</nav><span className="document-count">{workspace.documents.length} document{workspace.documents.length!==1?'s':''}</span></div>
         <div className="workspace-body">
