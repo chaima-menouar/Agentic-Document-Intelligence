@@ -23,8 +23,7 @@ The project is developed as a 12-week academic project and compares three modes:
 
 ## V2
 
-V2 is complete on the `v2-development` branch while `main` preserves the
-stable V1 until the final manual release test passes.
+V2 is released on `main`. Production deployment support is also available on `main` through Docker and the Render Blueprint.
 
 V2 milestones:
 
@@ -78,7 +77,7 @@ Detailed V2 design notes are in:
 
 ## Project status
 
-**V1 is the stable baseline on `main`; V2 is complete on `v2-development` and awaiting one final manual release test before merge.**
+**V2 is the current stable release on `main`, with production-container CI and Docker deployment support.**
 
 Current pipeline:
 
@@ -299,7 +298,7 @@ Key controlled A/B/C results: Mode B detected unsupported/uncited stress cases a
 
 ## V2 status
 
-**V2 is complete on the `v2-development` branch.**
+**V2 is released on `main`.**
 
 V2 adds:
 
@@ -329,3 +328,9 @@ sentence-transformers, FAISS, and the local generator import successfully.
 
 GitHub Codespaces is configured through `.devcontainer/devcontainer.json` to
 install `requirements-all.txt` automatically and forward Streamlit port 8501.
+
+## Production deployment
+
+The React + FastAPI application now ships with a production Docker image and a Render Blueprint. Production CI builds the image, starts the container, checks `/api/health`, and verifies that the React shell is served successfully.
+
+See `docs/deployment.md` for deployment and release-test instructions. Uploaded workspaces are ephemeral by design, and the hosted demo defaults to dense retrieval plus offline generation so no paid LLM API is required.
