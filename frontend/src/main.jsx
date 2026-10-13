@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import './style.css';
+import {Robot,Demo,LandingSections,Footer} from './Landing';
 
 const EMPTY={documents:[],total_chunks:0,history:[],feedback:{}};
 const DEFAULTS={top_k:5,budget:10,retrieval:'dense',verifier:'semantic',generator:'offline',model:'',ocr:true};
@@ -59,12 +60,15 @@ function App(){
   function update(key,value){setSettings(s=>({...s,[key]:value}));}
   return <div className="app-shell">
     <a className="skip-link" href="#workspace">Skip to workspace</a>
-    <header className="topbar"><a className="brand" href="#" onClick={()=>setTab('documents')}><span className="brand-icon"><Icon name="file"/></span><span>Agentic<span className="brand-sub">Document Intelligence</span></span></a><div className="header-actions"><a className="header-link" href="https://github.com/chaima-menouar/Agentic-Document-Intelligence" target="_blank" rel="noreferrer">GitHub</a><button className="theme-toggle" type="button" onClick={()=>setTheme(t=>t==='dark'?'light':'dark')} aria-label={`Switch to ${theme==='dark'?'light':'dark'} mode`}><span className="theme-toggle-track"><span className="theme-icon">☀</span><span className="theme-icon">☾</span><span className="theme-toggle-thumb"/></span></button><a className="header-cta" href="#workspace">Start exploring</a></div></header>
+    <header className="topbar"><a className="brand" href="#" onClick={()=>setTab('documents')}><span className="brand-icon"><Icon name="file"/></span><span>Agentic<span className="brand-sub">Document Intelligence</span></span></a><div className="header-actions"><a className="header-link" href="#how-it-works">How it works</a><a className="header-link" href="#tools">Tools</a><a className="header-link" href="https://github.com/chaima-menouar/Agentic-Document-Intelligence" target="_blank" rel="noreferrer">GitHub</a><button className="theme-toggle" type="button" onClick={()=>setTheme(t=>t==='dark'?'light':'dark')} aria-label={`Switch to ${theme==='dark'?'light':'dark'} mode`}><span className="theme-toggle-track"><span className="theme-icon">☀</span><span className="theme-icon">☾</span><span className="theme-toggle-thumb"/></span></button><a className="header-cta" href="#workspace">Start exploring</a></div></header>
     <main>
       <section className="hero">
         <div className="hero-content"><p className="eyebrow">EVIDENCE-GROUNDED DOCUMENT ASSISTANT</p><h1>Get clear answers.<br/>Keep the evidence<br/><em>in sight.</em></h1><p className="hero-copy">Ask your documents a question. Find the relevant passage, check each claim, and follow the answer back to its source.</p><div className="hero-benefits"><span><Icon name="file" size={16}/>English PDFs</span><span><Icon name="check" size={16}/>Inspectable citations</span><span><Icon name="activity" size={16}/>Bounded retrieval</span></div><button className="hero-cta" onClick={()=>document.getElementById('workspace').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}>Open your workspace <Icon name="arrow" size={17}/></button></div>
-        <div className="hero-visual" aria-label="Document assistant workflow illustration"><div className="landscape landscape-back"/><div className="landscape landscape-front"/><div className="hero-sun"/><div className="preview-doc"><Icon name="file" size={32}/><strong>Your document</strong><div/><div/><div/></div><div className="preview-answer"><div className="preview-label"><span className="live-dot"/>Evidence first<span>HOW IT WORKS</span></div><p>Ask a question about your sources.</p><div className="preview-rule"/><strong>Read the answer. Inspect the citation.</strong><small><Icon name="check" size={13}/>Review claim support and missing evidence.</small></div></div>
+        <div className="hero-visual"><Robot/><div className="preview-answer"><div className="preview-label"><span className="live-dot"/>Document assistant<span>ILLUSTRATIVE EXAMPLE</span></div><p>When does the project launch?</p><div className="preview-rule"/><strong>12 November — according to your source.</strong><small><Icon name="check" size={13}/>Project brief.pdf · page 2 · [S1]</small></div></div>
       </section>
+      <Demo/>
+      <LandingSections/>
+      <div className="workspace-intro" id="try-it"><p className="eyebrow">TRY IT WITH YOUR OWN SOURCES</p><h2>Your research starts here.</h2><p>Upload a PDF and see what you can find.</p></div>
       <section className="workspace" id="workspace" aria-label="Document workspace">
         <div className="workspace-header"><nav aria-label="Workspace sections">{Object.entries(labels).map(([key,label])=><button key={key} aria-current={tab===key?'page':undefined} className={tab===key?'nav-item active':'nav-item'} onClick={()=>{setTab(key);setNotice('');}}><Icon name={{documents:'file',assistant:'chat',activity:'activity',settings:'settings'}[key]} size={17}/>{label}</button>)}</nav><span className="document-count">{workspace.documents.length} document{workspace.documents.length!==1?'s':''}</span></div>
         <div className="workspace-body">
@@ -93,7 +97,7 @@ function App(){
         </div>
       </section>
     </main>
-    <footer><span>Agentic Document Intelligence</span><span>Built around your sources.</span></footer>
+    <Footer/>
     {resetOpen&&<div className="modal-backdrop" onKeyDown={e=>{if(e.key==='Escape')setResetOpen(false);}}><div role="alertdialog" aria-modal="true" aria-labelledby="reset-title" className="modal"><h2 id="reset-title">Clear your workspace?</h2><p>This removes your session’s documents and answers.</p><div><button className="secondary" autoFocus onClick={()=>setResetOpen(false)}>Keep workspace</button><button className="danger" onClick={reset}>Clear workspace</button></div></div></div>}
   </div>
 }
