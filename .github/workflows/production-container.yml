@@ -1,0 +1,46 @@
+name: production-container
+on:
+  pull_request:
+    paths:
+      - "Dockerfile"
+      - ".dockerignore"
+      - "render.yaml"
+      - "app/**"
+      - "frontend/**"
+      - "requirements*.txt"
+      - ".github/workflows/production-container.yml"
+  push:
+    branches: [main]
+    paths:
+      - "Dockerfile"
+      - ".dockerignore"
+      - "render.yaml"
+      - "app/**"
+      - "frontend/**"
+      - "requirements*.txt"
+      - ".github/workflows/production-container.yml"
+
+jobs:
+  docker-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build production image
+        run: docker build -t adi:ci .
+      - name: Start container
+        run: docker run -d --rm --name adi-ci -p 8501:8501 adi:ci
+      - name: Wait for health endpoint
+        run: |
+          for i in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:8501/api/health | grep -q '"status":"ok"'; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs adi-ci
+          exit 1
+      - name: Verify React shell
+        run: curl --fail --silent http://127.0.0.1:8501/ | grep -qi '<div id="root"'
+      - name: Container logs
+        if: failure()
+        run: docker logs adi-ci || true
