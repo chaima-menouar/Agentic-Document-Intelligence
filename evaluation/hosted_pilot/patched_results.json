@@ -1,0 +1,257 @@
+{
+  "deployment_commit": "7d9df077b51cd6465d76ebc96030c2c475998f96",
+  "configuration": {
+    "retrieval": "dense",
+    "generator": "offline",
+    "verifier": "lexical",
+    "top_k": 5,
+    "budget": 10
+  },
+  "records": [
+    {
+      "question_id": "pilot-01",
+      "http_status": 409,
+      "status": null,
+      "verification_status": null,
+      "correct_by_manual_review": false,
+      "answer_excerpt": "",
+      "citation_pages": [],
+      "seconds": null,
+      "recovery_rounds": null
+    },
+    {
+      "question_id": "pilot-02",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": true,
+      "answer_excerpt": "6 Results 6.1 Machine Translation On the WMT 2014 English-to-German translation task,",
+      "citation_pages": [
+        8
+      ],
+      "seconds": 0.05,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-03",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "6 Results 6.1 Machine Translation On the WMT 2014 English-to-German translation task,",
+      "citation_pages": [
+        8
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-04",
+      "http_status": 200,
+      "status": "insufficient_evidence",
+      "verification_status": "unsupported",
+      "correct_by_manual_review": true,
+      "answer_excerpt": "I do not have enough verified evidence to answer safely.",
+      "citation_pages": [],
+      "seconds": 0.13,
+      "recovery_rounds": 2
+    },
+    {
+      "question_id": "pilot-05",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": true,
+      "answer_excerpt": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding Jacob Devlin Ming-Wei",
+      "citation_pages": [
+        1
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-06",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "3.2 Fine-tuning BERT Fine-tuning is straightforward since the self- attention mechanism in",
+      "citation_pages": [
+        5
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-07",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "The \u201cAverage\u201d column is slightly different than the of\ufb01cial GLUE score, since",
+      "citation_pages": [
+        6
+      ],
+      "seconds": 0.03,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-08",
+      "http_status": 200,
+      "status": "insufficient_evidence",
+      "verification_status": "unsupported",
+      "correct_by_manual_review": true,
+      "answer_excerpt": "I do not have enough verified evidence to answer safely.",
+      "citation_pages": [],
+      "seconds": 0.11,
+      "recovery_rounds": 2
+    },
+    {
+      "question_id": "pilot-09",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": true,
+      "answer_excerpt": "We build RAG models where the parametric memory is a pre-trained seq2seq",
+      "citation_pages": [
+        2
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-10",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "Finally, we demonstrate that the non-parametric memory can be replaced to update",
+      "citation_pages": [
+        2
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-11",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "Concretely, the top K documents are retrieved using the retriever, and then",
+      "citation_pages": [
+        3
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-12",
+      "http_status": 200,
+      "status": "insufficient_evidence",
+      "verification_status": "unsupported",
+      "correct_by_manual_review": true,
+      "answer_excerpt": "I do not have enough verified evidence to answer safely.",
+      "citation_pages": [],
+      "seconds": 0.12,
+      "recovery_rounds": 2
+    },
+    {
+      "question_id": "pilot-13",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "Dense Passage Retrieval for Open-Domain Question Answering Vladimir Karpukhin\u2217, Barlas O\u02d8guz\u2217, Sewon",
+      "citation_pages": [
+        1
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-14",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "8 Conclusion In this work, we demonstrated that dense retrieval can outperform",
+      "citation_pages": [
+        9
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-15",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "Training Retriever Top-20 Top-100 NQ TriviaQA WQ TREC SQuAD NQ TriviaQA WQ",
+      "citation_pages": [
+        5
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-16",
+      "http_status": 200,
+      "status": "insufficient_evidence",
+      "verification_status": "unsupported",
+      "correct_by_manual_review": true,
+      "answer_excerpt": "I do not have enough verified evidence to answer safely.",
+      "citation_pages": [],
+      "seconds": 0.11,
+      "recovery_rounds": 2
+    },
+    {
+      "question_id": "pilot-17",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": true,
+      "answer_excerpt": "SQuAD: 100,000+ Questions for Machine Comprehension of Text Pranav Rajpurkar and Jian",
+      "citation_pages": [
+        1
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-18",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "Dataset Question source Formulation Size SQuAD crowdsourced RC, spans in passage 100K",
+      "citation_pages": [
+        2
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-19",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "To gain more insight into the performance of our logistic re- gression",
+      "citation_pages": [
+        8
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-20",
+      "http_status": 200,
+      "correct_by_manual_review": true,
+      "answer_excerpt": "I do not have enough verified evidence to answer safely.",
+      "evidence_source": "Completed runner stdout; final JSON checkpoint did not contain this response.",
+      "seconds": null
+    }
+  ]
+}

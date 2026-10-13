@@ -30,3 +30,29 @@ Latency excludes upload, network time and cold-start model downloads. Indexing t
 - Several answers were supported by citations but irrelevant to the question. These are recorded as failures, not counted as correct. Stronger answer relevance remains necessary.
 
 Focused regression tests cover column paragraph order and dated-question abstention. The baseline predates these changes; do not attribute its numbers to the patched release or claim improvement until rerunning.
+
+## Patched hosted rerun — commit 7d9df07
+
+The same compressed PDFs and questions were rerun after deployment. Indexing took about 90 seconds. Twenty requests were issued: 19 returned HTTP 200 and one returned HTTP 409 immediately after upload, confirming that process-local sessions are unreliable across Vercel instances.
+
+| Check | Baseline | Patched rerun |
+|---|---:|---:|
+| Correct answerable questions, all 15 including HTTP failures | 6/15 | 4/15 |
+| Safe abstention on the five dated revenue questions | 3/5 | 5/5 |
+| HTTP success | 20/20 | 19/20 |
+
+The final abstention is preserved from the completed runner stdout; its final raw JSON checkpoint was unavailable, so no timing or verification metadata is invented for that record. Patched results are in `patched_results.json`.
+
+Column order became readable and dated abstention improved, but answer relevance regressed on this small pilot. This release must not be described as generally more accurate or production-ready. The offline selector still confuses similar numerical questions, ranks tables/headings highly, and sometimes truncates a useful answer. Stable external workspace storage and stronger question-answer relevance are remaining work.
+
+The deployed 4 MiB API guard was checked separately: a PDF payload one byte above the limit returned HTTP 413 with the application's explicit 4.0 MB explanation. React build and 30 focused extraction/generator/API tests passed.
+
+## Reproduce
+
+Install the project's runtime dependencies, then run:
+
+```bash
+python scripts/run_hosted_pilot.py --output /tmp/adi-pilot
+```
+
+The command downloads the five public PDFs when absent, compresses their byte representation, opens its own temporary workspace, uploads the full corpus and checkpoints raw responses. Raw outputs are for local review and are not redistributed here. Manually judge relevance against `questions.json`; do not treat citation verification or keyword matching as answer accuracy.
