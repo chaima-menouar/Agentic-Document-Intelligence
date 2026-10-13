@@ -1,5 +1,9 @@
 # Agentic Document Intelligence
 
+[Open the live React demo](https://agentic-document-intelligence.vercel.app/) · [Deployment and hosting limits](docs/deployment.md)
+
+The live demo runs on Vercel Hobby with CPU-only retrieval, OCR and offline answers. Document workspaces are temporary; re-upload after server restarts or instance changes.
+
 ## React application (recommended interface)
 
 The primary interface is now React with a generated charcoal/yellow document-AI background.

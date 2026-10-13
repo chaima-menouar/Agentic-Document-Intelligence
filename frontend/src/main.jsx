@@ -9,7 +9,7 @@ const readable=value=>(value||'').replaceAll('_',' ');
 
 async function api(path,options={}) {
   const response=await fetch(`/api${path}`,{...options,headers:{'X-ADI-Request':'1',...options.headers}});
-  if(!response.ok){let message=`Request failed (${response.status})`;try{const data=await response.json();message=typeof data.detail==='string'?data.detail:message;}catch{}throw new Error(message);}
+  if(!response.ok){let message=`Request failed (${response.status})`;try{const data=await response.json();message=typeof data.detail==='string'?data.detail:message;}catch{}const error=new Error(message);error.status=response.status;throw error;}
   return response.json();
 }
 function Icon({name,size=20}) {
@@ -27,6 +27,10 @@ function App(){
   useEffect(()=>{api('/workspace').then(setWorkspace).catch(e=>setError(e.message)).finally(()=>setLoading(false));},[]);
   const answer=workspace.history.find(a=>a.id===selected)||workspace.history.at(-1);
   const locked=loading||Boolean(busy);
+  function expiredWorkspace(){
+    setWorkspace(EMPTY);setScope('');setSelected(null);setInspector(null);setResetOpen(false);setTab('documents');setError('');
+    setNotice('This temporary workspace has expired. Upload and process your PDFs again to continue. Your question has been kept.');
+  }
   function chooseFiles(incoming){
     setError('');const items=Array.from(incoming);
     if(items.some(f=>!f.name.toLowerCase().endsWith('.pdf'))){setError('Please choose PDF files only.');return;}
@@ -43,7 +47,7 @@ function App(){
     event.preventDefault();if(!question.trim()||locked)return;
     setBusy('Finding evidence, checking claims, and recovering missing support…');setError('');setNotice('');
     try{const result=await api('/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...settings,question,document_id:scope||null})});setWorkspace(w=>({...w,history:[...w.history,result].slice(-50)}));setSelected(result.id);}
-    catch(e){setError(e.message);}finally{setBusy('');}
+    catch(e){if(e.status===409)expiredWorkspace();else setError(e.message);}finally{setBusy('');}
   }
   async function reset(){setResetOpen(false);setBusy('Clearing workspace…');setError('');try{setWorkspace(await api('/workspace',{method:'DELETE'}));setScope('');setSelected(null);setInspector(null);setNotice('Workspace cleared.');}catch(e){setError(e.message);}finally{setBusy('');}}
   async function inspect(doc){setError('');setBusy('Opening document text…');try{const chunks=await api(`/documents/${encodeURIComponent(doc.document_id)}/chunks`);setInspector({doc,chunks});}catch(e){setError(e.message);}finally{setBusy('');}}
