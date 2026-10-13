@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from typing import Protocol
+import re
 
 from app.models import AnswerCitation, ClaimVerification, ExtractedClaim
 from .verifier import CitationGroundingVerifier, lexical_support_score
@@ -83,6 +84,24 @@ class LocalNLIEntailmentScorer:
             logits = self._model(**inputs).logits[0]
             probabilities = self._torch.softmax(logits, dim=-1)
         return float(probabilities[self._entailment_index].item())
+
+
+_NEGATION_RE = re.compile(r"\b(?:no|not|never|neither|nor|without|cannot|can't|didn't|doesn't|isn't|wasn't|weren't|won't)\b", re.IGNORECASE)
+
+
+def _has_negation(text: str) -> bool:
+    """Return whether text contains an explicit English negation marker."""
+    return bool(_NEGATION_RE.search(text))
+
+
+def _negation_mismatch(claim_text: str, evidence_text: str) -> bool:
+    """Guard lexical overlap from accepting an obvious polarity reversal.
+
+    NLI remains the primary semantic signal. This only disables the lexical
+    rescue path when claim and evidence differ in explicit negation polarity,
+    a common false-positive case for bag-of-words overlap.
+    """
+    return _has_negation(claim_text) != _has_negation(evidence_text)
 
 
 class SemanticCitationGroundingVerifier:
@@ -195,8 +214,15 @@ class SemanticCitationGroundingVerifier:
             # its *mapped citation* should not be rejected solely because the
             # NLI confidence is low.  Citation mapping is still mandatory, so
             # this safeguard cannot turn an uncited claim into a supported one.
-            lexical_supported = lexical_score >= self.lexical_fallback.supported_threshold
-            lexical_review = lexical_score >= self.lexical_fallback.review_threshold
+            negation_mismatch = _negation_mismatch(claim.text, evidence_text)
+            lexical_supported = (
+                lexical_score >= self.lexical_fallback.supported_threshold
+                and not negation_mismatch
+            )
+            lexical_review = (
+                lexical_score >= self.lexical_fallback.review_threshold
+                and not negation_mismatch
+            )
 
             if semantic_score >= self.supported_threshold or lexical_supported:
                 status = "supported"
