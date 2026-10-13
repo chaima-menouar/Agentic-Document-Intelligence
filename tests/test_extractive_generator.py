@@ -109,3 +109,21 @@ The program was launched in 2021 and expanded the following year.""",
 
     assert "2021" in answer
     assert answer.endswith("[S1]")
+
+
+def test_dated_question_abstains_on_undated_research_text() -> None:
+    prompt = _prompt(
+        "What was this research project's annual revenue in 2025?",
+        "[S1] page=1\nThe research project improved retrieval accuracy.",
+    )
+    assert ExtractiveGenerator().generate(prompt) == "INSUFFICIENT_EVIDENCE"
+
+
+def test_dated_question_uses_matching_year() -> None:
+    prompt = _prompt(
+        "What was revenue in 2025?",
+        "[S1] page=1\nRevenue in 2024 was 10 million. Revenue in 2025 was 12 million.",
+    )
+    answer = ExtractiveGenerator().generate(prompt)
+    assert "2025 was 12 million" in answer
+    assert "2024" not in answer

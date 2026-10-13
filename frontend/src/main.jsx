@@ -4,6 +4,9 @@ import './style.css';
 
 const EMPTY={documents:[],total_chunks:0,history:[],feedback:{}};
 const DEFAULTS={top_k:5,budget:10,retrieval:'dense',verifier:'semantic',generator:'offline',model:'',ocr:true};
+const MAX_PDF_BYTES=Number(import.meta.env.VITE_MAX_PDF_BYTES)||25*1024*1024;
+const MAX_UPLOAD_BYTES=Number(import.meta.env.VITE_MAX_UPLOAD_BYTES)||100*1024*1024;
+const uploadLimits=`${(MAX_PDF_BYTES/1024/1024).toFixed(1)} MB per PDF, ${(MAX_UPLOAD_BYTES/1024/1024).toFixed(1)} MB total`;
 const labels={documents:'Documents',assistant:'Assistant',activity:'Activity',settings:'Settings'};
 const readable=value=>(value||'').replaceAll('_',' ');
 
@@ -34,7 +37,7 @@ function App(){
   function chooseFiles(incoming){
     setError('');const items=Array.from(incoming);
     if(items.some(f=>!f.name.toLowerCase().endsWith('.pdf'))){setError('Please choose PDF files only.');return;}
-    if(items.some(f=>f.size>25*1024*1024)||items.length>10||items.reduce((s,f)=>s+f.size,0)>100*1024*1024){setError('Choose up to 10 PDFs: 25 MB per file, 100 MB total.');return;}
+    if(items.some(f=>f.size>MAX_PDF_BYTES)||items.length>10||items.reduce((s,f)=>s+f.size,0)>MAX_UPLOAD_BYTES){setError(`Choose up to 10 PDFs: ${uploadLimits}.`);return;}
     setFiles(items);
   }
   async function processDocuments(){
@@ -79,7 +82,7 @@ function App(){
           {tab==='documents'&&<>
             <div className="section-heading"><div><p className="eyebrow small">START WITH YOUR SOURCES</p><h2>Your document space</h2><p>Bring the PDFs. We’ll help you find what matters.</p></div>{workspace.documents.length>0&&<button className="secondary" disabled={locked} onClick={()=>setTab('assistant')}>Ask a question <Icon name="arrow" size={16}/></button>}</div>
             <div className={`dropzone ${drag?'dragging':''}`} onDragOver={e=>{e.preventDefault();if(!locked)setDrag(true);}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);if(!locked)chooseFiles(e.dataTransfer.files);}}>
-              <span className="upload-icon"><Icon name="upload" size={25}/></span><h3>Drop your documents here</h3><p>English PDFs, including scanned pages · Up to 25 MB each</p><input ref={input} type="file" id="pdf-input" className="visually-hidden" accept="application/pdf,.pdf" multiple disabled={locked} onChange={e=>chooseFiles(e.target.files)} aria-label="Select PDF files"/><button className="secondary" disabled={locked} onClick={()=>input.current.click()}>Browse files</button>
+              <span className="upload-icon"><Icon name="upload" size={25}/></span><h3>Drop your documents here</h3><p>English PDFs, including scanned pages · {uploadLimits}</p><input ref={input} type="file" id="pdf-input" className="visually-hidden" accept="application/pdf,.pdf" multiple disabled={locked} onChange={e=>chooseFiles(e.target.files)} aria-label="Select PDF files"/><button className="secondary" disabled={locked} onClick={()=>input.current.click()}>Browse files</button>
             </div>
             {files.length>0&&<div className="pending-files"><ul>{files.map((f,i)=><li key={i}><Icon name="file" size={16}/><span>{f.name}</span><small>{(f.size/1024/1024).toFixed(1)} MB</small><button disabled={locked} aria-label={`Remove ${f.name}`} onClick={()=>setFiles(fs=>fs.filter((_,j)=>j!==i))}><Icon name="close" size={16}/></button></li>)}</ul><div className="upload-actions"><p>{workspace.documents.length?'Processing these files replaces your current documents and answer history.':'Your sources stay in this server workspace.'}</p><button className="primary" disabled={locked} onClick={processDocuments}>Process {files.length} PDF{files.length>1?'s':''}<Icon name="arrow" size={17}/></button></div></div>}
             {workspace.documents.length>0&&<div className="documents-list"><div className="list-title"><h3>Ready to explore</h3><span>{workspace.total_chunks} searchable passages</span></div>{workspace.documents.map(doc=><article className="document-row" key={doc.document_id}><span className="file-icon"><Icon name="file"/></span><div className="doc-name"><strong>{doc.filename.replace(/^\d{3}_/,'')}</strong><small>{doc.page_count} pages · {doc.chunk_count} passages{doc.ocr_page_count>0?` · ${doc.ocr_page_count} OCR pages`:''}</small>{doc.warnings.map((w,i)=><small className="warning" key={i}>{w}</small>)}</div><button className="secondary compact" disabled={locked} onClick={()=>inspect(doc)}>Inspect</button><a className="source-link" href={`/api/documents/${encodeURIComponent(doc.document_id)}/source`} target="_blank" rel="noreferrer">Open PDF ↗</a></article>)}</div>}

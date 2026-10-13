@@ -1,0 +1,267 @@
+{
+  "deployment_commit": "c1bd6f967365c02f784d726e3835dd9408c087f3",
+  "configuration": {
+    "retrieval": "dense",
+    "generator": "offline",
+    "verifier": "lexical",
+    "top_k": 5,
+    "budget": 10
+  },
+  "review": "Manual answer relevance against page-one references; verified means evidence support, not correctness.",
+  "records": [
+    {
+      "question_id": "pilot-01",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "3.2 Attention An attention function can be described as mapping a query",
+      "citation_pages": [
+        3
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-02",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": true,
+      "answer_excerpt": "6 Results 6.1 Machine Translation On the WMT 2014 English-to-German translation task,",
+      "citation_pages": [
+        8
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-03",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "6 Results 6.1 Machine Translation On the WMT 2014 English-to-German translation task,",
+      "citation_pages": [
+        8
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-04",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "Lukasz and Aidan spent countless long days designing various parts of and",
+      "citation_pages": [
+        1
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-05",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding Jacob Devlin Ming-Wei",
+      "citation_pages": [
+        1
+      ],
+      "seconds": 0.03,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-06",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "Fine-tuning is straightforward since the self- 4.1 GLUE attention mechanism in the",
+      "citation_pages": [
+        5
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-07",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "put, sentence A and sentence B from pre-training 7For example, the BERT",
+      "citation_pages": [
+        5
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-08",
+      "http_status": 200,
+      "status": "insufficient_evidence",
+      "verification_status": "unsupported",
+      "correct_by_manual_review": true,
+      "answer_excerpt": "I do not have enough verified evidence to answer safely.",
+      "citation_pages": [],
+      "seconds": 0.12,
+      "recovery_rounds": 2
+    },
+    {
+      "question_id": "pilot-09",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": true,
+      "answer_excerpt": "We build RAG models where the parametric memory is a pre-trained seq2seq",
+      "citation_pages": [
+        2
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-10",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "Finally, we demonstrate that the non-parametric memory can be replaced to update",
+      "citation_pages": [
+        2
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-11",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "As shown in Figure 1, our models leverage two components: (i) a",
+      "citation_pages": [
+        2
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-12",
+      "http_status": 200,
+      "status": "insufficient_evidence",
+      "verification_status": "unsupported",
+      "correct_by_manual_review": true,
+      "answer_excerpt": "I do not have enough verified evidence to answer safely.",
+      "citation_pages": [],
+      "seconds": 0.11,
+      "recovery_rounds": 2
+    },
+    {
+      "question_id": "pilot-13",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "Dense Passage Retrieval for Open-Domain Question Answering Vladimir Karpukhin\u2217, Barlas O\u02d8guz\u2217, Sewon",
+      "citation_pages": [
+        1
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-14",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": true,
+      "answer_excerpt": "First, we demon- ing the retrieval component in open-domain QA.strate that with",
+      "citation_pages": [
+        2
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-15",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "As some QA datasets contain only the Table 5: Retrieval accuracy on",
+      "citation_pages": [
+        12
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-16",
+      "http_status": 200,
+      "status": "insufficient_evidence",
+      "verification_status": "unsupported",
+      "correct_by_manual_review": true,
+      "answer_excerpt": "I do not have enough verified evidence to answer safely.",
+      "citation_pages": [],
+      "seconds": 0.11,
+      "recovery_rounds": 2
+    },
+    {
+      "question_id": "pilot-17",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": true,
+      "answer_excerpt": "ford Question Answering Dataset v1.0 (SQuAD), Dataset Question Formulation Size freely available",
+      "citation_pages": [
+        2
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-18",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": true,
+      "answer_excerpt": "ford Question Answering Dataset v1.0 (SQuAD), Dataset Question Formulation Size freely available",
+      "citation_pages": [
+        2
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-19",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": true,
+      "answer_excerpt": "2000) and a logistic regression model (Ng et al., Our best model",
+      "citation_pages": [
+        2
+      ],
+      "seconds": 0.03,
+      "recovery_rounds": 0
+    },
+    {
+      "question_id": "pilot-20",
+      "http_status": 200,
+      "status": "complete",
+      "verification_status": "verified",
+      "correct_by_manual_review": false,
+      "answer_excerpt": "In Proceedings of the in building models on this dataset, and the",
+      "citation_pages": [
+        9
+      ],
+      "seconds": 0.04,
+      "recovery_rounds": 0
+    }
+  ]
+}

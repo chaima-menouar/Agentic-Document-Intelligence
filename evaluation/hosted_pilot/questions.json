@@ -1,0 +1,162 @@
+[
+  {
+    "id": "pilot-01",
+    "paper_id": "1706.03762",
+    "question": "What architecture is proposed in Attention Is All You Need?",
+    "reference_answer": "Transformer",
+    "reference_pdf_page": 1,
+    "answerable": true
+  },
+  {
+    "id": "pilot-02",
+    "paper_id": "1706.03762",
+    "question": "What BLEU score is reported for WMT 2014 English-to-German translation?",
+    "reference_answer": "28.4",
+    "reference_pdf_page": 1,
+    "answerable": true
+  },
+  {
+    "id": "pilot-03",
+    "paper_id": "1706.03762",
+    "question": "What BLEU score is reported for English-to-French translation?",
+    "reference_answer": "41.8",
+    "reference_pdf_page": 1,
+    "answerable": true
+  },
+  {
+    "id": "pilot-04",
+    "paper_id": "1706.03762",
+    "question": "What was this research project's annual revenue in 2025?",
+    "reference_answer": null,
+    "reference_pdf_page": null,
+    "answerable": false
+  },
+  {
+    "id": "pilot-05",
+    "paper_id": "1810.04805",
+    "question": "What does BERT stand for?",
+    "reference_answer": "Bidirectional Encoder Representations from Transformers",
+    "reference_pdf_page": 1,
+    "answerable": true
+  },
+  {
+    "id": "pilot-06",
+    "paper_id": "1810.04805",
+    "question": "How many NLP tasks obtained new state-of-the-art results with BERT?",
+    "reference_answer": "eleven",
+    "reference_pdf_page": 1,
+    "answerable": true
+  },
+  {
+    "id": "pilot-07",
+    "paper_id": "1810.04805",
+    "question": "What GLUE score does BERT achieve?",
+    "reference_answer": "80.5",
+    "reference_pdf_page": 1,
+    "answerable": true
+  },
+  {
+    "id": "pilot-08",
+    "paper_id": "1810.04805",
+    "question": "What was this research project's annual revenue in 2025?",
+    "reference_answer": null,
+    "reference_pdf_page": null,
+    "answerable": false
+  },
+  {
+    "id": "pilot-09",
+    "paper_id": "2005.11401",
+    "question": "What is the parametric memory in the RAG model?",
+    "reference_answer": "pre-trained seq2seq model",
+    "reference_pdf_page": 1,
+    "answerable": true
+  },
+  {
+    "id": "pilot-10",
+    "paper_id": "2005.11401",
+    "question": "What is the non-parametric memory in the RAG model?",
+    "reference_answer": "dense vector index of Wikipedia",
+    "reference_pdf_page": 1,
+    "answerable": true
+  },
+  {
+    "id": "pilot-11",
+    "paper_id": "2005.11401",
+    "question": "Can one RAG formulation use different passages per token?",
+    "reference_answer": "different passages per token",
+    "reference_pdf_page": 1,
+    "answerable": true
+  },
+  {
+    "id": "pilot-12",
+    "paper_id": "2005.11401",
+    "question": "What was this research project's annual revenue in 2025?",
+    "reference_answer": null,
+    "reference_pdf_page": null,
+    "answerable": false
+  },
+  {
+    "id": "pilot-13",
+    "paper_id": "2004.04906",
+    "question": "What framework learns the dense question and passage embeddings?",
+    "reference_answer": "dual-encoder",
+    "reference_pdf_page": 1,
+    "answerable": true
+  },
+  {
+    "id": "pilot-14",
+    "paper_id": "2004.04906",
+    "question": "Which sparse retrieval baseline does the dense retriever outperform?",
+    "reference_answer": "BM25",
+    "reference_pdf_page": 1,
+    "answerable": true
+  },
+  {
+    "id": "pilot-15",
+    "paper_id": "2004.04906",
+    "question": "What absolute improvement in top-20 retrieval accuracy is reported?",
+    "reference_answer": "9%-19%",
+    "reference_pdf_page": 1,
+    "answerable": true
+  },
+  {
+    "id": "pilot-16",
+    "paper_id": "2004.04906",
+    "question": "What was this research project's annual revenue in 2025?",
+    "reference_answer": null,
+    "reference_pdf_page": null,
+    "answerable": false
+  },
+  {
+    "id": "pilot-17",
+    "paper_id": "1606.05250",
+    "question": "Who posed the questions in SQuAD?",
+    "reference_answer": "crowdworkers",
+    "reference_pdf_page": 1,
+    "answerable": true
+  },
+  {
+    "id": "pilot-18",
+    "paper_id": "1606.05250",
+    "question": "Where do the SQuAD reading passages come from?",
+    "reference_answer": "Wikipedia",
+    "reference_pdf_page": 1,
+    "answerable": true
+  },
+  {
+    "id": "pilot-19",
+    "paper_id": "1606.05250",
+    "question": "What F1 score does the logistic regression model achieve?",
+    "reference_answer": "51.0",
+    "reference_pdf_page": 1,
+    "answerable": true
+  },
+  {
+    "id": "pilot-20",
+    "paper_id": "1606.05250",
+    "question": "What was this research project's annual revenue in 2025?",
+    "reference_answer": null,
+    "reference_pdf_page": null,
+    "answerable": false
+  }
+]

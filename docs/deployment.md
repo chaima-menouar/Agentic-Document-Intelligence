@@ -25,3 +25,7 @@ Upload a small English text PDF, ask one answerable question and one unsupported
 ## Runtime constraints
 
 Workspaces are ephemeral and stored on the service filesystem. A restart clears uploads and history. Run one worker because the session registry is process-local. CPU-only embedding, NLI, reranking, and OCR can be slow on small instances; dense retrieval plus the offline generator is the safest demo configuration.
+
+## Hosted upload limit
+
+Vercel rejected the original 4.7 MB combined pilot upload before it reached FastAPI. `Dockerfile.vercel` sets a conservative 4 MiB limit per PDF and per upload in both the UI and API, leaving room for multipart framing. Local and Render defaults remain 25 MiB per PDF and 100 MiB total. See [the real-PDF pilot](../evaluation/hosted_pilot/README.md) for measured behavior and remaining quality failures.

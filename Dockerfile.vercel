@@ -3,10 +3,11 @@ WORKDIR /src/frontend
 COPY frontend/package*.json ./
 RUN npm ci
 COPY frontend/ ./
+ENV VITE_MAX_PDF_BYTES=4194304 VITE_MAX_UPLOAD_BYTES=4194304
 RUN npm run build
 
 FROM python:3.12-slim
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PORT=8501
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PORT=8501 ADI_MAX_PDF_BYTES=4194304 ADI_MAX_UPLOAD_BYTES=4194304
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends tesseract-ocr libgomp1 && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt requirements-web.txt requirements-retrieval.txt requirements-ocr.txt ./

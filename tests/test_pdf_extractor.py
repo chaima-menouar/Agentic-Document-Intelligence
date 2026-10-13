@@ -127,3 +127,21 @@ def test_v2_ocr_metadata_reaches_corpus_segment(
     assert ocr_segment.metadata["extraction_method"] == "ocr"
     assert ocr_segment.metadata["ocr_applied"] is True
     assert ocr_segment.metadata["ocr_confidence"] == 88.0
+
+
+def test_two_column_text_preserves_authored_paragraph_order(tmp_path) -> None:
+    import pymupdf
+    from app.ingestion import extract_pdf
+
+    path = tmp_path / "columns.pdf"
+    doc = pymupdf.open()
+    page = doc.new_page()
+    page.insert_textbox(pymupdf.Rect(40, 40, 270, 200),
+                        "Left column first sentence.\nLeft column second sentence.")
+    page.insert_textbox(pymupdf.Rect(320, 40, 550, 200),
+                        "Right column first sentence.\nRight column second sentence.")
+    doc.save(path)
+    doc.close()
+    result = extract_pdf(path)
+    text = result.pages[0].text
+    assert text.index("Left column second") < text.index("Right column first")

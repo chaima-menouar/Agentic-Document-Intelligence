@@ -340,6 +340,10 @@ class ExtractiveGenerator:
                 if sentence.strip()
             ]
             for sentence in sentences:
+                # A dated question must not be answered with unrelated evidence
+                # merely because it shares generic research/project terms.
+                if not set(_YEAR_RE.findall(question)).issubset(set(_YEAR_RE.findall(sentence))):
+                    continue
                 if _requires_year(question) and not _YEAR_RE.search(sentence):
                     continue
                 if _requires_number(question) and not _NUMBER_RE.search(sentence):

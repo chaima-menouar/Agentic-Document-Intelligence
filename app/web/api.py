@@ -29,7 +29,8 @@ app = FastAPI(title="Agentic Document Intelligence", docs_url=None, redoc_url=No
 logger = logging.getLogger(__name__)
 ROOT = Path(__file__).resolve().parents[2]
 DIST = ROOT / "frontend" / "dist"
-MAX_BYTES = 25 * 1024 * 1024
+MAX_BYTES = int(os.environ.get("ADI_MAX_PDF_BYTES", 25 * 1024 * 1024))
+MAX_TOTAL_BYTES = int(os.environ.get("ADI_MAX_UPLOAD_BYTES", 100 * 1024 * 1024))
 
 
 @dataclass
@@ -133,8 +134,8 @@ def upload(files: list[UploadFile] = File(...), ocr: bool = Form(True), ws: Work
     for item in files:
         data = item.file.read(MAX_BYTES + 1)
         total += len(data)
-        if len(data) > MAX_BYTES or total > 100 * 1024 * 1024:
-            raise HTTPException(413, "Maximum: 25 MB per PDF and 100 MB per upload.")
+        if len(data) > MAX_BYTES or total > MAX_TOTAL_BYTES:
+            raise HTTPException(413, f"Maximum: {MAX_BYTES / 1024 / 1024:.1f} MB per PDF and {MAX_TOTAL_BYTES / 1024 / 1024:.1f} MB per upload.")
         if not (item.filename or "").lower().endswith(".pdf") or not data.startswith(b"%PDF-"):
             raise HTTPException(400, "Only valid PDF files are supported.")
         payloads.append((Path(item.filename).name, data))

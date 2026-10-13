@@ -1,6 +1,6 @@
 # Agentic Document Intelligence
 
-[Open the live React demo](https://agentic-document-intelligence.vercel.app/) · [Deployment and hosting limits](docs/deployment.md)
+[Open the live React demo](https://agentic-document-intelligence.vercel.app/) · [Deployment and hosting limits](docs/deployment.md) · [Real-PDF pilot results](evaluation/hosted_pilot/README.md)
 
 The live demo runs on Vercel Hobby with CPU-only retrieval, OCR and offline answers. Document workspaces are temporary; re-upload after server restarts or instance changes.
 

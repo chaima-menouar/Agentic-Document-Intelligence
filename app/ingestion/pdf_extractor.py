@@ -127,7 +127,9 @@ def extract_pdf(
 
             for zero_based_index, page in enumerate(document):
                 page_number = zero_based_index + 1
-                text = _normalize_text(page.get_text("text", sort=True))
+                # Preserve authored block order; geometric line sorting interleaves
+                # left and right columns in scientific PDFs.
+                text = _normalize_text(page.get_text("text", sort=False))
                 method = "text"
                 ocr_applied = False
                 ocr_confidence = None
