@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: agentic-document-intelligence
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 8501
