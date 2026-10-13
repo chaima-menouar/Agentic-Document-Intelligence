@@ -104,6 +104,134 @@ class OpenAICompatibleGenerator:
             raise RuntimeError("LLM endpoint returned an unexpected response.") from exc
 
 
+_OUTPUT_CITATION_RE = re.compile(r"\[S(\d+)\]")
+
+
+def _available_source_labels(prompt: str) -> set[str]:
+    """Return source labels that appear in the Evidence section only."""
+    evidence_start = prompt.find("Evidence:")
+    if evidence_start < 0:
+        return set()
+    answer_start = prompt.find("\n\nAnswer:", evidence_start)
+    evidence_text = (
+        prompt[evidence_start:answer_start]
+        if answer_start >= 0
+        else prompt[evidence_start:]
+    )
+    return {
+        f"S{int(raw)}"
+        for raw in _OUTPUT_CITATION_RE.findall(evidence_text)
+    }
+
+
+def _answer_citation_labels(answer: str) -> set[str]:
+    return {
+        f"S{int(raw)}"
+        for raw in _OUTPUT_CITATION_RE.findall(answer)
+    }
+
+
+def _has_valid_citations(answer: str, prompt: str) -> bool:
+    """Require valid evidence labels on every factual sentence."""
+    if not answer:
+        return False
+    if answer.strip() == "INSUFFICIENT_EVIDENCE":
+        return True
+
+    available = _available_source_labels(prompt)
+    used = _answer_citation_labels(answer)
+    if not used or not used.issubset(available):
+        return False
+
+    # Keep a citation attached to the sentence that precedes it. This splitter
+    # only starts a new sentence when the next token looks like normal prose,
+    # not when the next token is a citation such as [S1].
+    sentences = re.split(r"(?<=[.!?])\s+(?=[A-Z0-9])", answer.strip())
+    for sentence in sentences:
+        if not _content_tokens(sentence):
+            continue
+        if not _answer_citation_labels(sentence):
+            return False
+    return True
+
+
+class GroundedLocalGenerator:
+    """V2 guarded local generator with repair and deterministic fallback.
+
+    The wrapped local LLM can produce fluent answers, while this guard keeps the
+    output compatible with the evidence-grounded RAG contract. Invalid or
+    missing citations trigger one stricter repair request. If the repaired
+    output still violates the contract, the deterministic extractive generator
+    is used instead.
+    """
+
+    def __init__(
+        self,
+        *,
+        model: str | None = None,
+        base_url: str | None = None,
+        api_key: str | None = None,
+        timeout_seconds: int = 120,
+        max_repair_attempts: int = 1,
+        fallback=None,
+        client=None,
+    ) -> None:
+        if max_repair_attempts < 0:
+            raise ValueError("max_repair_attempts must be non-negative.")
+        self.client = client or OpenAICompatibleGenerator(
+            model=model,
+            base_url=base_url,
+            api_key=api_key,
+            timeout_seconds=timeout_seconds,
+        )
+        self.max_repair_attempts = max_repair_attempts
+        self.fallback = fallback or ExtractiveGenerator()
+        self.last_llm_calls = 0
+
+    def _repair_prompt(self, original_prompt: str, invalid_answer: str) -> str:
+        labels = sorted(
+            _available_source_labels(original_prompt),
+            key=lambda label: int(label[1:]),
+        )
+        allowed = ", ".join(f"[{label}]" for label in labels) or "(none)"
+        return f"""The previous answer violated the citation contract.
+
+Previous answer:
+{invalid_answer}
+
+Rewrite the answer using the ORIGINAL question and evidence below.
+
+Strict rules:
+1. Use ONLY evidence from the original prompt.
+2. Every factual sentence must end with one or more valid source labels.
+3. Allowed source labels are: {allowed}
+4. Never invent another source label.
+5. If the evidence is insufficient, output exactly:
+   INSUFFICIENT_EVIDENCE
+6. Return only the repaired answer, with no explanation.
+
+ORIGINAL PROMPT:
+{original_prompt}
+"""
+
+    def generate(self, prompt: str) -> str:
+        self.last_llm_calls = 0
+        self.last_llm_calls += 1
+        answer = self.client.generate(prompt).strip()
+        if _has_valid_citations(answer, prompt):
+            return answer
+
+        for _ in range(self.max_repair_attempts):
+            self.last_llm_calls += 1
+            answer = self.client.generate(
+                self._repair_prompt(prompt, answer)
+            ).strip()
+            if _has_valid_citations(answer, prompt):
+                return answer
+
+        return self.fallback.generate(prompt)
+
+
 def _content_tokens(text: str) -> set[str]:
     return {
         token.lower()

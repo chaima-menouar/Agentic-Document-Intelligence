@@ -1,5 +1,18 @@
 # Agentic Document Intelligence
 
+## React application (recommended interface)
+
+The primary interface is now React with a generated charcoal/yellow document-AI background.
+It connects to the existing Python retrieval, OCR, verification, and adaptive agent through FastAPI.
+
+```bash
+bash scripts/run_web.sh
+```
+
+Open private port **8501** in Codespaces. Stop any old Streamlit process on that port first.
+See [React setup and features](docs/react_frontend.md) for requirements and development.
+
+
 An evidence-grounded document question-answering system for English PDF corpora.
 
 The project is developed as a 12-week academic project and compares three modes:
@@ -7,6 +20,50 @@ The project is developed as a 12-week academic project and compares three modes:
 - **Mode A — Classical RAG:** retrieval + answer generation.
 - **Mode B — Verified RAG:** Mode A + claim-level evidence verification.
 - **Mode C — Agentic Verified RAG:** Mode B + bounded additional retrieval when evidence is insufficient.
+
+## V2
+
+V2 is complete on the `v2-development` branch while `main` preserves the
+stable V1 until the final manual release test passes.
+
+V2 milestones:
+
+- ✅ Milestone 11 — local OCR fallback for scanned/text-poor PDF pages
+- ✅ Milestone 12 — guarded local LLM generation with citation repair/fallback
+- ✅ Milestone 13 — local semantic/NLI claim verification with lexical fallback
+- ✅ Milestone 14 — hybrid dense+BM25 retrieval and local cross-encoder reranking
+- ✅ Milestone 15 — adaptive agent policy
+- ✅ Milestone 16 — V1 vs V2 evaluation
+- ✅ Milestone 17 — final V2 UI/report/demo polish
+
+### V2 benchmark snapshot
+
+Controlled V1 vs V2 scorecard:
+
+| Metric | V1 | V2 |
+| --- | ---: | ---: |
+| Generation citation precision | 0% | 100% |
+| Verification classification accuracy | 33.3% | 66.7% |
+| Recoverable claim recovery | 90% | 90% |
+| Unsupported safe abstention | 100% | 100% |
+| Unsupported average agent rounds | 3.0 | 2.0 |
+| Unsupported average additional chunks | 9.0 | 6.0 |
+
+Retrieval remains evidence-driven rather than novelty-driven: full QASPER
+Recall@5 was 66.10% for dense BGE versus 65.43% for plain hybrid RRF, so dense
+BGE remains the default. Hybrid + reranker is available as an optional V2 mode
+and reached 74% Recall@5 versus 70% dense on the matched 50-question sample.
+
+Detailed V2 design notes are in:
+
+- `docs/v2_roadmap.md`
+- `docs/v2_local_generator.md`
+- `docs/v2_semantic_verifier.md`
+- `docs/v2_hybrid_retrieval.md`
+- `docs/v2_adaptive_agent.md`
+- `docs/v2_v1_vs_v2_evaluation.md`
+- `docs/v2_demo_guide.md`
+- `docs/v2_final_project_report.md`
 
 ## Version 1 scope
 
@@ -21,7 +78,7 @@ The project is developed as a 12-week academic project and compares three modes:
 
 ## Project status
 
-**V1 complete — implementation, evaluation, stabilization, report, and demo are finished.**
+**V1 is the stable baseline on `main`; V2 is complete on `v2-development` and awaiting one final manual release test before merge.**
 
 Current pipeline:
 
@@ -239,6 +296,29 @@ The final academic delivery package is available in:
 
 Key controlled A/B/C results: Mode B detected unsupported/uncited stress cases at 100% with 100% safe abstention; Mode C recovered 90% of recoverable uncited cases, safely abstained on unsupported claims at 100%, and respected its retrieval bound at 100%.
 
+
+## V2 status
+
+**V2 is complete on the `v2-development` branch.**
+
+V2 adds:
+
+- local OCR fallback for scanned/text-poor PDFs;
+- guarded local LLM generation with citation repair and extractive fallback;
+- local semantic/NLI claim verification with lexical fallback;
+- hybrid BM25 + dense retrieval and optional local cross-encoder reranking;
+- adaptive budgeted agentic retrieval;
+- a side-by-side V1 vs V2 comparison tab;
+- consolidated V1 vs V2 evaluation and a final V2 report/demo guide.
+
+Final V2 documentation:
+
+- `docs/v2_final_project_report.md`
+- `docs/v2_demo_guide.md`
+- `docs/v2_v1_vs_v2_evaluation.md`
+- `docs/v2_roadmap.md`
+- `docs/v2_release_notes.md`
+- `docs/v2_final_manual_test.md`
 
 ## Final validation
 

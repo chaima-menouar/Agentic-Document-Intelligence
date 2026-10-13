@@ -103,3 +103,34 @@ def test_classical_rag_marks_uncited_answer() -> None:
 
     assert result.status == "uncited_answer"
     assert result.citations == []
+
+
+
+def test_classical_rag_preserves_retrieval_metadata_in_citation() -> None:
+    hit = _hit(1, "c1", "Hybrid evidence.")
+    hit = RetrievalHit(
+        rank=hit.rank,
+        score=hit.score,
+        dataset=hit.dataset,
+        document_id=hit.document_id,
+        chunk_id=hit.chunk_id,
+        source_id=hit.source_id,
+        text=hit.text,
+        page_number=hit.page_number,
+        section=hit.section,
+        metadata={
+            "retrieval_mode": "hybrid_rrf",
+            "dense_score": 0.8,
+            "sparse_score": 2.1,
+            "fusion_score": 0.03,
+        },
+    )
+    rag = ClassicalRAG(
+        retriever=FakeRetriever([hit]),
+        generator=FakeGenerator("Hybrid answer [S1]."),
+    )
+
+    result = rag.answer("Question?")
+
+    assert result.citations[0].metadata["retrieval_mode"] == "hybrid_rrf"
+    assert result.citations[0].metadata["fusion_score"] == 0.03

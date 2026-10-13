@@ -1,0 +1,82 @@
+name: v2-adaptive-agent-e2e
+
+on:
+  push:
+    branches: ["v2-development"]
+    paths:
+      - "app/agent/**"
+      - "app/models/**"
+      - "app/ui/**"
+      - "scripts/evaluate_agent_policies.py"
+      - "tests/test_adaptive_agent.py"
+      - ".github/workflows/v2-adaptive-agent-e2e.yml"
+  pull_request:
+    branches: ["v2-development"]
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  adaptive-agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install base dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Install CPU retrieval dependencies
+        run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install -r requirements-retrieval.txt
+
+      - name: Run adaptive agent regression tests
+        run: >
+          pytest -q
+          tests/test_adaptive_agent.py
+          tests/test_agentic_rag.py
+          tests/test_claim_verifier.py
+
+      - name: Download selected BGE validation index
+        uses: actions/download-artifact@v4
+        with:
+          name: qasper-validation-index-bge-small-v1.5
+          path: data/indexes/qasper-bge-small
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 37443041910
+
+      - name: Compare fixed vs adaptive agent policies
+        run: |
+          python scripts/evaluate_agent_policies.py             --index data/indexes/qasper-bge-small             --output data/evaluation/v2_agent_policy.json             --cases 20             --max-rounds 3             --additional-top-k 3             --adaptive-budget 6
+
+      - name: Validate adaptive safety and budget
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(
+              Path("data/evaluation/v2_agent_policy.json").read_text()
+          )
+          unsupported = report["unsupported_claim"]
+          assert unsupported["adaptive_safe_abstention_rate"] == 1.0
+          assert unsupported["adaptive_budget_respected_rate"] == 1.0
+          print(json.dumps(report, indent=2))
+          PY
+
+      - name: Validate Streamlit module
+        run: python -m py_compile app/ui/streamlit_app.py
+
+      - name: Upload adaptive-agent evaluation
+        uses: actions/upload-artifact@v4
+        with:
+          name: v2-adaptive-agent-evaluation
+          path: data/evaluation/v2_agent_policy.json
+          retention-days: 30

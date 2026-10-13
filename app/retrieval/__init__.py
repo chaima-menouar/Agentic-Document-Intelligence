@@ -1,5 +1,6 @@
 """Semantic embedding and retrieval utilities."""
 
+from .hybrid import BM25Index, HybridRetriever, LocalCrossEncoderReranker
 from .index_builder import build_index
 from .qasper_eval import (
     evidence_paragraphs,
@@ -15,6 +16,9 @@ from .semantic import (
 )
 
 __all__ = [
+    "BM25Index",
+    "HybridRetriever",
+    "LocalCrossEncoderReranker",
     "DEFAULT_EMBEDDING_MODEL",
     "build_index",
     "RetrievalHit",

@@ -31,11 +31,12 @@ def build_rag_prompt(question: str, hits: Sequence[RetrievalHit]) -> str:
 
 Rules:
 1. Do not use outside knowledge.
-2. Cite factual statements with one or more source labels such as [S1].
-3. Only cite labels that appear in the evidence.
+2. End every factual sentence with one or more source labels such as [S1].
+3. Only cite labels that appear in the evidence; never invent a label.
 4. If the evidence is not sufficient to answer, output exactly:
    { _INSUFFICIENT }
 5. Keep the answer concise and directly responsive.
+6. Do not add a bibliography or a separate sources section.
 
 Question:
 {question}
@@ -128,6 +129,7 @@ class ClassicalRAG:
                     page_number=hit.page_number,
                     section=hit.section,
                     text=hit.text,
+                    metadata=dict(hit.metadata),
                 )
             )
 

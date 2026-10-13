@@ -1,12 +1,19 @@
 {
   "name": "Agentic Document Intelligence",
   "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
-  "postCreateCommand": "python -m pip install --upgrade pip && python -m pip install -r requirements-all.txt",
-  "forwardPorts": [8501],
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y tesseract-ocr tesseract-ocr-eng && python -m pip install --upgrade pip && python -m pip install -r requirements-all.txt && npm --prefix frontend ci && npm --prefix frontend run build",
+  "forwardPorts": [
+    8501
+  ],
   "portsAttributes": {
     "8501": {
-      "label": "Streamlit",
+      "label": "React \u00b7 Document Intelligence",
       "onAutoForward": "openBrowser"
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22"
     }
   }
 }

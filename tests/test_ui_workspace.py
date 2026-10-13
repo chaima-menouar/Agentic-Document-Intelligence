@@ -35,6 +35,8 @@ def test_prepare_uploaded_pdfs_preserves_documents_and_pages(tmp_path: Path) -> 
     assert len(summaries) == 2
     assert summaries[0].page_count == 2
     assert summaries[1].page_count == 1
+    assert summaries[0].ocr_page_count == 0
+    assert summaries[1].ocr_page_count == 0
     assert total_chunks == 3
 
     lines = chunks_path.read_text(encoding="utf-8").splitlines()

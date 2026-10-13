@@ -32,6 +32,7 @@ def evaluate(
     include_title: bool = False,
     query_batch_size: int = 64,
     scope: str = "document",
+    limit: int | None = None,
 ) -> dict:
     dataset = Dataset.from_parquet(str(qasper_parquet))
 
@@ -42,6 +43,7 @@ def evaluate(
     unmatched_evidence_questions = 0
     questions_without_text_evidence = 0
 
+    stop = False
     for raw_row in dataset:
         row = dict(raw_row)
         document = qasper_row_to_document(row)
@@ -64,6 +66,12 @@ def evaluate(
             question_ids.append(question_record["question_id"])
             gold_source_ids.append(gold)
             document_ids.append(document.document_id)
+
+            if limit is not None and len(queries) >= limit:
+                stop = True
+                break
+        if stop:
+            break
 
     if not queries:
         raise RuntimeError("No evaluable QASPER questions with mapped text evidence.")
@@ -112,6 +120,7 @@ def evaluate(
         "questions_without_text_evidence": questions_without_text_evidence,
         "unmatched_evidence_questions": unmatched_evidence_questions,
         "max_k": max_k,
+        "limit": limit,
         "metrics": {
             **metrics,
             f"mrr@{max_k}": sum(reciprocal_ranks) / len(reciprocal_ranks),
@@ -155,6 +164,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--top-k", type=_parse_top_ks, default=[1, 3, 5, 10, 20])
     parser.add_argument("--include-title", action="store_true")
     parser.add_argument("--query-batch-size", type=int, default=64)
+    parser.add_argument("--limit", type=int)
     parser.add_argument(
         "--scope",
         choices=["document", "global"],
@@ -174,6 +184,7 @@ def main() -> int:
         include_title=args.include_title,
         query_batch_size=args.query_batch_size,
         scope=args.scope,
+        limit=args.limit,
     )
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0

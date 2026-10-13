@@ -33,7 +33,12 @@ def pdf_extraction_to_document(
             text=page.text,
             page_number=page.page_number,
             section=None,
-            metadata={"filename": extraction.filename},
+            metadata={
+                "filename": extraction.filename,
+                "extraction_method": page.extraction_method,
+                "ocr_applied": page.ocr_applied,
+                "ocr_confidence": page.ocr_confidence,
+            },
         )
         for page in extraction.pages
         if clean_text(page.text)
