@@ -7,3 +7,7 @@ This is a runnable API connectivity workflow, not the A/B/C evaluation pipeline.
 For repeatable quality evaluation, use `scripts/run_hosted_pilot.py`. Automating ingestion and evaluation in n8n next requires a stable session/storage backend and an authenticated job endpoint. The current Vercel process-local workspace is not reliable across instances, so no unattended ingestion workflow is advertised yet.
 
 The project remains usable without n8n. A self-hosted n8n instance needs a host with persistent storage; a local development instance is sufficient for importing and manually trying this workflow.
+
+## Transcript notes
+
+Import `transcript-summary.json`, open **Replace with your transcript**, edit the `text` field, then execute manually. The **Create transcript notes** node sends that text to Clario and returns exact highlights, possible actions and questions. No API key or paid AI is needed. Only send transcripts you intend to process on the hosted Clario server. The workflow is not activated or connected to a personal n8n instance by this repository.

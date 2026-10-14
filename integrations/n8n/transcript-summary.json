@@ -1,0 +1,98 @@
+{
+  "name": "Clario \u2014 transcript highlights and action candidates",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start",
+      "name": "Run manually",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "transcript",
+              "name": "text",
+              "value": "The pilot launches on 12 November. We will send the report on Friday. What is the budget?",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "input",
+      "name": "Replace with your transcript",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://agentic-document-intelligence.vercel.app/api/audio/summary",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ADI-Request",
+              "value": "1"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: $json.text }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "summarize",
+      "name": "Create transcript notes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Run manually": {
+      "main": [
+        [
+          {
+            "node": "Replace with your transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace with your transcript": {
+      "main": [
+        [
+          {
+            "node": "Create transcript notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "tags": []
+}

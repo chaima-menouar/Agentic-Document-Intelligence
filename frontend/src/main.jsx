@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import './style.css';
+import VoiceStudio from './VoiceStudio';
 import {MotionLayer} from './Motion';
 import {Brand,Glyph} from './Visuals';
 import {Robot,Demo,LandingSections,Footer} from './Landing';
@@ -9,7 +10,7 @@ const EMPTY={documents:[],total_chunks:0,history:[],feedback:{}};
 const DEFAULTS={top_k:5,budget:10,retrieval:'dense',verifier:'semantic',generator:'offline',model:'',ocr:true};
 const MAX_PDF_BYTES=Number(import.meta.env.VITE_MAX_PDF_BYTES)||25*1024*1024;
 const MAX_UPLOAD_BYTES=Number(import.meta.env.VITE_MAX_UPLOAD_BYTES)||100*1024*1024;
-const labels={documents:'Documents',assistant:'Assistant',activity:'Activity',settings:'Settings'};
+const labels={documents:'Documents',assistant:'Assistant',voice:'Audio studio',activity:'Activity',settings:'Settings'};
 const readable=value=>(value||'').replaceAll('_',' ');
 
 async function api(path,options={}) {
@@ -18,10 +19,11 @@ async function api(path,options={}) {
   return response.json();
 }
 function Icon({name,size=20}) {
-  const paths={file:<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></>,upload:<><path d="M12 16V3m-5 5 5-5 5 5M4 16v4h16v-4"/></>,chat:<path d="M21 11a8 8 0 0 1-8 8H7l-5 3V11a9 9 0 0 1 19 0Z"/>,arrow:<path d="M4 12h16m-6-6 6 6-6 6"/>,check:<path d="m5 12 4 4L19 6"/>,settings:<><path d="M4 7h16M4 17h16"/><circle cx="8" cy="7" r="3"/><circle cx="16" cy="17" r="3"/></>,activity:<path d="M2 12h4l3-8 6 16 3-8h4"/>,close:<path d="m6 6 12 12M6 18 18 6"/>,trash:<><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></>};
+  const paths={mic:<><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/></>,file:<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></>,upload:<><path d="M12 16V3m-5 5 5-5 5 5M4 16v4h16v-4"/></>,chat:<path d="M21 11a8 8 0 0 1-8 8H7l-5 3V11a9 9 0 0 1 19 0Z"/>,arrow:<path d="M4 12h16m-6-6 6 6-6 6"/>,check:<path d="m5 12 4 4L19 6"/>,settings:<><path d="M4 7h16M4 17h16"/><circle cx="8" cy="7" r="3"/><circle cx="16" cy="17" r="3"/></>,activity:<path d="M2 12h4l3-8 6 16 3-8h4"/>,close:<path d="m6 6 12 12M6 18 18 6"/>,trash:<><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></>};
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]||paths.file}</svg>;
 }
 function App(){
+  const [voiceDraft,setVoiceDraft]=useState('');
   const [theme,setTheme]=useState(()=>localStorage.getItem('adi-theme-v2')||'light');
   useEffect(()=>{document.documentElement.dataset.theme=theme;localStorage.setItem('adi-theme-v2',theme);},[theme]);
   const [tab,setTab]=useState('documents'),[workspace,setWorkspace]=useState(EMPTY),[settings,setSettings]=useState(DEFAULTS);
@@ -74,15 +76,17 @@ function App(){
         <div className="hero-content"><p className="eyebrow">EVIDENCE-GROUNDED DOCUMENT ASSISTANT</p><h1>Get clear answers.<br/>Keep the evidence<br/><em>in sight.</em></h1><p className="hero-copy">Ask your documents a question. Find the relevant passage, check each claim, and follow the answer back to its source.</p><div className="hero-benefits"><span><Icon name="file" size={16}/>English PDFs</span><span><Icon name="check" size={16}/>Inspectable citations</span><span><Icon name="activity" size={16}/>Bounded retrieval</span></div><button className="hero-cta" onClick={()=>document.getElementById('workspace').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}>Open your workspace <Icon name="arrow" size={17}/></button></div>
         <div className="hero-visual"><Robot/><div className="preview-answer"><div className="preview-label"><span className="live-dot"/>Document assistant<span>ILLUSTRATIVE EXAMPLE</span></div><p>When does the project launch?</p><div className="preview-rule"/><strong>12 November — according to your source.</strong><small><Icon name="check" size={13}/>Project brief.pdf · page 2 · [S1]</small></div></div>
       </section>
+      <div className="voice-entry"><span><Glyph name="mic" size={18}/> NEW · YOUR DOCUMENT ASSISTANT, NOW WITH VOICE</span><button onClick={()=>{setTab('voice');document.getElementById('workspace').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}}>Open audio studio <Glyph name="arrow" size={16}/></button></div>
       <Demo/>
       <LandingSections/>
       <div className="workspace-intro" id="try-it"><p className="eyebrow">TRY IT WITH YOUR OWN SOURCES</p><h2>Your research starts here.</h2><p>Upload a PDF and see what you can find.</p></div>
       <section className="workspace" id="workspace" aria-label="Document workspace">
-        <div className="workspace-header"><nav aria-label="Workspace sections">{Object.entries(labels).map(([key,label])=><button key={key} aria-current={tab===key?'page':undefined} className={tab===key?'nav-item active':'nav-item'} onClick={()=>{setTab(key);setNotice('');}}><Icon name={{documents:'file',assistant:'chat',activity:'activity',settings:'settings'}[key]} size={17}/>{label}</button>)}</nav><span className="document-count">{workspace.documents.length} document{workspace.documents.length!==1?'s':''}</span></div>
+        <div className="workspace-header"><nav aria-label="Workspace sections">{Object.entries(labels).map(([key,label])=><button key={key} aria-current={tab===key?'page':undefined} className={tab===key?'nav-item active':'nav-item'} onClick={()=>{setTab(key);setNotice('');}}><Icon name={{documents:'file',assistant:'chat',voice:'mic',activity:'activity',settings:'settings'}[key]} size={17}/>{label}</button>)}</nav><span className="document-count">{workspace.documents.length} document{workspace.documents.length!==1?'s':''}</span></div>
         <div className="workspace-body" key={tab}>
           {error&&<div className="notice error" role="alert"><span>{error}</span><button aria-label="Dismiss error" onClick={()=>setError('')}><Icon name="close" size={16}/></button></div>}
           {notice&&<div className="notice success" role="status">{notice}</div>}
           {(busy||loading)&&<div className="notice progress" role="status"><span className="spinner"/>{busy||'Opening your workspace…'}</div>}
+          {tab==='voice'&&<VoiceStudio draft={voiceDraft} onDraft={setVoiceDraft} request={api} workspace={workspace} settings={settings} onAnswer={result=>{setWorkspace(w=>({...w,history:[...w.history.filter(a=>a.id!==result.id),result].slice(-50)}));setSelected(result.id);}} onConflict={refreshChangedWorkspace} onOpenDocs={()=>setTab('documents')}/>}
           {tab==='documents'&&<>
             <div className="section-heading"><div><p className="eyebrow small">START WITH YOUR SOURCES</p><h2>Your document space</h2><p>Bring the PDFs. We’ll help you find what matters.</p></div>{workspace.documents.length>0&&<button className="secondary" disabled={locked} onClick={()=>setTab('assistant')}>Ask a question <Icon name="arrow" size={16}/></button>}</div>
             <div className={`dropzone ${drag?'dragging':''}`} onDragOver={e=>{e.preventDefault();if(!locked)setDrag(true);}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);if(!locked)chooseFiles(e.dataTransfer.files);}}>

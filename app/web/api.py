@@ -20,6 +20,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from app.audio.routes import router as audio_router
 from app.agent import AdaptiveAgenticVerifiedRAG
 from app.rag import ClassicalRAG, ExtractiveGenerator, GroundedLocalGenerator
 from app.retrieval import HybridRetriever, LocalCrossEncoderReranker, SemanticRetriever
@@ -27,6 +28,7 @@ from app.ui.workspace import build_local_workspace
 from app.verification import CitationGroundingVerifier, SemanticCitationGroundingVerifier, VerifiedRAG
 
 app = FastAPI(title="Agentic Document Intelligence", docs_url=None, redoc_url=None)
+app.include_router(audio_router)
 logger = logging.getLogger(__name__)
 ROOT = Path(__file__).resolve().parents[2]
 DIST = ROOT / "frontend" / "dist"
