@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import './style.css';
+import {MotionLayer} from './Motion';
 import {Brand,Glyph} from './Visuals';
 import {Robot,Demo,LandingSections,Footer} from './Landing';
 
@@ -8,13 +9,12 @@ const EMPTY={documents:[],total_chunks:0,history:[],feedback:{}};
 const DEFAULTS={top_k:5,budget:10,retrieval:'dense',verifier:'semantic',generator:'offline',model:'',ocr:true};
 const MAX_PDF_BYTES=Number(import.meta.env.VITE_MAX_PDF_BYTES)||25*1024*1024;
 const MAX_UPLOAD_BYTES=Number(import.meta.env.VITE_MAX_UPLOAD_BYTES)||100*1024*1024;
-const uploadLimits=`${(MAX_PDF_BYTES/1024/1024).toFixed(1)} MB per PDF, ${(MAX_UPLOAD_BYTES/1024/1024).toFixed(1)} MB total`;
 const labels={documents:'Documents',assistant:'Assistant',activity:'Activity',settings:'Settings'};
 const readable=value=>(value||'').replaceAll('_',' ');
 
 async function api(path,options={}) {
   const response=await fetch(`/api${path}`,{...options,headers:{'X-ADI-Request':'1',...options.headers}});
-  if(!response.ok){let message=`Request failed (${response.status})`;try{const data=await response.json();message=typeof data.detail==='string'?data.detail:message;}catch{}const error=new Error(message);error.status=response.status;throw error;}
+  if(!response.ok){let message=`Request failed (${response.status})`;try{const data=await response.json();message=typeof data.detail==='string'?data.detail:(data.detail?.message||message);}catch{}const error=new Error(message);error.status=response.status;throw error;}
   return response.json();
 }
 function Icon({name,size=20}) {
@@ -28,7 +28,12 @@ function App(){
   const [loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('');
   const [files,setFiles]=useState([]),[question,setQuestion]=useState(''),[scope,setScope]=useState(''),[selected,setSelected]=useState(null);
   const [drag,setDrag]=useState(false),[resetOpen,setResetOpen]=useState(false),[inspector,setInspector]=useState(null);
-  const input=useRef(null);
+  const input=useRef(null),pendingQuestion=useRef(null);
+  const [capabilities,setCapabilities]=useState(null);
+  useEffect(()=>{api('/capabilities').then(setCapabilities).catch(()=>{});},[]);
+  const pdfLimit=capabilities?.limits.pdf_bytes||MAX_PDF_BYTES, totalLimit=capabilities?.limits.upload_bytes||MAX_UPLOAD_BYTES;
+  const uploadLimits=`${(pdfLimit/1024/1024).toFixed(1)} MB per PDF, ${(totalLimit/1024/1024).toFixed(1)} MB total`;
+  async function refreshChangedWorkspace(){try{const current=await api('/workspace');if(!current.documents.length){expiredWorkspace();setWorkspace(current);pendingQuestion.current=null;return;}setWorkspace(current);setScope('');setSelected(null);setInspector(null);pendingQuestion.current=null;setNotice('Your documents changed in another tab. The current workspace is loaded; review it before retrying.');}catch(e){setError(e.message);}}
   useEffect(()=>{api('/workspace').then(setWorkspace).catch(e=>setError(e.message)).finally(()=>setLoading(false));},[]);
   const answer=workspace.history.find(a=>a.id===selected)||workspace.history.at(-1);
   const locked=loading||Boolean(busy);
@@ -39,27 +44,29 @@ function App(){
   function chooseFiles(incoming){
     setError('');const items=Array.from(incoming);
     if(items.some(f=>!f.name.toLowerCase().endsWith('.pdf'))){setError('Please choose PDF files only.');return;}
-    if(items.some(f=>f.size>MAX_PDF_BYTES)||items.length>10||items.reduce((s,f)=>s+f.size,0)>MAX_UPLOAD_BYTES){setError(`Choose up to 10 PDFs: ${uploadLimits}.`);return;}
+    if(items.some(f=>f.size>pdfLimit)||items.length>10||items.reduce((s,f)=>s+f.size,0)>totalLimit){setError(`Choose up to 10 PDFs: ${uploadLimits}.`);return;}
     setFiles(items);
   }
   async function processDocuments(){
     setBusy('Reading PDFs and building your document index. The first run may download local models…');setError('');setNotice('');
     const data=new FormData();files.forEach(f=>data.append('files',f));data.append('ocr',settings.ocr);
-    try{setWorkspace(await api('/documents',{method:'POST',body:data}));setFiles([]);if(input.current)input.current.value='';setScope('');setSelected(null);setInspector(null);setNotice('Your documents are ready. Open Assistant to ask a question.');}
-    catch(e){setError(e.message);}finally{setBusy('');}
+    try{setWorkspace(await api('/documents',{method:'POST',body:data,headers:workspace.revision?{'X-ADI-Workspace':workspace.revision}:{}}));setFiles([]);if(input.current)input.current.value='';setScope('');setSelected(null);setInspector(null);setNotice('Your documents are ready. Open Assistant to ask a question.');}
+    catch(e){if(e.status===409)await refreshChangedWorkspace();else setError(e.message);}finally{setBusy('');}
   }
   async function ask(event){
     event.preventDefault();if(!question.trim()||locked)return;
     setBusy('Finding evidence, checking claims, and recovering missing support…');setError('');setNotice('');
-    try{const result=await api('/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...settings,question,document_id:scope||null})});setWorkspace(w=>({...w,history:[...w.history,result].slice(-50)}));setSelected(result.id);}
-    catch(e){if(e.status===409)expiredWorkspace();else setError(e.message);}finally{setBusy('');}
+    const payload={...settings,question,document_id:scope||null,workspace_revision:workspace.revision};const signature=JSON.stringify(payload);
+    if(pendingQuestion.current?.signature!==signature)pendingQuestion.current={signature,id:crypto.randomUUID()};
+    try{const result=await api('/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,request_id:pendingQuestion.current.id})});setWorkspace(w=>({...w,history:[...w.history.filter(a=>a.id!==result.id),result].slice(-50)}));setSelected(result.id);pendingQuestion.current=null;}
+    catch(e){if(e.status===409)await refreshChangedWorkspace();else setError(e.message);}finally{setBusy('');}
   }
-  async function reset(){setResetOpen(false);setBusy('Clearing workspace…');setError('');try{setWorkspace(await api('/workspace',{method:'DELETE'}));setScope('');setSelected(null);setInspector(null);setNotice('Workspace cleared.');}catch(e){setError(e.message);}finally{setBusy('');}}
+  async function reset(){setResetOpen(false);setBusy('Clearing workspace…');setError('');try{setWorkspace(await api('/workspace',{method:'DELETE',headers:workspace.revision?{'X-ADI-Workspace':workspace.revision}:{}}));setScope('');setSelected(null);setInspector(null);setNotice('Workspace cleared.');}catch(e){if(e.status===409)await refreshChangedWorkspace();else setError(e.message);}finally{setBusy('');}}
   async function inspect(doc){setError('');setBusy('Opening document text…');try{const chunks=await api(`/documents/${encodeURIComponent(doc.document_id)}/chunks`);setInspector({doc,chunks});}catch(e){setError(e.message);}finally{setBusy('');}}
   async function rate(rating){if(!answer)return;setBusy('Saving feedback…');setError('');try{await api(`/answers/${answer.id}/feedback`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rating})});setWorkspace(w=>({...w,feedback:{...w.feedback,[answer.id]:{rating}}}));setNotice('Feedback saved.');}catch(e){setError(e.message);}finally{setBusy('');}}
   function exportSession(){const blob=new Blob([JSON.stringify(workspace,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='document-workspace.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   function update(key,value){setSettings(s=>({...s,[key]:value}));}
-  return <div className="app-shell">
+  return <div className="app-shell"><MotionLayer/>
     <a className="skip-link" href="#workspace">Skip to workspace</a>
     <header className="topbar"><a className="brand" href="#" onClick={()=>setTab('documents')}><Brand/></a><div className="header-actions"><a className="header-link" href="#how-it-works">How it works</a><a className="header-link" href="#tools">Tools</a><a className="header-link" href="https://github.com/chaima-menouar/Agentic-Document-Intelligence" target="_blank" rel="noreferrer">GitHub</a><button className="theme-toggle" type="button" onClick={()=>setTheme(t=>t==='dark'?'light':'dark')} aria-label={`Switch to ${theme==='dark'?'light':'dark'} mode`}><span className="theme-toggle-track"><span className="theme-icon"><Glyph name="sun" size={15}/></span><span className="theme-icon"><Glyph name="moon" size={15}/></span><span className="theme-toggle-thumb"/></span></button><a className="header-cta" href="#workspace">Start exploring</a></div></header>
     <main>
@@ -72,7 +79,7 @@ function App(){
       <div className="workspace-intro" id="try-it"><p className="eyebrow">TRY IT WITH YOUR OWN SOURCES</p><h2>Your research starts here.</h2><p>Upload a PDF and see what you can find.</p></div>
       <section className="workspace" id="workspace" aria-label="Document workspace">
         <div className="workspace-header"><nav aria-label="Workspace sections">{Object.entries(labels).map(([key,label])=><button key={key} aria-current={tab===key?'page':undefined} className={tab===key?'nav-item active':'nav-item'} onClick={()=>{setTab(key);setNotice('');}}><Icon name={{documents:'file',assistant:'chat',activity:'activity',settings:'settings'}[key]} size={17}/>{label}</button>)}</nav><span className="document-count">{workspace.documents.length} document{workspace.documents.length!==1?'s':''}</span></div>
-        <div className="workspace-body">
+        <div className="workspace-body" key={tab}>
           {error&&<div className="notice error" role="alert"><span>{error}</span><button aria-label="Dismiss error" onClick={()=>setError('')}><Icon name="close" size={16}/></button></div>}
           {notice&&<div className="notice success" role="status">{notice}</div>}
           {(busy||loading)&&<div className="notice progress" role="status"><span className="spinner"/>{busy||'Opening your workspace…'}</div>}
@@ -94,7 +101,7 @@ function App(){
             </>}
           </>}
           {tab==='activity'&&<><div className="section-heading"><div><p className="eyebrow small">YOUR WORKSPACE AT A GLANCE</p><h2>Activity</h2><p>Real results from this session.</p></div><button className="secondary" disabled={locked||!workspace.history.length} onClick={exportSession}>Export session</button></div><div className="metrics">{[['Questions',workspace.history.length],['Citations',workspace.history.reduce((n,a)=>n+(a.citations?.length||0),0)],['Supported claims',workspace.history.reduce((n,a)=>n+(a.verifications?.filter(v=>v.status==='supported').length||0),0)]].map(([name,value])=><div key={name}><span>{name}</span><strong>{value}</strong></div>)}</div>{!workspace.history.length?<div className="empty-state"><Icon name="activity" size={30}/><h3>Your research trail starts here.</h3><p>Ask a question to see your answers and sources.</p></div>:<div className="activity-list">{[...workspace.history].reverse().map(a=><button key={a.id} onClick={()=>{setSelected(a.id);setTab('assistant');}}><span><strong>{a.question}</strong><small>{readable(a.final_verification_status)} · {a.latency_seconds}s</small></span><Icon name="arrow"/></button>)}</div>}</>}
-          {tab==='settings'&&<><div className="section-heading"><div><p className="eyebrow small">MAKE IT WORK FOR YOU</p><h2>Workspace settings</h2><p>Applied to the next question or document upload.</p></div></div><fieldset disabled={locked} className="settings-grid"><label>Answer generation<select value={settings.generator} onChange={e=>update('generator',e.target.value)}><option value="offline">Free extractive answers</option><option value="local">Local language model</option></select><small>Extractive mode selects text from your sources. A local model requires Ollama or LM Studio on the server.</small></label>{settings.generator==='local'&&<label>Local model name<input value={settings.model} onChange={e=>update('model',e.target.value)} placeholder="e.g. qwen2.5:3b"/><small>The local endpoint is configured on the Python server.</small></label>}<label>Evidence retrieval<select value={settings.retrieval} onChange={e=>update('retrieval',e.target.value)}><option value="dense">Semantic search · BGE</option><option value="hybrid">Hybrid semantic + keyword</option><option value="reranked">Hybrid with reranking</option></select></label><label>Claim verification<select value={settings.verifier} onChange={e=>update('verifier',e.target.value)}><option value="semantic">Semantic NLI</option><option value="lexical">Lexical baseline</option></select><small>Semantic checks may download a model on first use.</small></label><label>Evidence passages: {settings.top_k}<input type="range" min="1" max="10" value={settings.top_k} onChange={e=>update('top_k',Number(e.target.value))}/></label><label>Recovery budget: {settings.budget} passages<input type="range" min="2" max="20" value={settings.budget} onChange={e=>update('budget',Number(e.target.value))}/></label><label className="checkbox-label"><input type="checkbox" checked={settings.ocr} onChange={e=>update('ocr',e.target.checked)}/><span>Read scanned pages with OCR<small>Requires local Tesseract. Applies to the next upload.</small></span></label></fieldset><div className="reset-row"><div><h3>Clear this workspace</h3><p>Remove the uploaded PDFs, index, answers and feedback from this session.</p></div><button className="danger" disabled={locked||!workspace.documents.length} onClick={()=>setResetOpen(true)}><Icon name="trash" size={16}/>Clear workspace</button></div></>}
+          {tab==='settings'&&<><div className="section-heading"><div><p className="eyebrow small">MAKE IT WORK FOR YOU</p><h2>Workspace settings</h2><p>Applied to the next question or document upload.</p></div></div><fieldset disabled={locked} className="settings-grid"><label>Answer generation<select value={settings.generator} onChange={e=>update('generator',e.target.value)}><option value="offline">Free extractive answers</option><option value="local" disabled={!capabilities?.local_model_configured}>Local language model{capabilities?.local_model_configured?'':' · not configured'}</option></select><small>Extractive mode selects text from your sources. Local mode is available only when a model endpoint is configured on the server.</small></label>{settings.generator==='local'&&<label>Local model name<input value={settings.model} onChange={e=>update('model',e.target.value)} placeholder="e.g. qwen2.5:3b"/><small>The local endpoint is configured on the Python server.</small></label>}<label>Evidence retrieval<select value={settings.retrieval} onChange={e=>update('retrieval',e.target.value)}><option value="dense">Semantic search · BGE</option><option value="hybrid">Hybrid semantic + keyword</option><option value="reranked">Hybrid with reranking</option></select></label><label>Claim verification<select value={settings.verifier} onChange={e=>update('verifier',e.target.value)}><option value="semantic">Semantic NLI</option><option value="lexical">Lexical baseline</option></select><small>Semantic checks may download a model on first use.</small></label><label>Evidence passages: {settings.top_k}<input type="range" min="1" max="10" value={settings.top_k} onChange={e=>update('top_k',Number(e.target.value))}/></label><label>Recovery budget: {settings.budget} passages<input type="range" min="2" max="20" value={settings.budget} onChange={e=>update('budget',Number(e.target.value))}/></label><label className="checkbox-label"><input type="checkbox" checked={settings.ocr} onChange={e=>update('ocr',e.target.checked)}/><span>Read scanned pages with OCR<small>Requires local Tesseract. Applies to the next upload.</small></span></label></fieldset><div className="reset-row"><div><h3>Clear this workspace</h3><p>Remove the uploaded PDFs, index, answers and feedback from this session.</p></div><button className="danger" disabled={locked||!workspace.documents.length} onClick={()=>setResetOpen(true)}><Icon name="trash" size={16}/>Clear workspace</button></div></>}
         </div>
       </section>
     </main>

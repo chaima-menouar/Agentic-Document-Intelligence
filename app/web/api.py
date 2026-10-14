@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import atexit
+import hashlib
 import json
 import logging
 import os
@@ -41,6 +42,8 @@ class Workspace:
     retriever: object = None
     history: list = field(default_factory=list)
     feedback: dict = field(default_factory=dict)
+    revision: str = field(default_factory=lambda: secrets.token_hex(16))
+    requests: dict = field(default_factory=dict)
     touched: float = field(default_factory=time.monotonic)
 
     def clear(self):
@@ -49,6 +52,8 @@ class Workspace:
         self.directory = self.result = self.retriever = None
         self.history.clear()
         self.feedback.clear()
+        self.requests.clear()
+        self.revision = secrets.token_hex(16)
 
 
 _sessions: dict[str, Workspace] = {}
@@ -100,6 +105,7 @@ def session(request: Request, response: Response) -> Workspace:
 
 def summary(ws):
     return {
+        "revision": ws.revision,
         "documents": [asdict(d) for d in ws.result.documents] if ws.result else [],
         "total_chunks": ws.result.total_chunks if ws.result else 0,
         "history": ws.history,
@@ -112,6 +118,22 @@ def health():
     return {"status": "ok"}
 
 
+@app.get("/api/capabilities")
+def capabilities():
+    # Configuration, not a promise that a model service is currently reachable.
+    return {
+        "limits": {"pdf_bytes": MAX_BYTES, "upload_bytes": MAX_TOTAL_BYTES, "files": 10},
+        "ocr_available": shutil.which("tesseract") is not None,
+        "local_model_configured": bool(os.environ.get("ADI_LOCAL_LLM_URL")),
+        "storage": "temporary", "idle_timeout_seconds": 8 * 3600,
+    }
+
+
+def check_revision(ws, expected):
+    if expected is not None and expected != ws.revision:
+        raise HTTPException(409, {"code": "workspace_changed", "message": "Your workspace changed or expired. Refresh it before continuing."})
+
+
 @app.get("/api/workspace")
 def workspace(ws: Workspace = Depends(session)):
     with ws.lock:
@@ -119,14 +141,15 @@ def workspace(ws: Workspace = Depends(session)):
 
 
 @app.delete("/api/workspace")
-def reset(ws: Workspace = Depends(session)):
+def reset(request: Request, ws: Workspace = Depends(session)):
     with ws.lock:
+        check_revision(ws, request.headers.get("x-adi-workspace"))
         ws.clear()
         return summary(ws)
 
 
 @app.post("/api/documents")
-def upload(files: list[UploadFile] = File(...), ocr: bool = Form(True), ws: Workspace = Depends(session)):
+def upload(request: Request, files: list[UploadFile] = File(...), ocr: bool = Form(True), ws: Workspace = Depends(session)):
     if not 1 <= len(files) <= 10:
         raise HTTPException(400, "Choose between 1 and 10 PDFs.")
     payloads = []
@@ -140,6 +163,7 @@ def upload(files: list[UploadFile] = File(...), ocr: bool = Form(True), ws: Work
             raise HTTPException(400, "Only valid PDF files are supported.")
         payloads.append((Path(item.filename).name, data))
     with ws.lock:
+        check_revision(ws, request.headers.get("x-adi-workspace"))
         directory = Path(tempfile.mkdtemp(prefix="adi-react-"))
         try:
             # Keep the old corpus if extraction or indexing fails.
@@ -165,6 +189,8 @@ class Question(BaseModel):
     verifier: Literal["semantic", "lexical"] = "semantic"
     generator: Literal["offline", "local"] = "offline"
     model: str = Field(default="", max_length=150)
+    request_id: str | None = Field(default=None, min_length=8, max_length=100)
+    workspace_revision: str | None = Field(default=None, max_length=64)
 
 
 def answer_question(ws, query):
@@ -196,6 +222,17 @@ def ask(query: Question, ws: Workspace = Depends(session)):
     if not query.question.strip():
         raise HTTPException(400, "Enter a question.")
     with ws.lock:
+        check_revision(ws, query.workspace_revision)
+        fingerprint = hashlib.sha256(json.dumps(query.model_dump(exclude={"request_id", "workspace_revision"}), sort_keys=True).encode()).hexdigest()
+        if query.request_id in ws.requests:
+            previous_fingerprint, previous_answer = ws.requests[query.request_id]
+            if previous_fingerprint != fingerprint:
+                raise HTTPException(409, {"code": "request_conflict", "message": "This request ID was already used for another question."})
+            return previous_answer
+        if query.generator == "local" and not os.environ.get("ADI_LOCAL_LLM_URL"):
+            raise HTTPException(400, "Local AI is not configured on this server. Choose free extractive answers.")
+        if query.generator == "local" and not (query.model.strip() or os.environ.get("RAG_LLM_MODEL")):
+            raise HTTPException(400, "Enter a local model name in Settings.")
         if ws.retriever is None:
             raise HTTPException(409, "Upload and process documents first.")
         ids = {d.document_id for d in ws.result.documents}
@@ -210,9 +247,14 @@ def ask(query: Question, ws: Workspace = Depends(session)):
             raise HTTPException(503, "Could not generate an answer. Check model availability and the server terminal, then retry.")
         answer["latency_seconds"] = round(time.perf_counter() - started, 2)
         answer["id"] = secrets.token_hex(8)
-        answer["settings"] = query.model_dump(exclude={"question", "document_id"})
+        answer["settings"] = query.model_dump(exclude={"question", "document_id", "request_id", "workspace_revision"})
         ws.history.append(answer)
         ws.history = ws.history[-50:]
+        if query.request_id:
+            ws.requests[query.request_id] = (fingerprint, answer)
+        retained = {item["id"] for item in ws.history}
+        ws.requests = {key: value for key, value in ws.requests.items() if value[1]["id"] in retained}
+        ws.feedback = {key: value for key, value in ws.feedback.items() if key in retained}
         ws.touched = time.monotonic()
         return answer
 

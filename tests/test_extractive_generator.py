@@ -144,3 +144,18 @@ def test_numeric_answer_recognizes_spelled_out_counts() -> None:
 def test_generator_does_not_cut_a_long_sentence_mid_claim() -> None:
     prompt = _prompt("What did the study find?", "[S1] page=1\nThe study found " + "many preliminary observations " * 30 + "but did not establish a result.")
     assert ExtractiveGenerator().generate(prompt) == "INSUFFICIENT_EVIDENCE"
+
+
+def test_when_question_accepts_month_date_without_year():
+    prompt = _prompt('When does the pilot launch?', '[S1] page=2\nThe pilot launches on 12 November.')
+    assert ExtractiveGenerator().generate(prompt) == 'The pilot launches on 12 November. [S1]'
+
+
+def test_explicit_year_question_still_requires_year():
+    prompt = _prompt('What year does the pilot launch?', '[S1] page=2\nThe pilot launches on 12 November.')
+    assert ExtractiveGenerator().generate(prompt) == 'INSUFFICIENT_EVIDENCE'
+
+
+def test_when_question_abstains_without_time_evidence():
+    prompt = _prompt('When does the pilot launch?', '[S1] page=2\nThe pilot launch involves three research teams.')
+    assert ExtractiveGenerator().generate(prompt) == 'INSUFFICIENT_EVIDENCE'

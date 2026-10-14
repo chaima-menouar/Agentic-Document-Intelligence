@@ -17,6 +17,7 @@ _SOURCE_BLOCK_RE = re.compile(
     re.DOTALL,
 )
 _YEAR_RE = re.compile(r"\b(?:18|19|20)\d{2}\b")
+_TIME_RE = re.compile(r"\b(?:January|February|March|April|May|June|July|August|September|October|November|December|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|spring|summer|autumn|winter|morning|afternoon|evening)\b|\b\d{1,2}[:/]\d{2}\b|\b\d+\s+(?:days?|weeks?|months?|years?|hours?)\b", re.IGNORECASE)
 _NUMBER_RE = re.compile(r"\b(?:\d+(?:\.\d+)?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|hundred|thousand|million)\b", re.IGNORECASE)
 
 _STOPWORDS = {
@@ -274,7 +275,7 @@ def _question_keywords(question: str) -> set[str]:
 
 def _requires_year(question: str) -> bool:
     lowered = question.lower()
-    return "what year" in lowered or "which year" in lowered or lowered.startswith("when ")
+    return "what year" in lowered or "which year" in lowered
 
 
 def _requires_number(question: str) -> bool:
@@ -354,6 +355,8 @@ class ExtractiveGenerator:
                 if not set(_YEAR_RE.findall(question)).issubset(set(_YEAR_RE.findall(sentence))):
                     continue
                 if _requires_year(question) and not _YEAR_RE.search(sentence):
+                    continue
+                if question.lower().startswith("when ") and not (_YEAR_RE.search(sentence) or _TIME_RE.search(sentence)):
                     continue
                 if _requires_number(question) and not _NUMBER_RE.search(sentence):
                     continue

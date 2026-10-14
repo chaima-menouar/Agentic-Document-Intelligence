@@ -83,3 +83,51 @@ def test_failed_replacement_preserves_original_and_validates_requests(clients,mo
     assert a.post('/api/ask',json={'question':'hi','document_id':'other-session'}).status_code==404
     outsider=TestClient(api.app)
     assert outsider.post('/api/ask',json={'question':'hi'}).status_code==403
+
+
+def test_revision_prevents_stale_question_and_destructive_actions(clients):
+    a,_=clients
+    first=a.post('/api/documents',files={'files':('one.pdf',pdf(),'application/pdf')}).json()
+    second=a.post('/api/documents',files={'files':('two.pdf',pdf(),'application/pdf')},headers={'X-ADI-Workspace':first['revision']}).json()
+    assert second['revision'] != first['revision']
+    stale={'X-ADI-Workspace':first['revision']}
+    assert a.delete('/api/workspace',headers=stale).status_code==409
+    assert a.post('/api/documents',files={'files':('three.pdf',pdf(),'application/pdf')},headers=stale).status_code==409
+    answer=a.post('/api/ask',json={'question':'What reduces latency?','workspace_revision':first['revision']})
+    assert answer.status_code==409
+    assert answer.json()['detail']['code']=='workspace_changed'
+    assert a.get('/api/workspace').json()['documents']==second['documents']
+
+
+def test_question_retry_is_idempotent_and_rejects_reused_id(clients,monkeypatch):
+    a,_=clients
+    workspace=a.post('/api/documents',files={'files':('one.pdf',pdf(),'application/pdf')}).json()
+    calls=[]
+    def answer(*args):
+        calls.append(1)
+        return {'question':'What reduces latency?', 'final_answer':'Caching reduces latency. [S1]'}
+    monkeypatch.setattr(api,'answer_question',answer)
+    payload={'question':'What reduces latency?','request_id':'test-retry-123','workspace_revision':workspace['revision']}
+    first=a.post('/api/ask',json=payload)
+    second=a.post('/api/ask',json=payload)
+    assert first.status_code==second.status_code==200
+    assert first.json()==second.json()
+    assert len(calls)==1
+    assert len(a.get('/api/workspace').json()['history'])==1
+    conflict=a.post('/api/ask',json={**payload,'question':'A different question?'})
+    assert conflict.status_code==409
+    assert conflict.json()['detail']['code']=='request_conflict'
+
+
+def test_capabilities_and_unconfigured_local_model(clients,monkeypatch):
+    a,_=clients
+    monkeypatch.delenv('ADI_LOCAL_LLM_URL',raising=False)
+    caps=a.get('/api/capabilities')
+    assert caps.status_code==200
+    assert caps.json()['limits']['pdf_bytes']==api.MAX_BYTES
+    assert caps.json()['storage']=='temporary'
+    assert not caps.json()['local_model_configured']
+    a.post('/api/documents',files={'files':('one.pdf',pdf(),'application/pdf')})
+    response=a.post('/api/ask',json={'question':'What reduces latency?','generator':'local'})
+    assert response.status_code==400
+    assert 'not configured' in response.json()['detail']
