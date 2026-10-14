@@ -11,7 +11,7 @@ def render(t):
     def text(x,y,s,size=18,color='#eeeef3',bold=False):d.text((x,y),s,font=font(size,bold),fill=color)
     def box(rect,color,r=12):d.rounded_rectangle(rect,r,fill=color)
     phase=min(int(t//6),2)
-    text(48,30,'A / AGENTIC DOCUMENT INTELLIGENCE',16,'#ffa16b',True)
+    text(48,30,'CLARIO / DOCUMENT INTELLIGENCE',16,'#ffa16b',True)
     text(960,32,'ILLUSTRATIVE EXAMPLE',12,'#969bac')
     box((40,95,530,626),'#fff5e9',16)
     text(75,128,'PROJECT BRIEF.PDF  /  PAGE 2',13,'#9d7454',True)
