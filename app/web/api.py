@@ -11,6 +11,8 @@ import shutil
 import tempfile
 import threading
 import time
+import zipfile
+import zlib
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Literal
@@ -20,6 +22,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from app.web.backups import MAX_ARCHIVE, encode_snapshot, decode_snapshot
 from app.audio.routes import router as audio_router
 from app.agent import AdaptiveAgenticVerifiedRAG
 from app.rag import ClassicalRAG, ExtractiveGenerator, GroundedLocalGenerator
@@ -127,6 +130,7 @@ def capabilities():
         "limits": {"pdf_bytes": MAX_BYTES, "upload_bytes": MAX_TOTAL_BYTES, "files": 10},
         "ocr_available": shutil.which("tesseract") is not None,
         "local_model_configured": bool(os.environ.get("ADI_LOCAL_LLM_URL")),
+        "backup_bytes": MAX_ARCHIVE, "workspace_backups": True,
         "storage": "temporary", "idle_timeout_seconds": 8 * 3600,
     }
 
@@ -148,6 +152,58 @@ def reset(request: Request, ws: Workspace = Depends(session)):
         check_revision(ws, request.headers.get("x-adi-workspace"))
         ws.clear()
         return summary(ws)
+
+
+class BackupRequest(BaseModel):
+    transcript: str = Field(default="", max_length=20000)
+    workspace_revision: str | None = None
+
+
+@app.post("/api/workspace/backup")
+def backup(data: BackupRequest, ws: Workspace = Depends(session)):
+    with ws.lock:
+        check_revision(ws, data.workspace_revision)
+        try:
+            archive = encode_snapshot(ws, data.transcript)
+        except ValueError as exc:
+            raise HTTPException(413, str(exc))
+        return Response(archive, media_type="application/zip", headers={
+            "Content-Disposition": 'attachment; filename="clario-workspace.zip"',
+        })
+
+
+@app.post("/api/workspace/restore")
+def restore(request: Request, file: UploadFile = File(...), ws: Workspace = Depends(session)):
+    data = file.file.read(MAX_ARCHIVE + 1)
+    if len(data) > MAX_ARCHIVE:
+        raise HTTPException(413, "Backup exceeds 4 MB.")
+    try:
+        payloads, manifest = decode_snapshot(data, MAX_BYTES, MAX_TOTAL_BYTES)
+    except (ValueError, zipfile.BadZipFile, RuntimeError, NotImplementedError, OSError, EOFError, zlib.error, RecursionError):
+        raise HTTPException(422, "Invalid or unsupported Clario backup. Your current workspace is unchanged.")
+    with ws.lock:
+        check_revision(ws, request.headers.get("x-adi-workspace"))
+        directory = Path(tempfile.mkdtemp(prefix="clario-restore-")) if payloads else None
+        result = retriever = None
+        try:
+            if payloads:
+                with _model_lock:
+                    result = build_local_workspace(payloads, directory, ocr_fallback=True)
+                    retriever = SemanticRetriever.load(result.index_dir)
+            doc_ids = {d.document_id for d in result.documents} if result else set()
+            if any(c.document_id not in doc_ids for a in manifest.history for c in a.citations):
+                raise ValueError("Missing citation source")
+        except Exception:
+            if directory:
+                shutil.rmtree(directory, ignore_errors=True)
+            logger.exception("Workspace restore failed")
+            raise HTTPException(422, "Could not restore the backup. Your current workspace is unchanged.")
+        ws.clear()
+        ws.directory, ws.result, ws.retriever = directory, result, retriever
+        ws.history = [a.model_dump(mode="json") for a in manifest.history]
+        ws.feedback = {key: value.model_dump() for key, value in manifest.feedback.items()}
+        ws.touched = time.monotonic()
+        return {**summary(ws), "transcript": manifest.transcript}
 
 
 @app.post("/api/documents")

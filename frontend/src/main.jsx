@@ -2,6 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import './style.css';
 import VoiceStudio from './VoiceStudio';
+import WorkspaceBackup from './WorkspaceBackup';
 import {MotionLayer} from './Motion';
 import {Brand,Glyph} from './Visuals';
 import {Robot,Demo,LandingSections,Footer} from './Landing';
@@ -11,6 +12,7 @@ const DEFAULTS={top_k:5,budget:10,retrieval:'dense',verifier:'semantic',generato
 const MAX_PDF_BYTES=Number(import.meta.env.VITE_MAX_PDF_BYTES)||25*1024*1024;
 const MAX_UPLOAD_BYTES=Number(import.meta.env.VITE_MAX_UPLOAD_BYTES)||100*1024*1024;
 const labels={documents:'Documents',assistant:'Assistant',voice:'Audio studio',activity:'Activity',settings:'Settings'};
+function storedTheme(){try{return localStorage.getItem('adi-theme-v2')||'light';}catch{return 'light';}}
 const readable=value=>(value||'').replaceAll('_',' ');
 
 async function api(path,options={}) {
@@ -24,8 +26,8 @@ function Icon({name,size=20}) {
 }
 function App(){
   const [voiceDraft,setVoiceDraft]=useState('');
-  const [theme,setTheme]=useState(()=>localStorage.getItem('adi-theme-v2')||'light');
-  useEffect(()=>{document.documentElement.dataset.theme=theme;localStorage.setItem('adi-theme-v2',theme);},[theme]);
+  const [theme,setTheme]=useState(storedTheme);
+  useEffect(()=>{document.documentElement.dataset.theme=theme;try{localStorage.setItem('adi-theme-v2',theme);}catch{}},[theme]);
   const [tab,setTab]=useState('documents'),[workspace,setWorkspace]=useState(EMPTY),[settings,setSettings]=useState(DEFAULTS);
   const [loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('');
   const [files,setFiles]=useState([]),[question,setQuestion]=useState(''),[scope,setScope]=useState(''),[selected,setSelected]=useState(null);
@@ -41,7 +43,7 @@ function App(){
   const locked=loading||Boolean(busy);
   function expiredWorkspace(){
     setWorkspace(EMPTY);setScope('');setSelected(null);setInspector(null);setResetOpen(false);setTab('documents');setError('');
-    setNotice('This temporary workspace has expired. Upload and process your PDFs again to continue. Your question has been kept.');
+    setNotice('This temporary workspace has expired. Upload and process your PDFs again to continue. Your question has been kept. Restore a downloaded workspace backup below if you have one.');
   }
   function chooseFiles(incoming){
     setError('');const items=Array.from(incoming);
@@ -87,6 +89,7 @@ function App(){
           {notice&&<div className="notice success" role="status">{notice}</div>}
           {(busy||loading)&&<div className="notice progress" role="status"><span className="spinner"/>{busy||'Opening your workspace…'}</div>}
           {tab==='voice'&&<VoiceStudio draft={voiceDraft} onDraft={setVoiceDraft} request={api} workspace={workspace} settings={settings} onAnswer={result=>{setWorkspace(w=>({...w,history:[...w.history.filter(a=>a.id!==result.id),result].slice(-50)}));setSelected(result.id);}} onConflict={refreshChangedWorkspace} onOpenDocs={()=>setTab('documents')}/>}
+          {(tab==='documents'||tab==='settings')&&<WorkspaceBackup workspace={workspace} transcript={voiceDraft} locked={locked} onBusy={setBusy} onError={setError} onConflict={refreshChangedWorkspace} onRestored={restored=>{const {transcript,...data}=restored;setWorkspace(data);setVoiceDraft(transcript||'');setFiles([]);setScope('');setSelected(null);setInspector(null);pendingQuestion.current=null;}}/>}
           {tab==='documents'&&<>
             <div className="section-heading"><div><p className="eyebrow small">START WITH YOUR SOURCES</p><h2>Your document space</h2><p>Bring the PDFs. We’ll help you find what matters.</p></div>{workspace.documents.length>0&&<button className="secondary" disabled={locked} onClick={()=>setTab('assistant')}>Ask a question <Icon name="arrow" size={16}/></button>}</div>
             <div className={`dropzone ${drag?'dragging':''}`} onDragOver={e=>{e.preventDefault();if(!locked)setDrag(true);}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);if(!locked)chooseFiles(e.dataTransfer.files);}}>
